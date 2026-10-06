@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Table
 public class AuthorityEntity {
 }
