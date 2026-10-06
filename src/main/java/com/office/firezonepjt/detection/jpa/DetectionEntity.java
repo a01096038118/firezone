@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 @Table
 public class DetectionEntity {
