@@ -1,4 +1,4 @@
-package com.office.firezonepjt.member;
+package com.office.firezonepjt.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -7,5 +7,5 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 @Controller
 @RequestMapping("/member")
-public class MemberController {
+public class UserController {
 }

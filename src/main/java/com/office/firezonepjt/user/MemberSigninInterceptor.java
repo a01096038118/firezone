@@ -1,4 +1,4 @@
-package com.office.firezonepjt.member;
+package com.office.firezonepjt.user;
 
 public class MemberSigninInterceptor {
 }

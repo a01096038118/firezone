@@ -1,11 +1,9 @@
-package com.office.firezonepjt.member.jpa;
+package com.office.firezonepjt.user.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Entity
