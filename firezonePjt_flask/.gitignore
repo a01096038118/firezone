@@ -1,0 +1,43 @@
+# Gradle 캐시와 빌드 결과
+.gradle/
+build/
+out/
+*.class
+
+# IntelliJ 개인 설정
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# 다른 에디터 개인 설정
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# 운영체제 임시 파일
+.DS_Store
+Thumbs.db
+
+# 실행 중 생성되는 로그
+*.log
+logs/
+
+# 환경변수 파일: 비밀번호, API 키 등
+.env
+.env.*
+!.env.example
+
+# 개인 PC 전용 설정
+/src/main/resources/application-local.properties
+/src/main/resources/application-local.yml
+/src/main/resources/application-local.yaml
+
+# 프로젝트에서 생성하는 촬영·업로드 자료
+/uploads/
+/captures/
+
+# 로컬 Docker DB 데이터
+/mysql-data/

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+    <header th:fragment="header">
+        <div id="header_wrap">
+            <h3>소방전용 구역주차 및 진입로 차량 감지·관제 시스템</h3>
+        </div>
+    </header>
+
+    <nav th:fragment="nav">
+        <div id="nav_wrap">
+            <a th:href="@{/}">HOME</a>
+
+            <!-- 로그인 전 승인 상태 확인 -->
+            <th:block sec:authorize="!hasAnyRole('PRE_USER', 'USER')">
+                <a th:href="@{/user/signup}">회원가입</a>
+                <a th:href="@{/user/signin}">로그인</a>
+            </th:block>
+
+            <!-- 로그인 후 목록 -->
+            <th:block sec:authorize="hasAnyRole('PRE_USER', 'USER')">
+                <a th:href="@{/monitoring}">관제화면</a>
+                <a th:href="@{/detection}">탐지 목록</a>
+                <a th:href="@{/planner}">Planner</a>
+                <a th:href="@{/user/mypage}">내 정보 조회</a>
+
+                <form th:action="@{/user/logout}"
+                      method="post"
+                      style="display: inline;">
+                    <button type="submit">로그아웃</button>
+                </form>
+            </th:block>
+        </div>
+    </nav>
+
+    <footer th:fragment="footer">
+        <div id="footer_wrap">
+            Copyright OFFICE Corp. ALL Rights Reserved.
+        </div>
+    </footer>
+
+</html>
