@@ -1,10 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+
+
 </head>
 <body>
-    THIS PAGE IS HOME.
+
+    <header th:replace="~{/include/header_nav_footer.html::header}"/>
+
+    <nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+
+    <section id="section_wrap">
+        <div class="imgs">
+            <img class="img_active" th:src="@{/include/img/img_1.png}">
+            <img th:src="@{/include/img/img_2.png}">
+            <img th:src="@{/include/img/img_3.png}">
+            <img th:src="@{/include/img/img_4.png}">
+            <img th:src="@{/include/img/img_5.png}">
+            <img th:src="@{/include/img/img_6.png}">
+        </div>
+    </section>
+
+
+    <footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
 </body>
 </html>
