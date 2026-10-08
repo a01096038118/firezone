@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.Date;
@@ -17,9 +19,6 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class AdminService {
-
-
-    final private String CLASS_NAME = "[MemberService] ";
 
     final public static int ADMIN_ID_ALREADY_EXIST   = 0;
     final public static int ADMIN_SIGNUP_SUCCESS     = 1;
@@ -48,7 +47,7 @@ public class AdminService {
 
 
     public int signupConfirm(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("signupConfirm()"));
+        log.info("signupConfirm()");
 
         boolean isAdmin = adminRepository.existsByAdId(adminDto.getAm_id());
 
@@ -70,21 +69,7 @@ public class AdminService {
     }
 
     public String signinConfirm(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("signinConfirm()"));
-
-//        MemberDto dto = memberDao.selectMemberByID(memberDto.getId());
-        /*
-        MemberDto dto = memberMapper.selectMemberByID(memberDto.getId());
-        if (dto != null && passwordEncoder.matches(memberDto.getPw(), dto.getPw())) {
-            System.out.println(CLASS_NAME.concat("MEMBER LOGIN SUCCESS!!"));
-            return dto.getId();
-
-        } else {
-            System.out.println(CLASS_NAME.concat("MEMBER LOGIN FAIL!!"));
-            return null;
-
-        }
-        */
+        log.info("signinConfirm()");
 
         Optional<AdminEntity> optionalMember =
                 adminRepository.findByAdId(adminDto.getAm_id());
@@ -102,7 +87,7 @@ public class AdminService {
     }
 
     public AdminDto modify(String loginedID) {
-        System.out.println(CLASS_NAME.concat("modify()"));
+        log.info("modify()");
 
 //        return memberDao.selectMemberByID(loginedID);
 //        return memberMapper.selectMemberByID(loginedID);
@@ -122,7 +107,7 @@ public class AdminService {
 
     @Transactional
     public int modifyConfirm(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("modifyConfirm()"));
+        log.info("modifyConfirm()");
 
         String encodedPW = passwordEncoder.encode(adminDto.getAm_pw());
         adminDto.setAm_pw(encodedPW);
@@ -145,7 +130,7 @@ public class AdminService {
     }
 
     public int findpasswordConfirm(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
+        log.info("findpasswordConfirm()");
 
         Optional<AdminEntity> optionalAdmin =
                 adminRepository.findByAdIdAndAdMail(adminDto.getAm_id(), adminDto.getAm_mail());
@@ -167,7 +152,7 @@ public class AdminService {
     }
 
     private String createNewPassword() {
-        System.out.println(CLASS_NAME.concat("createNewPassword()");
+        log.info("createNewPassword()");
 
         char[] chars = new char[] {
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -191,14 +176,14 @@ public class AdminService {
                 stringBuffer.append(String.valueOf(chars[index]).toLowerCase());
         }
 
-        System.out.println(CLASS_NAME.concat("NEW PASSWORD: " + stringBuffer.toString());
+        System.out.println(CLASS_NAME.concat("NEW PASSWORD: " + stringBuffer.toString()));
 
         return stringBuffer.toString();
 
     }
 
     private void sendNewPasswordByMail(String toMailAddr, String newPassword) {
-        System.out.println(CLASS_NAME.concat("sendNewPasswordByMail()");
+        log.info("sendNewPasswordByMail()");
 
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         // simpleMailMessage.setTo(toMailAddr);
@@ -210,8 +195,5 @@ public class AdminService {
         javaMailSender.send(simpleMailMessage);
 
     }
-
-}
-
 
 }

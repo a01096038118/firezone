@@ -1,17 +1,19 @@
 package com.office.firezonepjt.admin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Repository
 public class AdminDao {
-
-    final private String CLASS_NAME = "[AdminDao] ";
 
     final private JdbcTemplate jdbcTemplate;
 
@@ -20,7 +22,7 @@ public class AdminDao {
     }
 
     public boolean isAdmin(String id) {
-        System.out.println(CLASS_NAME.concat("isAdmin()"));
+        log.info("isAdmin()");
 
         String sql = "SELECT COUNT(*) FROM admin_member WHERE ID = ?";
 
@@ -33,7 +35,7 @@ public class AdminDao {
     }
 
     public int insertAdmin(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("insertAdmin()"));
+        log.info("insertAdmin()");
 
         String sql = "INSERT INTO admin_member(am_id, am_pw, am_name, am_mail, am_phone) " +
                 "VALUES(?, ?, ?, ?)";
@@ -56,7 +58,7 @@ public class AdminDao {
     }
 
     public AdminDto selectAdminByID(String id) {
-        System.out.println(CLASS_NAME.concat("selectAdminByID()"));
+        log.info("selectAdminByID()");
 
         String sql = "SELECT * FROM admin_member WHERE am_id = ?";
 
@@ -87,7 +89,7 @@ public class AdminDao {
     }
 
     public int updateAdmin(AdminDto adminDto) {
-        System.out.println(CLASS_NAME.concat("updateAdmin()"));
+        log.info("updateAdmin()");
 
         String sql =    "UPDATE " +
                 "admin_member " +
@@ -118,7 +120,7 @@ public class AdminDao {
     }
 
     public AdminDto selectAdminByIDAndMail(AdminDto memberDto) {
-        System.out.println(CLASS_NAME.concat("selectAdminByIDAndMail()"));
+        log.info("selectAdminByIDAndMail()");
 
         String sql = "SELECT * " +
                 "FROM admin_member " +
@@ -147,7 +149,7 @@ public class AdminDao {
     }
 
     public int updatePassword(String id, String encodedNewPw) {
-        System.out.println(CLASS_NAME.concat("updatePassword()"));
+        log.info("updatePassword()");
 
         String sql = "UPDATE admin_member SET am_pw = ? WHERE am_id = ?";
 
