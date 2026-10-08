@@ -1,4 +1,4 @@
-package com.office.firezonepjt.dashboard;
+package com.office.firezonepjt_admin.dashboard;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
