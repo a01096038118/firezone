@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.5.RELEASE" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.thymeleaf.extras" artifactId="thymeleaf-extras-springsecurity6" version="3.1.5.RELEASE" baseVersion="3.1.5.RELEASE" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.thymeleaf.extras/thymeleaf-extras-springsecurity6/3.1.5.RELEASE/577c4a639e0d243b9004a09ba17ea819385cddee/thymeleaf-extras-springsecurity6-3.1.5.RELEASE.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.thymeleaf.extras/thymeleaf-extras-springsecurity6/3.1.5.RELEASE/605e09a4bf4ed07caaaef6ff75f63f7fb7e49f66/thymeleaf-extras-springsecurity6-3.1.5.RELEASE-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
