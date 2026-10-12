@@ -4,21 +4,25 @@ function signupForm() {
 
     let form = document.signup_form;
 
-    if (form.id.value === '') {
-        alert('INPUT NEW MEMBER ID!!');
-        form.id.focus();
+    if (form.am_id.value === '') {
+        alert('INPUT NEW ADMIN ID!!');
+        form.am_id.focus();
 
-    } else if (form.pw.value === '') {
-        alert('INPUT NEW MEMBER PW!!');
-        form.pw.focus();
+    } else if (form.am_pw.value === '') {
+        alert('INPUT NEW ADMIN PW!!');
+        form.am_pw.focus();
 
-    } else if (form.mail.value === '') {
-        alert('INPUT NEW MEMBER MAIL!!');
-        form.mail.focus();
+    } else if (form.am_name.value === '') {
+        alert('INPUT NEW ADMIN NAME!!');
+        form.am_name.focus();
 
-    } else if (form.phone.value === '') {
-        alert('INPUT NEW MEMBER PHONE!!');
-        form.phone.focus();
+    } else if (form.am_mail.value === '') {
+        alert('INPUT NEW ADMIN MAIL!!');
+        form.am_mail.focus();
+
+    } else if (form.am_phone.value === '') {
+        alert('INPUT NEW ADMIN PHONE!!');
+        form.am_phone.focus();
 
     } else {
         form.submit();
@@ -32,13 +36,13 @@ function signinForm() {
 
     let form = document.signin_form;
 
-    if (form.id.value === '') {
-        alert('INPUT MEMBER ID!!');
-        form.id.focus();
+    if (form.am_id.value === '') {
+        alert('INPUT ADMIN ID!!');
+        form.am_id.focus();
 
-    } else if (form.pw.value === '') {
-        alert('INPUT MEMBER PW!!');
-        form.pw.focus();
+    } else if (form.am_pw.value === '') {
+        alert('INPUT ADMIN PW!!');
+        form.am_pw.focus();
 
     } else {
         form.submit();
