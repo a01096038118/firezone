@@ -1,4 +1,6 @@
 package com.office.firezonepjt_admin.detection.jpa;
 
-public interface DetectionRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DetectionRepository extends JpaRepository<DetectionEntity, Integer> {
 }
