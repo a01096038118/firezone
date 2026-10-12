@@ -1,7 +1,7 @@
-package com.office.firezonepjt_user.planner;
+package com.office.firezonepjt.planner;
 
 import jakarta.persistence.Entity;
 
-@Entity
+//@Entity
 public class PlannerEntity {
 }
