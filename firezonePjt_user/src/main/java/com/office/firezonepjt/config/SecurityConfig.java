@@ -1,12 +1,11 @@
 package com.office.firezonepjt_user.config;
 
-import com.office.firezonepjt.admin.security.AdminAccessDeniedHandler;
+import com.office.firezonepjt.member.security.MemberAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,15 +30,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
-                                "/css/*",
-                                "/img/*",
-                                "/js/*",
+                                "/error",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/img/**",
+                                "/js/**",
+                                "/include/**",
                                 "/member/signup",
                                 "/member/signup_confirm",
                                 "/member/signin",
                                 "/member/signin_confirm",
                                 "/member/findpassword",
-                                "/member/findpassword_confirm").permitAll()
+                                "/member/findpassword_confirm",
+                                "/member/access_denied").permitAll()
                         .requestMatchers("/planner/**").hasAnyRole("USER")
                         .anyRequest().authenticated()
                 );
@@ -53,15 +56,18 @@ public class SecurityConfig {
                         .successHandler((request, response, authentication) -> {
                             log.info("SIGNIN SUCCESS HANDLER()");
 
-                            User user = (User) authentication.getPrincipal();
-                            String targetURI = "/member/signin_result?loginedID=" + user.getUsername();
+                            String targetURI = request.getContextPath()
+                                    + "/member/signin_result?loginedID="
+                                    + java.net.URLEncoder.encode(
+                                            authentication.getName(),
+                                            java.nio.charset.StandardCharsets.UTF_8);
                             response.sendRedirect(targetURI);
 
                         })
                         .failureHandler((request, response, exception) -> {
                             log.info("SIGNIN FAIL HANDLER()");
 
-                            String targetURI = "/member/signin_result";
+                            String targetURI = request.getContextPath() + "/member/signin?error";
                             response.sendRedirect(targetURI);
 
                         })
@@ -80,7 +86,7 @@ public class SecurityConfig {
 
         http
                 .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(new AdminAccessDeniedHandler())
+                        .accessDeniedHandler(new MemberAccessDeniedHandler())
                 );
 
         return http.build();

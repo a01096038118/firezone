@@ -56,6 +56,18 @@ public class AdminController {
 
     }
 
+    @PostMapping("/signin_confirm")
+    public String signinConfirm(AdminDto adminDto, HttpSession session) {
+        String loginedID = adminService.signinConfirm(adminDto);
+
+        if (loginedID != null) {
+            session.setAttribute("loginedID", loginedID);
+            return "redirect:/admin/signin_result?loginedID=" + loginedID;
+        }
+
+        return "redirect:/admin/signin_result";
+    }
+
     // 계정 수정 양식(/member/modify)
     @GetMapping("/modify")
     public String modify(HttpSession session, Model model) {

@@ -95,6 +95,7 @@ public class AdminDto {
                 .adNo(am_no)
                 .adId(am_id)
                 .adPw(am_pw)
+                .adName(am_name)
                 .adMail(am_mail)
                 .adPhone(am_phone)
                 .adRegDate(am_reg_date != null ? LocalDateTime.parse(am_reg_date, formatter) : null)
