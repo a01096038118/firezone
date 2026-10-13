@@ -22,11 +22,14 @@
             SIGN-IN RESULT
         </div>
         <div class="content">
-            <th:block th:if="${loginedID != null}">
-                SIGN-IN SUCCESS
+            <th:block th:if="${loginError}">
+                로그인에 실패하였습니다.
+                <p>아이디 또는 비밀번호를 확인해 주세요.</p>
+                <a th:href="@{/admin/signin}">다시 로그인</a>
             </th:block>
-            <th:block th:if="${loginedID == null}">
-                SIGN-IN FAIL
+            <th:block th:if="${!loginError and loginedID != null}">
+                로그인 성공!
+                <a th:href="@{/}">홈으로</a>
             </th:block>
         </div>
     </div>

@@ -1,4 +1,4 @@
-package com.office.firezonepjt.member.security;
+package com.office.firezonepjt.user.security;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

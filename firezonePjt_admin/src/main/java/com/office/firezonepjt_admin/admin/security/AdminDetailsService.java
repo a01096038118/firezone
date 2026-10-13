@@ -31,6 +31,7 @@ public class AdminDetailsService implements UserDetailsService {
             return User.builder()
                     .username(findedMemberEntity.getAdId())
                     .password(findedMemberEntity.getAdPw())
+                    .roles("ADMIN")
                     .build();
         }
 

@@ -24,12 +24,43 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.disable())
-                .csrf(csrf -> csrf.disable());
-
-        http
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/admin/signin",
+                                "/admin/signup",
+                                "/admin/signup_confirm",
+                                "/admin/findpassword",
+                                "/admin/findpassword_confirm",
+                                "/admin/signin_result",
+                                "/admin/access_denied",
+                                "/css/**",
+                                "/js/**",
+                                "/img/**",
+                                "/include/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/admin/**",
+                                "/monitoring/**",
+                                "/detection/**",
+                                "/planner/**",
+                                "/logs/**"
+                        ).hasRole("ADMIN")
                         .anyRequest().permitAll()
+                )
+                .formLogin(form -> form
+                        .loginPage("/admin/signin")
+                        .loginProcessingUrl("/admin/signin_confirm")
+                        .usernameParameter("am_id")
+                        .passwordParameter("am_pw")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/admin/signin_result?error")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/admin/logout")
+                        .logoutSuccessUrl("/admin/signin?logout")
+                        .permitAll()
                 );
 
         return http.build();
