@@ -1,7 +1,6 @@
 package com.office.firezonepjt_admin.detection.jpa;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,4 +9,7 @@ import lombok.Data;
 @Builder
 @Table
 public class DetectionEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 }

@@ -1,6 +1,6 @@
-package com.office.firezonepjt_user.config;
+package com.office.firezonepjt.config;
 
-import com.office.firezonepjt.member.security.MemberAccessDeniedHandler;
+import com.office.firezonepjt.user.security.MemberAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/member/signup_confirm",
                                 "/member/signin",
                                 "/member/signin_confirm",
+                                "/member/signin_result",
                                 "/member/findpassword",
                                 "/member/findpassword_confirm",
                                 "/member/access_denied").permitAll()
@@ -51,8 +52,8 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/member/signin")
                         .loginProcessingUrl("/member/signin_confirm")
-                        .usernameParameter("id")
-                        .passwordParameter("pw")
+                        .usernameParameter("um_id")
+                        .passwordParameter("um_pw")
                         .successHandler((request, response, authentication) -> {
                             log.info("SIGNIN SUCCESS HANDLER()");
 
@@ -67,7 +68,7 @@ public class SecurityConfig {
                         .failureHandler((request, response, exception) -> {
                             log.info("SIGNIN FAIL HANDLER()");
 
-                            String targetURI = request.getContextPath() + "/member/signin?error";
+                            String targetURI = request.getContextPath() + "/member/signin_result";
                             response.sendRedirect(targetURI);
 
                         })

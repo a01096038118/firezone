@@ -1,4 +1,4 @@
-package com.office.firezonepjt.member;
+package com.office.firezonepjt.user;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -44,6 +44,7 @@ public class MemberDao {
             result = jdbcTemplate.update(sql,
                                             memberDto.getUm_id(),
                                             memberDto.getUm_pw(),
+                                            memberDto.getUm_name(),
                                             memberDto.getUm_mail(),
                                             memberDto.getUm_phone());
         } catch (Exception e) {
@@ -83,6 +84,7 @@ public class MemberDao {
         try {
             result = jdbcTemplate.update(sql,
                                             memberDto.getUm_pw(),
+                                            memberDto.getUm_name(),
                                             memberDto.getUm_mail(),
                                             memberDto.getUm_phone(),
                                             memberDto.getUm_no());
@@ -104,12 +106,13 @@ public class MemberDao {
                     "FROM " +
                         "USER_MEMBER " +
                     "WHERE " +
-                        "UM_ID=? AND UM_MAIL=?";
+                        "UM_ID=? AND UM_NAME=? AND UM_MAIL=?";
 
         return jdbcTemplate.query(
                         sql,
                         this::mapMember,
                         memberDto.getUm_id(),
+                        memberDto.getUm_name(),
                         memberDto.getUm_mail())
                 .stream()
                 .findFirst()

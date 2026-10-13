@@ -8,9 +8,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
 import java.security.SecureRandom;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -100,6 +102,56 @@ public class AdminService {
 
         return  null;
 
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminDto> findAllAdmins() {
+        return adminRepository.findAll(Sort.by(Sort.Direction.DESC, "adNo"))
+                .stream()
+                .map(this::toManagementDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AdminDto> findAdminByNo(int adminNo) {
+        return adminRepository.findById(adminNo)
+                .map(this::toManagementDto);
+    }
+
+    @Transactional
+    public boolean updateAdmin(int adminNo, AdminDto form) {
+        Optional<AdminEntity> optionalAdmin = adminRepository.findById(adminNo);
+        if (optionalAdmin.isEmpty()) {
+            return false;
+        }
+
+        AdminEntity admin = optionalAdmin.get();
+        admin.setAdName(form.getAm_name().trim());
+        admin.setAdMail(form.getAm_mail().trim());
+        admin.setAdPhone(form.getAm_phone().trim());
+        if (form.getAm_pw() != null && !form.getAm_pw().isBlank()) {
+            admin.setAdPw(passwordEncoder.encode(form.getAm_pw()));
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public boolean deleteAdmin(int adminNo, String currentUsername) {
+        Optional<AdminEntity> optionalAdmin = adminRepository.findById(adminNo);
+        if (optionalAdmin.isEmpty()
+                || optionalAdmin.get().getAdId().equals(currentUsername)) {
+            return false;
+        }
+
+        adminRepository.delete(optionalAdmin.get());
+        return true;
+    }
+
+    private AdminDto toManagementDto(AdminEntity admin) {
+        AdminDto dto = admin.toDto();
+        dto.setAm_pw(null);
+        return dto;
     }
 
     @Transactional

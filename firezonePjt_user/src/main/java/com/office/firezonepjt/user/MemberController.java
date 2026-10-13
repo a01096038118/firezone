@@ -1,4 +1,4 @@
-package com.office.firezonepjt.member;
+package com.office.firezonepjt.user;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import com.office.firezonepjt.member.MemberService;
 
 @Slf4j
 @Controller
