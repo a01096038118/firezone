@@ -36,22 +36,15 @@
 
         </div>
 
-        <!-- 탐지 정보 -->
-        <div class="detection">
-            <h2>탐지 정보</h2>
+        <!-- 실시간 탐지 -->
+        <div class="detection_log">
 
             <div class="detection_img">
                 <img id="detection_img" alt="탐지된 차량 사진" hidden>
             </div>
 
-            <div class="detection_info">
-                <dt>탐지 번호</dt>
-                <dd id="detection_no">-</dd>
-
-                <dt>카메라 ID</dt>
-                <dd id="camera_id">-</dd>
-
-                <dt>탐지 구역 ID</dt>
+            <dl class="detction_info">
+                <dt>탐지 구역</dt>
                 <dd id="zone_id">-</dd>
 
                 <dt>위반 유형</dt>
@@ -65,19 +58,25 @@
 
                 <dt>마지막 탐지 시간</dt>
                 <dd id="last_detected">-</dd>
+            </dl>
 
-                <a th:href="@{/dashboard/detection_List}">전체 탐지 기록</a>
+            <a th:href="@{/dashboard/list_detail}">탐지 상세 정보</a>
 
-            </div>
         </div>
 
+        <tbody id="detection_log_list">
+            <tr>
+                <td colspan="5">탐지 기록을 불러오는 중입니다.</td>
+            </tr>
+        </tbody>
+
         <!-- 최근 로그 기록 -->
+        <!--
         <div class="recent_logs">
             <h2>최근 로그 내역</h2>
             <table>
                 <thead>
                 <tr>
-                    <th>탐지 번호</th>
                     <th>차량 번호</th>
                     <th>위반 유형</th>
                     <th>최초 탐지 시간</th>
@@ -86,14 +85,12 @@
                 </tr>
                 </thead>
 
-                <tbody id="detection_log_list">
-                <tr>
-                    <td colspan="5">탐지 기록을 불러오는 중입니다.</td>
-                </tr>
+
                 </tbody>
             </table>
-
         </div>
+            -->
+
     </section>
 
 

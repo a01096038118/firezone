@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard/dashboard.css}">
+
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"/>
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+
+    <section id="detection_wrap">
+        <div class="detection">
+            <h2>탐지 목록</h2>
+
+        <!-- 탐지 목록 -->
+        <div class="detections">
+
+            <div class="detction_info">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>탐지 구역</th>
+                        <th>위반 유형</th>
+                        <th>차량 번호</th>
+                        <th>최초 탐지 시간</th>
+                        <th>마지막 탐지 시간</th>
+                    </tr>
+                    </thead>
+                </table>
+
+            </div>
+        </div>
+
+        <tbody id="detection_log_list">
+            <tr>
+                <td colspan="5">탐지 기록을 불러오는 중입니다.</td>
+            </tr>
+        </tbody>
+
+        <!-- 최근 로그 기록 -->
+        <!--
+        <div class="recent_logs">
+            <h2>최근 로그 내역</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>차량 번호</th>
+                    <th>위반 유형</th>
+                    <th>최초 탐지 시간</th>
+                    <th>마지막 탐지 시간</th>
+                    <th>발생 시간</th>
+                </tr>
+                </thead>
+
+
+                </tbody>
+            </table>
+        </div>
+            -->
+        </div>
+
+    </section>
+
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>
