@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard/detection.css}">
+
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"/>
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+
+    <section id="dashboard_wrap">
+        <!-- 탐지 정보 -->
+        <div class="detection">
+            <h2>탐지 정보</h2>
+
+            <div class="detection_img">
+                <img id="detection_img" alt="탐지된 차량 사진" hidden>
+            </div>
+
+            <div class="detection_info">
+                <dl>
+                    <dt>탐지 번호</dt>
+                    <dd id="detection_no">-</dd>
+
+                    <dt>카메라 ID</dt>
+                    <dd id="camera_id">-</dd>
+
+                    <dt>탐지 구역 ID</dt>
+                    <dd id="zone_id">-</dd>
+
+                    <dt>위반 유형</dt>
+                    <dd id="violation_type">-</dd>
+
+                    <dt>차량 번호</dt>
+                    <dd id="car_number">-</dd>
+
+                    <dt>최초 탐지 시간</dt>
+                    <dd id="first_detected">-</dd>
+
+                    <dt>마지막 탐지 시간</dt>
+                    <dd id="last_detected">-</dd>
+                </dl>
+
+                <a th:href="@{/dashboard/detection}">탐지 목록</a>
+            </div>
+        </div>
+
+
+
+        <!-- 최근 로그 기록 -->
+        <!--
+        <div class="recent_logs">
+            <h2>최근 로그 내역</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>차량 번호</th>
+                    <th>위반 유형</th>
+                    <th>최초 탐지 시간</th>
+                    <th>마지막 탐지 시간</th>
+                    <th>발생 시간</th>
+                </tr>
+                </thead>
+
+
+            </table>
+        </div>
+            -->
+
+    </section>
+
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

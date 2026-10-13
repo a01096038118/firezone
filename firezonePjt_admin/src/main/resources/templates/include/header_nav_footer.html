@@ -24,7 +24,7 @@
                 <a th:href="@{/}">HOME</a>
                 <a th:href="@{/dashboard/monitoring}">관제화면</a>
                 <a th:href="@{/dashboard/detection}">탐지 목록</a>
-                <a sec:authorize="hasAuthority('LOG_VIEW')" th:href="@{/logs}">로그 목록</a>
+                <a sec:authorize="hasAuthority('LOG_VIEW')" th:href="@{/log_List}">로그 목록</a>
                 <a th:href="@{/planner}">Planner</a>
                 <a th:href="@{/admin/members}">회원 조회</a>
                 <a th:href="@{/admin/mypage}">내 정보 조회</a>

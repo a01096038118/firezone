@@ -16,6 +16,8 @@ public class SystemLogDto {
     private String sl_action;               // 시스템 활동 내역
     private LocalDateTime sl_created_at;    // 로그 발생 시간
 
+
+
     public SystemLogEntity logEntity() {
 
         return SystemLogEntity.builder()
@@ -24,6 +26,17 @@ public class SystemLogDto {
                 .slCreated(sl_created_at)   // 로그 발생 시간
                 .build();
 
+    }
+
+    public static SystemLogDto fromLogEntity(SystemLogEntity entity) {
+
+        SystemLogDto logDto = new SystemLogDto();
+
+        logDto.setSl_no(entity.getSlNo());
+        logDto.setSl_action(entity.getSlAction());
+        logDto.setSl_created_at(entity.getSlCreated());
+
+        return logDto;
     }
 
 }
