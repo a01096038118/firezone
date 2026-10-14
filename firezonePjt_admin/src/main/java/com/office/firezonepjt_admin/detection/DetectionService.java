@@ -2,8 +2,7 @@ package com.office.firezonepjt_admin.detection;
 
 import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
-import com.office.firezonepjt_admin.detection.jpa.SystemLogEntity;
-import com.office.firezonepjt_admin.detection.jpa.SystemLogRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -12,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,14 +20,12 @@ import java.util.List;
 @Service
 public class DetectionService {
     private final DetectionRepository detectionRepository;
-    private final SystemLogRepository systemLogRepository;
+    private static final DateTimeFormatter LOG_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
-    public DetectionService(DetectionRepository detectionRepository,
-                            SystemLogRepository systemLogRepository
+    public DetectionService(DetectionRepository detectionRepository
                             ) {
         this.detectionRepository = detectionRepository;
-        this.systemLogRepository = systemLogRepository;
     }
 
 
@@ -45,29 +44,15 @@ public class DetectionService {
     }
 
 
-    // 로그 기록 저장
-    public Integer saveSystemLog(SystemLogDto dto) {
-        log.info("saveSystemLog()");
-
-        // Dto에 담긴 log데이터를 Entity에 옮김
-        SystemLogEntity entity = dto.logEntity();
-
-        // system_log 테이블에 저장
-        SystemLogEntity saved = systemLogRepository.save(entity);
-
-        return saved.getSlNo();
-    }
-
-
     // 탐지 목록 조회
-    public List<DetectionDto> getDetectionList() {
+    public List<DetectionDto> getDetectionList(String cameraId, String zoneNo, int page, int size, String direction) {
         log.info("getDetectionList()");
 
         // 최신 데이터 순서로 조회
         List<DetectionEntity> entities =
                 detectionRepository.findAll(
-                        Sort.by(Sort.Direction.DESC, "dl_no")
-                );
+                        Sort.by(Sort.Direction.DESC, "dlNo"));
+
 
         // Entity 목록을 Dto 목록으로 변환
         List<DetectionDto> dtoList = new ArrayList<>();
@@ -99,47 +84,6 @@ public class DetectionService {
     }
 
 
-    // 로그 목록 조회
-    public List<SystemLogDto> getSystemLog() {
-        log.info("getSystemLog()");
-
-        // 최신 데이터 순서로 조회
-        List<SystemLogEntity> entities =
-                systemLogRepository.findAll(
-                        Sort.by(Sort.Direction.DESC, "sl_no")
-                );
-
-        // Entity 목록을 Dto 목록으로 변환
-        List<SystemLogDto> dtoList = new ArrayList<>();
-
-        for (SystemLogEntity entity : entities) {
-            dtoList.add(SystemLogDto.fromLogEntity(entity));
-
-        }
-        return dtoList;
-
-    }
-
-
-    // 로그 목록 상세 조회
-    public SystemLogDto getSystemLogDetail(Integer slNo) {
-        log.info("getSystemLogDetail()");
-
-        SystemLogEntity entity = findSystemLog(slNo);
-
-        return SystemLogDto.fromLogEntity(entity);
-    }
-
-    private SystemLogEntity findSystemLog(Integer slNo) {
-
-        return systemLogRepository.findById(slNo)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "탐지 기록이 없습니다."
-                ));
-
-    }
-
 
     // 탐지 기록 삭제
     @Transactional
@@ -151,7 +95,7 @@ public class DetectionService {
         detectionRepository.delete(entity);
     }
 
-
+    // CSV 셀 값 변환
     private String csvCell(Object value) {
         // 값이 없으면 빈칸으로 처리
         if (value == null) {
@@ -175,7 +119,10 @@ public class DetectionService {
     public byte[] downloadDetectionCsv() {
         log.info("downloadDetectionCsv()");
 
-        List<DetectionDto> detections = getDetectionList();
+        List<DetectionEntity> entities =
+                detectionRepository.findAll(Sort.by(Sort.Direction.DESC, "dlNo"));
+
+        List<DetectionDto> detections = toDtoList(entities);
 
         StringBuilder csv = new StringBuilder();
 
@@ -196,15 +143,26 @@ public class DetectionService {
             csv.append(csvCell(dto.getDl_violation_type())).append(",");
             csv.append(csvCell(dto.getDl_car_number())).append(",");
             csv.append(csvCell(dto.getDl_image_path())).append(",");
-            csv.append(csvCell(dto.getDl_first_detected_at())).append(",");
-            csv.append(csvCell(dto.getDl_last_detected_at()));
+            csv.append(csvCell(csvTime(dto.getDl_first_detected_at()))).append(",");
+            csv.append(csvCell(csvTime(dto.getDl_last_detected_at())));
             csv.append("\r\n");
         }
         return csv.toString().getBytes(StandardCharsets.UTF_8);
     }
 
+    private String csvTime(LocalDateTime time) {
+        return time == null ? "" : time.format(LOG_FMT);
+    }
 
+    private List<DetectionDto> toDtoList(List<DetectionEntity> entities) {
 
+        List<DetectionDto> dtoList = new ArrayList<>();
+
+        for(DetectionEntity entity : entities) {
+            dtoList.add(DetectionDto.fromEntity(entity));
+        }
+        return dtoList;
+    }
 
 
 }
