@@ -4,6 +4,7 @@ import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.internal.util.Optional;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,50 @@ public class DetectionService {
 
 
     // 탐지 기록 저장
+    @Transactional
     public Integer saveDetection(DetectionDto dto) {
         log.info("saveDetection()");
+
+        // Flask가 보낸 마지막 탐지 시간
+        LocalDateTime detectedAt = dto.getDl_last_detected_at();
+
+        if (detectedAt == null) {
+            throw new IllegalArgumentException("마지막 탐지 시간이 필요합니다.");
+        }
+
+        String carNumber = dto.getDl_car_number();
+
+        // 차량번호가 있어야 같은 차량인지 비교할 수 있음
+        if (carNumber != null && !carNumber.isBlank()) {
+
+            Optional<DetectionEntity> result =
+                    detectionRepository
+                            .findFirstByDlCameraIdAndDlZoneNoAndDlCarNumberAndDlViolationTypeOrderByDlLastDetectedAtDesc(
+                                    dto.getDl_camera_id(),
+                                    dto.getDl_zone_no(),
+                                    carNumber,
+                                    dto.getDl_violation_type()
+                            );
+
+            if (result.isPresent()) {
+
+                DetectionEntity entity = result.get();
+                LocalDateTime lastTime = entity.getDlLastDetectedAt();
+
+                // 기존 마지막 탐지 시간과 1분 이내면 같은 기록으로 판단
+                if (lastTime != null
+                        && !detectedAt.isBefore(lastTime.minusMinutes(1))
+                        && !detectedAt.isAfter(lastTime.plusMinutes(1))) {
+
+                    // 새로운 시간이 더 최근일 때만 수정
+                    if (detectedAt.isAfter(lastTime)) {
+                        entity.setDlLastDetectedAt(detectedAt);
+                    }
+
+                    return entity.getDlNo();
+                }
+            }
+        }
 
         // Dto에 담긴 데이터를 Entity에 옮김
         DetectionEntity entity = dto.toEntity();
