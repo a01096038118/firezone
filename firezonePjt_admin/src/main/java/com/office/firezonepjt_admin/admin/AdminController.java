@@ -1,6 +1,6 @@
 package com.office.firezonepjt_admin.admin;
 
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -52,119 +54,66 @@ public class AdminController {
 
     // 로그인 양식 /signin
     @GetMapping("/signin")
-    public String signin() {
+    public String signin(
+            @RequestParam(value = "deleted", required = false) String deleted,
+            Model model) {
         log.info("signin()");
 
+        model.addAttribute("accountDeleted", deleted != null);
         String nextPage = "admin/signin_form";
 
         return nextPage;
 
     }
 
-    // 계정 수정 양식(/member/modify)
-    @GetMapping("/modify")
-    public String modify(HttpSession session, Model model) {
-        log.info("modify()");
-
-        String nextPage = "admin/modify_form";
-
-        String loginedID = String.valueOf(session.getAttribute("loginedID"));
-        AdminDto loginedAdminDto = adminService.modify(loginedID);
-        model.addAttribute("loginedAdminDto", loginedAdminDto);
-
-        return nextPage;
-
-    }
-
-    @GetMapping("/members")
-    public String members(Model model) {
+    @GetMapping("/members_list")
+    public String membersList(Model model) {
+        log.info("membersList()");
         model.addAttribute("admins", adminService.findAllAdmins());
-        return "admin/members";
-    }
+        model.addAttribute("users", adminService.findAllUsers());
 
-    @GetMapping("/members/{adminNo}")
-    public String memberDetail(@PathVariable int adminNo, Model model) {
-        model.addAttribute("admin", findAdminOr404(adminNo));
-        return "admin/member_detail";
-    }
-
-    @GetMapping("/members/{adminNo}/edit")
-    public String editMember(@PathVariable int adminNo, Model model) {
-        model.addAttribute("admin", findAdminOr404(adminNo));
-        return "admin/member_edit_form";
-    }
-
-    @PostMapping("/members/{adminNo}/edit")
-    public String updateMember(
-            @PathVariable int adminNo,
-            AdminDto form,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        AdminDto existingAdmin = findAdminOr404(adminNo);
-        String password = form.getAm_pw();
-        if (isBlank(form.getAm_name())
-                || isBlank(form.getAm_mail())
-                || isBlank(form.getAm_phone())
-                || form.getAm_name().trim().length() > 20
-                || form.getAm_mail().trim().length() > 20
-                || form.getAm_phone().trim().length() > 20
-                || (password != null && !password.isBlank() && password.length() < 8)) {
-            form.setAm_no(existingAdmin.getAm_no());
-            form.setAm_id(existingAdmin.getAm_id());
-            form.setAm_reg_date(existingAdmin.getAm_reg_date());
-            form.setAm_mod_date(existingAdmin.getAm_mod_date());
-            form.setAm_pw(null);
-            model.addAttribute("admin", form);
-            model.addAttribute(
-                    "errorMessage",
-                    "이름, 이메일, 전화번호를 입력해 주세요(각 20자 이하). 새 비밀번호는 입력할 경우 8자 이상이어야 합니다.");
-            return "admin/member_edit_form";
-        }
-
-        if (!adminService.updateAdmin(adminNo, form)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-        redirectAttributes.addFlashAttribute("message", "회원 정보를 수정했습니다.");
-        return "redirect:/admin/members/" + adminNo;
-    }
-
-    @PostMapping("/members/{adminNo}/delete")
-    public String deleteMember(
-            @PathVariable int adminNo,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes) {
-        boolean deleted = adminService.deleteAdmin(adminNo, authentication.getName());
-        if (!deleted) {
-            redirectAttributes.addFlashAttribute(
-                    "errorMessage", "현재 로그인한 관리자이거나 이미 존재하지 않는 계정은 삭제할 수 없습니다.");
-            return "redirect:/admin/members";
-        }
-
-        redirectAttributes.addFlashAttribute("message", "회원 계정을 삭제했습니다.");
-        return "redirect:/admin/members";
-    }
-
-    private AdminDto findAdminOr404(int adminNo) {
-        return adminService.findAdminByNo(adminNo)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    // 계정 수정 확인(/member/modify_confirm)
-    @PostMapping("/modify_confirm")
-    public String modifyConfirm(AdminDto adminDto, Model model) {
-        log.info("modifyConfirm()");
-
-        String nextPage = "admin/modify_result";
-
-        int result = adminService.modifyConfirm(adminDto);
-        model.addAttribute("result", result);
+        String nextPage = "admin/members";
 
         return nextPage;
+    }
 
+    @GetMapping("/members_list/admin/{adminNo}")
+    public String adminMemberDetail(@PathVariable int adminNo, Model model) {
+
+        AdminDto findAdminOr404 = adminService.findAdminByNo(adminNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        model.addAttribute("admin", findAdminOr404);
+
+        String nextPage = "admin/admin_member_detail";
+
+        return nextPage;
+    }
+
+    @GetMapping("/members_list/user/{userNo}")
+    public String userMemberDetail(@PathVariable int userNo, Model model) {
+
+        Map<String, Object> user = adminService.findUserByNo(userNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        model.addAttribute("user", user);
+
+        String nextPage = "admin/user_member_detail";
+
+        return nextPage;
+    }
+
+    @PostMapping("/members_list/user/{userNo}/approve")
+    public String approveUser(
+            @PathVariable int userNo,
+            RedirectAttributes redirectAttributes) {
+        if (!adminService.approveUser(userNo)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "회원이 없거나 이미 승인된 계정입니다.");
+        } else {
+            redirectAttributes.addFlashAttribute("message", "일반 회원을 승인했습니다.");
+        }
+        return "redirect:/admin/members_list/user/" + userNo;
     }
 
     // 비밀번호 찾기 양식(/member/findpassword)
@@ -216,6 +165,61 @@ public class AdminController {
 
         return nextPage;
 
+    }
+
+    @GetMapping({"/myinfocheck", "/modify"})
+    public String myinfocheck(Authentication authentication, Model model) {
+        log.info("myinfocheck()");
+
+        AdminDto admin = adminService.modify(authentication.getName());
+        if (admin == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        admin.setAm_pw(null);
+        model.addAttribute("admin", admin);
+        return "admin/myinfocheck";
+    }
+
+    @PostMapping({"/myinfocheck", "/modify_confirm"})
+    public String updateMyInfo(
+            AdminDto form,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        String password = form.getAm_pw();
+        if (isBlank(form.getAm_name())
+                || isBlank(form.getAm_mail())
+                || isBlank(form.getAm_phone())
+                || form.getAm_name().trim().length() > 20
+                || form.getAm_mail().trim().length() > 20
+                || form.getAm_phone().trim().length() > 20
+                || (password != null && !password.isBlank() && password.length() < 8)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "이름, 이메일, 전화번호를 입력해 주세요(각 20자 이하). 새 비밀번호는 입력할 경우 8자 이상이어야 합니다.");
+            return "redirect:/admin/myinfocheck";
+        }
+        if (!adminService.updateOwnAdmin(authentication.getName(), form)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        redirectAttributes.addFlashAttribute("message", "내 정보를 수정했습니다.");
+        return "redirect:/admin/myinfocheck";
+    }
+
+    @PostMapping("/myinfocheck/delete")
+    public String deleteMyInfo(
+            Authentication authentication,
+            HttpServletRequest request) {
+        if (!adminService.deleteOwnAdmin(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
+        return "redirect:/admin/signin?deleted";
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
 }

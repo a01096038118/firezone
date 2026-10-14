@@ -88,37 +88,6 @@ public class AdminDao {
         return adminDtos.size() > 0 ? adminDtos.get(0) : null;
     }
 
-    public int updateAdmin(AdminDto adminDto) {
-        log.info("updateAdmin()");
-
-        String sql =    "UPDATE " +
-                "admin_member " +
-                "SET " +
-                "am_pw = ?, " +
-                "am_name = ?, " +
-                "am_mail = ?, " +
-                "am_phone = ? " +
-                "WHERE " +
-                "am_no = ?";
-
-        int result = -1;
-        try {
-            result = jdbcTemplate.update(sql,
-                    adminDto.getAm_pw(),
-                    adminDto.getAm_mail(),
-                    adminDto.getAm_mail(),
-                    adminDto.getAm_phone(),
-                    adminDto.getAm_no());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-        }
-
-        return result;
-
-    }
-
     public AdminDto selectAdminByIDAndMail(AdminDto memberDto) {
         log.info("selectAdminByIDAndMail()");
 

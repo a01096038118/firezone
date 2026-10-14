@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"
+<html lang="ko"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -22,12 +22,18 @@
             SIGN-IN RESULT
         </div>
         <div class="content">
-            <th:block th:if="${loginedID != null}">
+            <th:block th:if="${approvalPending}">
+                승인되지 않아 로그인할 수 없습니다.
+                <p>관리자 승인 후 로그인해 주세요.</p>
+            </th:block>
+            <th:block th:if="${!loginFailed and loginedID != null}">
                 SIGN-IN SUCCESS
             </th:block>
-            <th:block th:if="${loginedID == null}">
-                SIGN-IN FAIL
+            <th:block th:if="${loginFailed and !approvalPending}">
+                로그인에 실패했습니다.
+                <p>아이디 또는 비밀번호를 확인해 주세요.</p>
             </th:block>
+            <p><a th:href="@{/member/signin}">다시 로그인</a></p>
         </div>
     </div>
 </section>

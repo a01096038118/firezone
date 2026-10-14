@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = {
         "com.office.firezonepjt.user",
-        "com.office.firezonepjt.config"
+        "com.office.firezonepjt.config",
+        "com.office.firezonepjt_user"
 })
 
 @EntityScan(basePackages = {

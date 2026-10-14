@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -33,6 +34,10 @@ public class MemberDetailsService implements UserDetailsService {
                     }
 
                     String role = member.getAuthorityEntity().getAuthRoleName();
+                    if ("PRE_USER".equalsIgnoreCase(role)) {
+                        throw new DisabledException("관리자 승인 대기 중인 회원입니다.");
+                    }
+
                     if (role.startsWith("ROLE_")) {
                         role = role.substring("ROLE_".length());
                     }

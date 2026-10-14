@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.security.Principal;
+
 @Slf4j
 @Controller
 @RequestMapping("/member")
@@ -97,13 +99,12 @@ public class MemberController {
 
     // 계정 수정 양식(/member/modify)
     @GetMapping("/modify")
-    public String modify(HttpSession session, Model model) {
+    public String modify(Principal principal, Model model) {
         System.out.println(CLASS_NAME.concat("modify()"));
 
         String nextPage = "member/modify_form";
 
-        String loginedID = String.valueOf(session.getAttribute("loginedID"));
-        MemberDto loginedMemberDto = memberService.modify(loginedID);
+        MemberDto loginedMemberDto = memberService.modify(principal.getName());
         model.addAttribute("loginedMemberDto", loginedMemberDto);
 
         return nextPage;
@@ -112,12 +113,12 @@ public class MemberController {
 
     // 계정 수정 확인(/member/modify_confirm)
     @PostMapping("/modify_confirm")
-    public String modifyConfirm(MemberDto memberDto, Model model) {
+    public String modifyConfirm(MemberDto memberDto, Principal principal, Model model) {
         System.out.println(CLASS_NAME.concat("modifyConfirm()"));
 
         String nextPage = "member/modify_result";
 
-        int result = memberService.modifyConfirm(memberDto);
+        int result = memberService.modifyConfirm(principal.getName(), memberDto);
         model.addAttribute("result", result);
 
         return nextPage;
@@ -152,11 +153,14 @@ public class MemberController {
     @GetMapping("/signin_result")
     public String signinResult(
             @RequestParam(value = "loginedID", required = false) String loginedID,
+            @RequestParam(value = "error", required = false) String error,
             Model model) {
         log.info("signinResult");
 
         String nextPage = "member/signin_result";
         model.addAttribute("loginedID", loginedID);
+        model.addAttribute("approvalPending", "approval_pending".equalsIgnoreCase(error));
+        model.addAttribute("loginFailed", error != null);
 
         return nextPage;
 

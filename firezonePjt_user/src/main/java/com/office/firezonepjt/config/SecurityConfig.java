@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,7 +45,7 @@ public class SecurityConfig {
                                 "/member/findpassword",
                                 "/member/findpassword_confirm",
                                 "/member/access_denied").permitAll()
-                        .requestMatchers("/planner/**").hasAnyRole("USER")
+                        .requestMatchers("/planner/**").hasAnyRole("APPR_USER", "USER")
                         .anyRequest().authenticated()
                 );
 
@@ -66,9 +67,13 @@ public class SecurityConfig {
 
                         })
                         .failureHandler((request, response, exception) -> {
-                            log.info("SIGNIN FAIL HANDLER()");
+                            log.info("SIGNIN FAIL HANDLER(): {}", exception.getClass().getSimpleName());
 
-                            String targetURI = request.getContextPath() + "/member/signin_result";
+                            String error = isApprovalPending(exception)
+                                    ? "approval_pending"
+                                    : "invalid_credentials";
+                            String targetURI = request.getContextPath()
+                                    + "/member/signin_result?error=" + error;
                             response.sendRedirect(targetURI);
 
                         })
@@ -92,6 +97,21 @@ public class SecurityConfig {
 
         return http.build();
 
+    }
+
+    private static boolean isApprovalPending(Throwable exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof DisabledException) {
+                return true;
+            }
+            Throwable nextCause = cause.getCause();
+            if (nextCause == cause) {
+                break;
+            }
+            cause = nextCause;
+        }
+        return false;
     }
 
 }

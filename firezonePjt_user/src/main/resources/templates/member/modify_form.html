@@ -21,7 +21,7 @@
 <section>
     <div id="section_wrap">
         <div class="word">
-            MODIFY FORM
+            내 정보 조회 / 수정
         </div>
         <div class="content">
             <form
@@ -29,12 +29,27 @@
             name="modify_form"
             method="post">
 
-                <input type="hidden" name="no" th:value="${loginedMemberDto.no}">
-
-                <input type="text" name="id" th:value="${loginedMemberDto.id}" readonly disabled ><br>
-                <input type="password" name="pw" placeholder="INPUT MEMBER PW"><br>
-                <input type="email" name="mail" th:value="${loginedMemberDto.mail}" placeholder="INPUT MEMBER MAIL"><br>
-                <input type="text" name="phone" th:value="${loginedMemberDto.phone}" placeholder="INPUT MEMBER PHONE"><br>
+                <label>아이디
+                    <input type="text" th:value="${loginedMemberDto.um_id}" readonly><br>
+                </label>
+                <label>이름
+                    <input type="text" name="um_name" th:value="${loginedMemberDto.um_name}" required><br>
+                </label>
+                <label>이메일
+                    <input type="email" name="um_mail" th:value="${loginedMemberDto.um_mail}" required><br>
+                </label>
+                <label>연락처
+                    <input type="text" name="um_phone" th:value="${loginedMemberDto.um_phone}" required><br>
+                </label>
+                <label>비밀번호
+                    <input type="password" name="um_pw" placeholder="변경할 때만 입력"><br>
+                </label>
+                <p th:if="${loginedMemberDto.um_reg_date != null}">
+                    가입일: <span th:text="${loginedMemberDto.um_reg_date}"></span>
+                </p>
+                <p th:if="${loginedMemberDto.um_mod_date != null}">
+                    최근 수정일: <span th:text="${loginedMemberDto.um_mod_date}"></span>
+                </p>
                 <input type="button" value="modify" onclick="modifyForm();">
                 <input type="reset" value="reset">
 

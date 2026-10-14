@@ -58,18 +58,15 @@ function modifyForm() {
 
     let form = document.modify_form;
 
-    if (form.pw.value === '') {
-        alert('INPUT MEMBER PW!!');
-        form.pw.focus();
-
-    } else if (form.mail.value === '') {
+    if (form.um_name.value === '') {
+        alert('INPUT MEMBER NAME!!');
+        form.um_name.focus();
+    } else if (form.um_mail.value === '') {
         alert('INPUT MEMBER MAIL!!');
-        form.mail.focus();
-
-    } else if (form.phone.value === '') {
+        form.um_mail.focus();
+    } else if (form.um_phone.value === '') {
         alert('INPUT MEMBER PHONE!!');
-        form.phone.focus();
-
+        form.um_phone.focus();
     } else {
         form.submit();
 
