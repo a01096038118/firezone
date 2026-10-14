@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"
+<html lang="ko"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -24,6 +24,7 @@
             SIGN-IN FORM
         </div>
         <div class="content">
+            <p th:if="${accountDeleted}">관리자 계정이 삭제되었습니다.</p>
             <form
             th:action="@{/admin/signin_confirm}"
             name="signin_form"

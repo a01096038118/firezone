@@ -17,8 +17,8 @@
     <div class="page-heading">
         <div>
             <p class="eyebrow">ADMINISTRATION</p>
-            <h1>관리자 상세 정보</h1>
-            <p class="page-description">계정 정보를 확인합니다.</p>
+            <h1>관리자 계정 조회</h1>
+            <p class="page-description">관리자 계정은 회원 조회 화면에서 확인만 할 수 있습니다.</p>
         </div>
     </div>
 
@@ -36,14 +36,7 @@
         </dl>
 
         <div class="form-actions">
-            <a class="button button-secondary" th:href="@{/admin/members}">목록</a>
-            <a class="button button-primary"
-               th:href="@{/admin/members/{adminNo}/edit(adminNo=${admin.am_no})}">수정</a>
-            <form th:action="@{/admin/members/{adminNo}/delete(adminNo=${admin.am_no})}"
-                  method="post"
-                  onsubmit="return confirm('이 관리자 계정을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">
-                <button class="button button-danger" type="submit">삭제</button>
-            </form>
+            <a class="button button-secondary" th:href="@{/admin/members_list}">목록</a>
         </div>
     </section>
 </main>
