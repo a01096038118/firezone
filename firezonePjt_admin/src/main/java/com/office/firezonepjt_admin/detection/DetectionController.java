@@ -1,5 +1,6 @@
 package com.office.firezonepjt_admin.detection;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Slf4j
+@Valid
 @Controller
 @ResponseBody
 @RequestMapping("/detections")
@@ -29,21 +31,34 @@ public class DetectionController {
         return detectionService.saveDetection(dto);
     }
 
-    // 로그 기록 저장
-    @PostMapping("/log")
-    public Integer saveSystemLog(@RequestBody SystemLogDto dto) {
-        log.info("saveSystemLog()");
-
-        return detectionService.saveSystemLog(dto);
-    }
-
-
     // 탐지 목록 조회
     @GetMapping("/list")
-    public List<DetectionDto> getDetectionList() {
+    public List<DetectionDto> getDetectionList(
+            // 카메라 ID 검색
+            @RequestParam(name = "cameraId", required = false)
+            String cameraId,
+            // zone(구역번호 조회)
+            @RequestParam(name = "zoneNo", required = false)
+            String zoneNo,
+            // 페이지 번호
+            @RequestParam(name = "page", defaultValue = "1")
+            int page,
+            // 페이지 기록 수
+            @RequestParam(name = "size", defaultValue = "10")
+            int size,
+            // 탐지 번호 정렬
+            @RequestParam(name = "direction", defaultValue = "desc")
+            String direction
+    ) {
         log.info("getDetectionList()");
 
-        return detectionService.getDetectionList();
+        return detectionService.getDetectionList(
+                cameraId,
+                zoneNo,
+                page,
+                size,
+                direction
+        );
     }
 
 
@@ -54,23 +69,6 @@ public class DetectionController {
         log.info("getDetectionDetail()");
 
         return detectionService.getDetectionDetail(dl_no);
-    }
-
-    // 로그 목록 조회
-    @GetMapping("/log_list")
-    public List<SystemLogDto> getSystemLog() {
-        log.info("getSystemLog()");
-
-        return detectionService.getSystemLog();
-    }
-
-    // 로그 목록 상세 조회
-    @GetMapping("/log_detail")
-    public SystemLogDto getSystemLogDetail(
-            @RequestParam("sl_no") Integer sl_no) {
-        log.info("getSystemLogDetail()");
-
-        return detectionService.getSystemLogDetail(sl_no);
     }
 
 

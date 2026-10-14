@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Builder
-@Table(name = "detection_log", uniqueConstraints = {@UniqueConstraint(columnNames = "ID")})
+@Table(name = "detection_log")
 @AllArgsConstructor
 @NoArgsConstructor
 public class DetectionEntity {
