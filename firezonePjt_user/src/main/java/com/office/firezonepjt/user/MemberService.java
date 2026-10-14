@@ -115,17 +115,22 @@ public class MemberService {
     }
 
     @Transactional
-    public int modifyConfirm(MemberDto memberDto) {
+    public int modifyConfirm(String loginedID, MemberDto memberDto) {
         System.out.println(CLASS_NAME.concat("modifyConfirm()"));
 
-        String encodedPW = passwordEncoder.encode(memberDto.getUm_pw());
-        memberDto.setUm_pw(encodedPW);
+        if (memberDto.getUm_name() == null || memberDto.getUm_name().isBlank()
+                || memberDto.getUm_mail() == null || memberDto.getUm_mail().isBlank()
+                || memberDto.getUm_phone() == null || memberDto.getUm_phone().isBlank()) {
+            return MODIFY_FAIL;
+        }
 
         Optional<MemberEntity> optionalMember =
-                memberRepository.findById(memberDto.getUm_no());
+                memberRepository.findByMemId(loginedID);
         if (optionalMember.isPresent()) {
             MemberEntity memberEntity = optionalMember.get();
-            memberEntity.setMemPw(memberDto.getUm_pw());
+            if (memberDto.getUm_pw() != null && !memberDto.getUm_pw().isBlank()) {
+                memberEntity.setMemPw(passwordEncoder.encode(memberDto.getUm_pw()));
+            }
             memberEntity.setMemName(memberDto.getUm_name());
             memberEntity.setMemMail(memberDto.getUm_mail());
             memberEntity.setMemPhone(memberDto.getUm_phone());

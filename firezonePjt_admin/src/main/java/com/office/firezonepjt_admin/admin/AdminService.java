@@ -3,16 +3,19 @@ package com.office.firezonepjt_admin.admin;
 import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import com.office.firezonepjt_admin.admin.jpa.AdminRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -30,15 +33,18 @@ public class AdminService {
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
 
     final private AdminDao adminDao;
+    final private UserMemberDao userMemberDao;
     final private PasswordEncoder passwordEncoder;
     final private JavaMailSender javaMailSender;
     final private AdminRepository adminRepository;
 
     public AdminService(AdminDao adminDao,
+                         UserMemberDao userMemberDao,
                          PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
                          AdminRepository adminRepository) {
         this.adminDao = adminDao;
+        this.userMemberDao = userMemberDao;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.adminRepository = adminRepository;
@@ -106,10 +112,16 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<AdminDto> findAllAdmins() {
+        log.info("findAllAdmins()");
         return adminRepository.findAll(Sort.by(Sort.Direction.DESC, "adNo"))
                 .stream()
                 .map(this::toManagementDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> findAllUsers() {
+        return userMemberDao.findAll();
     }
 
     @Transactional(readOnly = true)
@@ -118,10 +130,24 @@ public class AdminService {
                 .map(this::toManagementDto);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Map<String, Object>> findUserByNo(int userNo) {
+        return userMemberDao.findByNo(userNo);
+    }
+
     @Transactional
-    public boolean updateAdmin(int adminNo, AdminDto form) {
-        Optional<AdminEntity> optionalAdmin = adminRepository.findById(adminNo);
-        if (optionalAdmin.isEmpty()) {
+    public boolean approveUser(int userNo) {
+        return userMemberDao.approve(userNo);
+    }
+
+    @Transactional
+    public boolean updateOwnAdmin(String currentUsername, AdminDto form) {
+        log.info("updateOwnAdmin()");
+        Optional<AdminEntity> optionalAdmin = adminRepository.findByAdId(currentUsername);
+        if (optionalAdmin.isEmpty()
+                || isBlank(form.getAm_name())
+                || isBlank(form.getAm_mail())
+                || isBlank(form.getAm_phone())) {
             return false;
         }
 
@@ -132,50 +158,29 @@ public class AdminService {
         if (form.getAm_pw() != null && !form.getAm_pw().isBlank()) {
             admin.setAdPw(passwordEncoder.encode(form.getAm_pw()));
         }
-
         return true;
     }
 
     @Transactional
-    public boolean deleteAdmin(int adminNo, String currentUsername) {
-        Optional<AdminEntity> optionalAdmin = adminRepository.findById(adminNo);
-        if (optionalAdmin.isEmpty()
-                || optionalAdmin.get().getAdId().equals(currentUsername)) {
+    public boolean deleteOwnAdmin(String currentUsername) {
+        log.info("deleteOwnAdmin()");
+        Optional<AdminEntity> optionalAdmin = adminRepository.findByAdId(currentUsername);
+        if (optionalAdmin.isEmpty()) {
             return false;
         }
-
         adminRepository.delete(optionalAdmin.get());
         return true;
     }
 
     private AdminDto toManagementDto(AdminEntity admin) {
+        log.info("toManagementDto()");
         AdminDto dto = admin.toDto();
         dto.setAm_pw(null);
         return dto;
     }
 
-    @Transactional
-    public int modifyConfirm(AdminDto adminDto) {
-        log.info("modifyConfirm()");
-
-        String encodedPW = passwordEncoder.encode(adminDto.getAm_pw());
-        adminDto.setAm_pw(encodedPW);
-
-        Optional<AdminEntity> optionalAdmin =
-                adminRepository.findById(adminDto.getAm_no());
-        if (optionalAdmin.isPresent()) {
-            AdminEntity adminEntity = optionalAdmin.get();
-            adminEntity.setAdPw(adminDto.getAm_pw());
-            adminEntity.setAdMail(adminDto.getAm_mail());
-            adminEntity.setAdPhone(adminDto.getAm_phone());
-
-            return MODIFY_SUCCESS;
-
-        } else {
-            return MODIFY_FAIL;
-
-        }
-
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     public int findpasswordConfirm(AdminDto adminDto) {
