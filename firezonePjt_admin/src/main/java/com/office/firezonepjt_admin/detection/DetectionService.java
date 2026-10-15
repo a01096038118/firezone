@@ -4,7 +4,6 @@ import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.internal.util.Optional;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -59,16 +59,16 @@ public class DetectionService {
             if (result.isPresent()) {
 
                 DetectionEntity entity = result.get();
-                LocalDateTime lastTime = entity.getDlLastDetectedAt();
+                LocalDateTime lastTime = entity.getDlFirstTime();
 
                 // 기존 마지막 탐지 시간과 1분 이내면 같은 기록으로 판단
                 if (lastTime != null
-                        && !detectedAt.isBefore(lastTime.minusMinutes(1))
-                        && !detectedAt.isAfter(lastTime.plusMinutes(1))) {
+                        && !detectedAt.isBefore(lastTime.minusSeconds(30))
+                        && !detectedAt.isAfter(lastTime.plusSeconds(30))) {
 
                     // 새로운 시간이 더 최근일 때만 수정
                     if (detectedAt.isAfter(lastTime)) {
-                        entity.setDlLastDetectedAt(detectedAt);
+                        entity.setDlLastTime(detectedAt);
                     }
 
                     return entity.getDlNo();
