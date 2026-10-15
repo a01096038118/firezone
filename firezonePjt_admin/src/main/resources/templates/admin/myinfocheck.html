@@ -64,11 +64,17 @@
     <section class="danger-zone">
         <div>
             <h2>관리자 계정 삭제</h2>
-            <p>삭제하면 로그아웃되며 계정을 복구할 수 없습니다.</p>
+            <p>현재 비밀번호를 확인한 후 삭제하며, 계정을 복구할 수 없습니다.</p>
         </div>
         <form th:action="@{/admin/myinfocheck/delete}"
               method="post"
               onsubmit="return confirm('현재 로그인한 관리자 계정을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">
+            <label for="withdraw-password">현재 비밀번호</label>
+            <input id="withdraw-password"
+                   type="password"
+                   name="currentPassword"
+                   autocomplete="current-password"
+                   required>
             <button class="button button-danger" type="submit">내 계정 삭제</button>
         </form>
     </section>

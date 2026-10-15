@@ -44,15 +44,15 @@
                 </thead>
                 <tbody>
                 <tr th:each="user : ${users}">
-                    <td th:text="${user['userNo']}">1</td>
-                    <td class="member-id" th:text="${user['userId']}">user</td>
-                    <td th:text="${user['name']}">회원</td>
-                    <td th:text="${user['email']}">user@example.com</td>
-                    <td th:text="${user['phone']}">010-0000-0000</td>
-                    <td th:text="${user['registeredAt'] != null ? user['registeredAt'] : '-'}">-</td>
+                    <td th:text="${user.userNo}">1</td>
+                    <td class="member-id" th:text="${user.userId}">user</td>
+                    <td th:text="${user.name}">회원</td>
+                    <td th:text="${user.email}">user@example.com</td>
+                    <td th:text="${user.phone}">010-0000-0000</td>
+                    <td th:text="${user.registeredAt != null ? user.registeredAt : '-'}">-</td>
                     <td>
                         <a class="button button-secondary"
-                           th:href="@{/admin/members_list/user/{userNo}(userNo=${user['userNo']})}">상세</a>
+                           th:href="@{/admin/members_list/user/{userNo}(userNo=${user.userNo})}">상세</a>
                     </td>
 
                 </tr>

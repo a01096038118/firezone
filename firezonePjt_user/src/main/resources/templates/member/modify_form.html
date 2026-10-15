@@ -24,6 +24,7 @@
             내 정보 조회 / 수정
         </div>
         <div class="content">
+            <p th:if="${errorMessage}" th:text="${errorMessage}"></p>
             <form
             th:action="@{/member/modify_confirm}"
             name="modify_form"
@@ -54,6 +55,22 @@
                 <input type="reset" value="reset">
 
             </form>
+
+            <section class="danger-zone">
+                <h3>회원 탈퇴</h3>
+                <p>탈퇴하려면 현재 비밀번호를 입력해 주세요. 탈퇴한 계정은 복구할 수 없습니다.</p>
+                <form th:action="@{/member/withdraw}"
+                      method="post"
+                      onsubmit="return confirm('정말 탈퇴하시겠습니까? 계정을 복구할 수 없습니다.');">
+                    <label for="withdraw-password">현재 비밀번호</label>
+                    <input id="withdraw-password"
+                           type="password"
+                           name="currentPassword"
+                           autocomplete="current-password"
+                           required>
+                    <button type="submit">회원 탈퇴</button>
+                </form>
+            </section>
         </div>
     </div>
 </section>

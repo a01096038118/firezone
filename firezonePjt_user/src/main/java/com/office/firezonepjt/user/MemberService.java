@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
@@ -37,6 +36,7 @@ public class MemberService {
     final private JavaMailSender javaMailSender;
     final private MemberRepository memberRepository;
     final private AuthorityRepository authorityRepository;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public MemberService(MemberDao memberDao,
                          PasswordEncoder passwordEncoder,
@@ -144,6 +144,25 @@ public class MemberService {
 
     }
 
+    @Transactional
+    public boolean withdraw(String loginedID, String currentPassword) {
+        if (currentPassword == null || currentPassword.isBlank()) {
+            return false;
+        }
+
+        Optional<MemberEntity> optionalMember = memberRepository.findByMemId(loginedID);
+        if (optionalMember.isEmpty()
+                || !passwordEncoder.matches(currentPassword, optionalMember.get().getMemPw())) {
+            return false;
+        }
+
+        MemberEntity member = optionalMember.get();
+        memberRepository.deleteAuthorityLinkByMemberNo(member.getMemNo());
+        memberRepository.delete(member);
+        return true;
+    }
+
+    @Transactional
     public int findpasswordConfirm(MemberDto memberDto) {
         System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
 
@@ -169,31 +188,20 @@ public class MemberService {
     private String createNewPassword() {
         System.out.println("[MemberService] createNewPassword()");
 
-        char[] chars = new char[] {
+        char[] chars = {
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
                 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
                 'u', 'v', 'w', 'x', 'y', 'z'
         };
 
-        StringBuffer stringBuffer = new StringBuffer();
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.setSeed(new Date().getTime());
-
-        int index = 0;
-        int length = chars.length;
-        for (int i = 0; i < 8; i++) {
-            index = secureRandom.nextInt(length);
-
-            if (index % 2 == 0)
-                stringBuffer.append(String.valueOf(chars[index]).toUpperCase());
-            else
-                stringBuffer.append(String.valueOf(chars[index]).toLowerCase());
+        StringBuilder password = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+                char character = chars[SECURE_RANDOM.nextInt(chars.length)];
+                password.append(i % 2 == 0 ? Character.toUpperCase(character) : character);
         }
 
-        System.out.println("[MemberService] NEW PASSWORD: " + stringBuffer.toString());
-
-        return stringBuffer.toString();
+        return password.toString();
 
     }
 
@@ -201,10 +209,9 @@ public class MemberService {
         System.out.println("[MemberService] sendNewPasswordByMail()");
 
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setTo("nikecafe@naver.com");
+        simpleMailMessage.setTo(toMailAddr);
         simpleMailMessage.setSubject("[Firezone] 새 비밀번호 안내입니다.");
         simpleMailMessage.setText("새 비밀번호: " + newPassword);
-        simpleMailMessage.setFrom("@gmail.com");
 
         javaMailSender.send(simpleMailMessage);
 
