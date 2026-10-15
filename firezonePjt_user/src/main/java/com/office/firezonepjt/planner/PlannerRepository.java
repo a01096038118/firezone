@@ -1,4 +1,4 @@
-package com.office.firezonepjt_user.planner;
+package com.office.firezonepjt.planner;
 
 public interface PlannerRepository {
 }

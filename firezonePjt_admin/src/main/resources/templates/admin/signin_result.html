@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}" />
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+<section>
+    <div id="section_wrap">
+        <div class="word">
+            SIGN-IN RESULT
+        </div>
+        <div class="content">
+            <th:block th:if="${loginError}">
+                로그인에 실패하였습니다.
+                <p>아이디 또는 비밀번호를 확인해 주세요.</p>
+                <a th:href="@{/admin/signin}">다시 로그인</a>
+            </th:block>
+            <th:block th:if="${!loginError and loginedID != null}">
+                로그인 성공!
+                <a th:href="@{/}">홈으로</a>
+            </th:block>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

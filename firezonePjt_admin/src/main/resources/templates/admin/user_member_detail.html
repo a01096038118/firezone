@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>일반 회원 상세 정보</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-members.css}">
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"></header>
+<nav th:replace="~{/include/header_nav_footer.html::nav}"></nav>
+
+<main class="admin-members">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">MEMBER DETAILS</p>
+            <h1>일반 회원 상세 정보</h1>
+        </div>
+    </div>
+
+    <p class="notice success" th:if="${message}" th:text="${message}"></p>
+    <p class="notice error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <section class="detail-card">
+        <dl class="detail-list">
+            <div><dt>회원 번호</dt><dd th:text="${user.userNo}">1</dd></div>
+            <div><dt>아이디</dt><dd th:text="${user.userId}">user</dd></div>
+            <div><dt>이름</dt><dd th:text="${user.name}">회원</dd></div>
+            <div><dt>이메일</dt><dd th:text="${user.email}">user@example.com</dd></div>
+            <div><dt>전화번호</dt><dd th:text="${user.phone}">010-0000-0000</dd></div>
+            <div>
+                <dt>가입일</dt>
+                <dd th:text="${user.registeredAt != null ? user.registeredAt : '-'}">-</dd>
+            </div>
+            <div>
+                <dt>수정일</dt>
+                <dd th:text="${user.modifiedAt != null ? user.modifiedAt : '-'}">-</dd>
+            </div>
+            <div>
+                <dt>권한</dt>
+                <dd th:text="${user.authorityEntity != null ? user.authorityEntity.roleName : '권한 미설정'}">PRE_USER</dd>
+            </div>
+            <div>
+                <dt>승인 상태</dt>
+                <dd th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}">미승인</dd>
+                <dd th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'APPR_USER'}">승인 완료</dd>
+                <dd th:if="${user.authorityEntity == null or (user.authorityEntity.roleName != 'PRE_USER' and user.authorityEntity.roleName != 'APPR_USER')}">확인 필요</dd>
+            </div>
+        </dl>
+        <div class="form-actions">
+            <a class="button button-secondary" th:href="@{/admin/members_list}">회원 목록</a>
+            <form th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
+                  th:action="@{/admin/members_list/user/{userNo}/approve(userNo=${user.userNo})}"
+                  method="post">
+                <button class="button button-primary" type="submit">회원 승인</button>
+            </form>
+            <form th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
+                  method="post"
+                  onsubmit="return confirm('이 회원을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">
+                <button class="button button-danger" type="submit">회원 삭제</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"></footer>
+</body>
+</html>

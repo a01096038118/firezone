@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+
+    <script th:src="@{/js/admin.js}"></script>
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}" />
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+<section>
+    <div id="section_wrap">
+        <div class="word">
+            SIGN-UP FORM
+        </div>
+        <div class="content">
+            <form
+            th:action="@{/admin/signup_confirm}"
+            name="signup_form"
+            method="post">
+
+                <input type="text" name="am_id" placeholder="INPUT NEW ADMIN ID"><br>
+                <input type="password" name="am_pw" placeholder="INPUT NEW ADMIN PW"><br>
+                <input type="name" name="am_name" placeholder="INPUT NEW ADMIN NAME"><br>
+                <input type="email" name="am_mail" placeholder="INPUT NEW ADMIN MAIL"><br>
+                <input type="text" name="am_phone" placeholder="INPUT NEW ADMIN PHONE"><br>
+                <input type="button" value="sign-up" onclick="signupForm();">
+                <input type="reset" value="reset">
+
+            </form>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

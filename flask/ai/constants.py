@@ -1,0 +1,2 @@
+CAR = 0
+NUMBER_PLATE = 1

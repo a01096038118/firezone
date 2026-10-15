@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+
+    <script th:src="@{/js/admin.js}"></script>
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}" />
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+<section>
+    <div id="section_wrap">
+        <div class="word">
+            SIGN-IN FORM
+        </div>
+        <div class="content">
+            <p th:if="${accountDeleted}">관리자 계정이 삭제되었습니다.</p>
+            <form
+            th:action="@{/admin/signin_confirm}"
+            name="signin_form"
+            method="post">
+
+                <input type="text" name="am_id" placeholder="INPUT ADMIN ID"><br>
+                <input type="password" name="am_pw" placeholder="INPUT ADMIN PW"><br>
+                <input type="button" value="sign-in" onclick="signinForm();">
+                <input type="reset" value="reset">
+            </form>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

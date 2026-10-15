@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}" />
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+<section>
+    <div id="section_wrap">
+        <div class="word">
+            SIGN-IN RESULT
+        </div>
+        <div class="content">
+            <th:block th:if="${approvalPending}">
+                승인되지 않아 로그인할 수 없습니다.
+                <p>관리자 승인 후 로그인해 주세요.</p>
+            </th:block>
+            <th:block th:if="${!loginFailed and loginedID != null}">
+                SIGN-IN SUCCESS
+            </th:block>
+            <th:block th:if="${loginFailed and !approvalPending}">
+                로그인에 실패했습니다.
+                <p>아이디 또는 비밀번호를 확인해 주세요.</p>
+            </th:block>
+            <p><a th:href="@{/member/signin}">다시 로그인</a></p>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

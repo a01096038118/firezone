@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>내 정보 조회</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-members.css}">
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"></header>
+<nav th:replace="~{/include/header_nav_footer.html::nav}"></nav>
+
+<main class="admin-members">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">MY ACCOUNT</p>
+            <h1>내 정보 조회</h1>
+            <p class="page-description">현재 로그인한 관리자 계정의 정보만 수정하거나 삭제할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <p class="notice success" th:if="${message}" th:text="${message}"></p>
+    <p class="notice error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <form class="edit-card"
+          th:action="@{/admin/myinfocheck}"
+          th:object="${admin}"
+          method="post">
+        <div class="form-field">
+            <label for="am_id">아이디</label>
+            <input id="am_id" type="text" th:value="*{am_id}" readonly>
+            <small>아이디는 변경할 수 없습니다.</small>
+        </div>
+        <div class="form-field">
+            <label for="am_name">이름</label>
+            <input id="am_name" type="text" th:field="*{am_name}" maxlength="20" required>
+        </div>
+        <div class="form-field">
+            <label for="am_mail">이메일</label>
+            <input id="am_mail" type="email" th:field="*{am_mail}" maxlength="20" required>
+        </div>
+        <div class="form-field">
+            <label for="am_phone">전화번호</label>
+            <input id="am_phone" type="tel" th:field="*{am_phone}" maxlength="20" required>
+        </div>
+        <div class="form-field">
+            <label for="am_pw">새 비밀번호</label>
+            <input id="am_pw" name="am_pw" type="password" minlength="8" autocomplete="new-password">
+            <small>비밀번호를 변경하지 않으려면 비워 두세요.</small>
+        </div>
+        <dl class="detail-list">
+            <div><dt>가입일</dt><dd th:text="${admin.am_reg_date != null ? admin.am_reg_date : '-'}">-</dd></div>
+            <div><dt>최근 수정일</dt><dd th:text="${admin.am_mod_date != null ? admin.am_mod_date : '-'}">-</dd></div>
+        </dl>
+        <div class="form-actions">
+            <button class="button button-primary" type="submit">내 정보 저장</button>
+        </div>
+    </form>
+
+    <section class="danger-zone">
+        <div>
+            <h2>관리자 계정 삭제</h2>
+            <p>현재 비밀번호를 확인한 후 삭제하며, 계정을 복구할 수 없습니다.</p>
+        </div>
+        <form th:action="@{/admin/myinfocheck/delete}"
+              method="post"
+              onsubmit="return confirm('현재 로그인한 관리자 계정을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">
+            <label for="withdraw-password">현재 비밀번호</label>
+            <input id="withdraw-password"
+                   type="password"
+                   name="currentPassword"
+                   autocomplete="current-password"
+                   required>
+            <button class="button button-danger" type="submit">내 계정 삭제</button>
+        </form>
+    </section>
+</main>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 관리</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-members.css}">
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"></header>
+<nav th:replace="~{/include/header_nav_footer.html::nav}"></nav>
+
+<main class="admin-members">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">ADMINISTRATION</p>
+            <h1>회원 관리</h1>
+            <p class="page-description">등록된 일반 회원과 관리자 계정을 조회합니다.</p>
+        </div>
+        <span class="member-count">
+            전체 <strong th:text="${#lists.size(admins) + #lists.size(users)}">0</strong>명
+        </span>
+    </div>
+
+    <p class="notice success" th:if="${message}" th:text="${message}"></p>
+    <p class="notice error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <section class="member-section">
+        <h2>일반 회원</h2>
+        <div class="table-wrap" th:if="${!#lists.isEmpty(users)}">
+            <table class="member-table">
+                <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>아이디</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>전화번호</th>
+                    <th>가입일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.userNo}">1</td>
+                    <td class="member-id" th:text="${user.userId}">user</td>
+                    <td th:text="${user.name}">회원</td>
+                    <td th:text="${user.email}">user@example.com</td>
+                    <td th:text="${user.phone}">010-0000-0000</td>
+                    <td th:text="${user.registeredAt != null ? user.registeredAt : '-'}">-</td>
+                    <td>
+                        <a class="button button-secondary"
+                           th:href="@{/admin/members_list/user/{userNo}(userNo=${user.userNo})}">상세</a>
+                    </td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(users)}">
+            <p>등록된 일반 회원이 없습니다.</p>
+        </div>
+    </section>
+
+    <section class="member-section">
+        <h2>관리자 계정</h2>
+        <div class="table-wrap" th:if="${!#lists.isEmpty(admins)}">
+            <table class="member-table">
+                <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>아이디</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>전화번호</th>
+                    <th>가입일</th>
+                    <th>조회</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="admin : ${admins}">
+                    <td th:text="${admin.am_no}">1</td>
+                    <td class="member-id" th:text="${admin.am_id}">admin</td>
+                    <td th:text="${admin.am_name}">관리자</td>
+                    <td th:text="${admin.am_mail}">admin@example.com</td>
+                    <td th:text="${admin.am_phone}">010-0000-0000</td>
+                    <td th:text="${admin.am_reg_date != null ? admin.am_reg_date : '-'}">-</td>
+                    <td>
+                        <a class="button button-secondary"
+                           th:href="@{/admin/members_list/admin/{adminNo}(adminNo=${admin.am_no})}">상세</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(admins)}">
+            <p>등록된 관리자 계정이 없습니다.</p>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"></footer>
+</body>
+</html>

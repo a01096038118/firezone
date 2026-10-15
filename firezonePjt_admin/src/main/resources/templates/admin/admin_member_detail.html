@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 상세 정보</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-members.css}">
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"></header>
+<nav th:replace="~{/include/header_nav_footer.html::nav}"></nav>
+
+<main class="admin-members">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">ADMINISTRATION</p>
+            <h1>관리자 계정 조회</h1>
+            <p class="page-description">관리자 계정은 회원 조회 화면에서 확인만 할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <p class="notice success" th:if="${message}" th:text="${message}"></p>
+
+    <section class="detail-card">
+        <dl class="detail-list">
+            <div><dt>회원 번호</dt><dd th:text="${admin.am_no}">1</dd></div>
+            <div><dt>아이디</dt><dd th:text="${admin.am_id}">admin</dd></div>
+            <div><dt>이름</dt><dd th:text="${admin.am_name}">관리자</dd></div>
+            <div><dt>이메일</dt><dd th:text="${admin.am_mail}">admin@example.com</dd></div>
+            <div><dt>전화번호</dt><dd th:text="${admin.am_phone}">010-0000-0000</dd></div>
+            <div><dt>가입일</dt><dd th:text="${admin.am_reg_date != null ? admin.am_reg_date : '-'}">-</dd></div>
+            <div><dt>수정일</dt><dd th:text="${admin.am_mod_date != null ? admin.am_mod_date : '-'}">-</dd></div>
+        </dl>
+
+        <div class="form-actions">
+            <a class="button button-secondary" th:href="@{/admin/members_list}">목록</a>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"></footer>
+</body>
+</html>

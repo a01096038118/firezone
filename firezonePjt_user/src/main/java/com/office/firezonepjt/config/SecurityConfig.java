@@ -1,12 +1,12 @@
-package com.office.firezonepjt_user.config;
+package com.office.firezonepjt.config;
 
-import com.office.firezonepjt.admin.security.AdminAccessDeniedHandler;
+import com.office.firezonepjt.user.security.MemberAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,16 +31,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
-                                "/css/*",
-                                "/img/*",
-                                "/js/*",
+                                "/error",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/img/**",
+                                "/js/**",
+                                "/include/**",
                                 "/member/signup",
                                 "/member/signup_confirm",
                                 "/member/signin",
                                 "/member/signin_confirm",
+                                "/member/signin_result",
                                 "/member/findpassword",
-                                "/member/findpassword_confirm").permitAll()
-                        .requestMatchers("/planner/**").hasAnyRole("USER")
+                                "/member/findpassword_form",
+                                "/member/findpassword_confirm",
+                                "/member/findpassword_result",
+                                "/member/access_denied").permitAll()
+                        .requestMatchers("/planner/**").hasAnyRole("APPR_USER", "USER")
                         .anyRequest().authenticated()
                 );
 
@@ -48,20 +55,27 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/member/signin")
                         .loginProcessingUrl("/member/signin_confirm")
-                        .usernameParameter("id")
-                        .passwordParameter("pw")
+                        .usernameParameter("um_id")
+                        .passwordParameter("um_pw")
                         .successHandler((request, response, authentication) -> {
                             log.info("SIGNIN SUCCESS HANDLER()");
 
-                            User user = (User) authentication.getPrincipal();
-                            String targetURI = "/member/signin_result?loginedID=" + user.getUsername();
+                            String targetURI = request.getContextPath()
+                                    + "/member/signin_result?loginedID="
+                                    + java.net.URLEncoder.encode(
+                                            authentication.getName(),
+                                            java.nio.charset.StandardCharsets.UTF_8);
                             response.sendRedirect(targetURI);
 
                         })
                         .failureHandler((request, response, exception) -> {
-                            log.info("SIGNIN FAIL HANDLER()");
+                            log.info("SIGNIN FAIL HANDLER(): {}", exception.getClass().getSimpleName());
 
-                            String targetURI = "/member/signin_result";
+                            String error = isApprovalPending(exception)
+                                    ? "approval_pending"
+                                    : "invalid_credentials";
+                            String targetURI = request.getContextPath()
+                                    + "/member/signin_result?error=" + error;
                             response.sendRedirect(targetURI);
 
                         })
@@ -80,11 +94,26 @@ public class SecurityConfig {
 
         http
                 .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(new AdminAccessDeniedHandler())
+                        .accessDeniedHandler(new MemberAccessDeniedHandler())
                 );
 
         return http.build();
 
+    }
+
+    private static boolean isApprovalPending(Throwable exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof DisabledException) {
+                return true;
+            }
+            Throwable nextCause = cause.getCause();
+            if (nextCause == cause) {
+                break;
+            }
+            cause = nextCause;
+        }
+        return false;
     }
 
 }
