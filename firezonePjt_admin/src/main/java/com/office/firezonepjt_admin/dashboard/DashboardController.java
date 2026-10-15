@@ -33,7 +33,7 @@ public class DashboardController {
     // 탐지 목록 상세
     @GetMapping("/listDetail")
     public String listDetail() {
-        log.info("list_detail()");
+        log.info("listDetail()");
 
         String nextPage = "dashboard/list_detail";
 

@@ -2,15 +2,21 @@ package com.office.firezonepjt_admin.detection;
 
 import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,7 +28,8 @@ import java.util.Optional;
 public class DetectionService {
     private final DetectionRepository detectionRepository;
     private static final DateTimeFormatter LOG_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+    private static final int SAME_EVENT_SECONDS = 30;
+    private static final int MAX_PAGE_SIZE = 100;
 
     public DetectionService(DetectionRepository detectionRepository
                             ) {
@@ -45,26 +52,33 @@ public class DetectionService {
         String carNumber = dto.getDl_car_number();
 
         // 차량번호가 있어야 같은 차량인지 비교할 수 있음
-        if (carNumber != null && !carNumber.isBlank()) {
+        if (carNumber == null || carNumber.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "차량번호가 필요합니다."
+            );
+        }
 
-            Optional<DetectionEntity> result =
-                    detectionRepository
-                            .findFirstByDlCameraIdAndDlZoneNoAndDlCarNumberAndDlViolationTypeOrderByDlLastDetectedAtDesc(
-                                    dto.getDl_camera_id(),
-                                    dto.getDl_zone_no(),
-                                    carNumber,
-                                    dto.getDl_violation_type()
-                            );
+        Optional<DetectionEntity> result =
+                detectionRepository
+                        .findFirstByDlCameraIdAndDlZoneNoAndDlCarNumberAndDlTypeOrderByDlLastTimeDesc(
+                                dto.getDl_camera_id(),
+                                dto.getDl_zone_no(),
+                                carNumber,
+                                dto.getDl_violation_type()
+                        );
 
             if (result.isPresent()) {
 
                 DetectionEntity entity = result.get();
-                LocalDateTime lastTime = entity.getDlFirstTime();
 
-                // 기존 마지막 탐지 시간과 1분 이내면 같은 기록으로 판단
+                // 기존 '마지막' 탐지시간
+                LocalDateTime lastTime = entity.getDlLastTime();
+
+                // 기존 마지막 탐지 시간과 30초 이내면 같은 기록으로 판단
                 if (lastTime != null
-                        && !detectedAt.isBefore(lastTime.minusSeconds(30))
-                        && !detectedAt.isAfter(lastTime.plusSeconds(30))) {
+                        && !detectedAt.isBefore(lastTime.minusSeconds(SAME_EVENT_SECONDS))
+                        && !detectedAt.isAfter(lastTime.plusSeconds(SAME_EVENT_SECONDS))) {
 
                     // 새로운 시간이 더 최근일 때만 수정
                     if (detectedAt.isAfter(lastTime)) {
@@ -74,7 +88,7 @@ public class DetectionService {
                     return entity.getDlNo();
                 }
             }
-        }
+
 
         // Dto에 담긴 데이터를 Entity에 옮김
         DetectionEntity entity = dto.toEntity();
@@ -88,23 +102,70 @@ public class DetectionService {
 
 
     // 탐지 목록 조회
-    public List<DetectionDto> getDetectionList(String cameraId, String zoneNo, int page, int size, String direction) {
+    @Transactional(readOnly = true)
+    public DetectionPageDto getDetectionList(
+            String cameraId, String zoneNo,
+            LocalDate from, LocalDate to,
+            int page, int size, String direction
+            ) {
+
         log.info("getDetectionList()");
 
-        // 최신 데이터 순서로 조회
-        List<DetectionEntity> entities =
-                detectionRepository.findAll(
-                        Sort.by(Sort.Direction.DESC, "dlNo"));
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "조회 시작일이 종료일보다 늦을 수 없습니다."
+            );
+        }
 
+        // 페이지 번호는 1부터 JPA는 0부터 시작
+        int pageIndex = Math.max(page -1, 0);
+        int pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+
+        // 탐지 번호 기준 정렬 (desc가 아니면 asc)
+        Sort.Direction sortDirection =
+                "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(sortDirection, "dlNo"));
+
+        // 조건이 있는 것만 where 절에 추가
+        Specification<DetectionEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (cameraId != null && !cameraId.isBlank()) {
+                predicates.add(cb.equal(root.get("dlCameraId"), cameraId));
+            }
+
+            if (zoneNo != null && !zoneNo.isBlank()) {
+                predicates.add(cb.equal(root.get("dlZoneNo"), zoneNo));
+            }
+
+            // 기간은 최초 탐지 시간 기준 (from 00:00 이상, to 다음날 00:00 미만)
+            if (from != null) {
+                predicates.add(cb.greaterThanOrEqualTo(
+                        root.get("dlFirstTime"), from.atStartOfDay()));
+            }
+
+            if (to != null) {
+                predicates.add(cb.lessThan(
+                        root.get("dlFirstTime"), to.plusDays(1).atStartOfDay()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<DetectionEntity> result = detectionRepository.findAll(spec, pageable);
 
         // Entity 목록을 Dto 목록으로 변환
-        List<DetectionDto> dtoList = new ArrayList<>();
+        List<DetectionDto> content = toDtoList(result.getContent());
 
-        for (DetectionEntity entity : entities) {
-            dtoList.add(DetectionDto.fromEntity(entity));
-
-        }
-        return dtoList;
+        return new DetectionPageDto(
+                content,
+                result.getTotalElements(),
+                result.getTotalPages(),
+                pageIndex + 1,
+                pageSize
+        );
     }
 
 
@@ -149,7 +210,10 @@ public class DetectionService {
         String text = value.toString();
 
         // Excel이 텍스트를 수식으로 실행하지 않도록 처리
-        if (text.stripLeading().matches("^[=+@-].*")) {
+        String trimmed = text.stripLeading();
+        if (!text.isEmpty()
+                && ("\t\r\n".indexOf(text.charAt(0)) >= 0
+                || (!trimmed.isEmpty() && "=+-@".indexOf(trimmed.charAt(0)) >= 0))) {
             text = "'" + text;
         }
 
@@ -173,9 +237,8 @@ public class DetectionService {
         csv.append('\uFEFF');
 
         // CSV 첫 줄: 열 제목
-        csv.append(
-                "탐지 번호, 카메라 ID, 구역번호, 위반유형,"
-                + "차량번호, 이미지 경로, 최초 탐지 시간, 마지막 탐지 시간\r\n"
+        csv.append("탐지 번호,카메라 ID,구역번호,위반유형,")
+                .append("차량번호,이미지 경로,최초 탐지 시간,마지막 탐지 시간\r\n"
         );
 
         // 탐지 기록 한 건마다 추가

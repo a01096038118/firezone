@@ -2,12 +2,14 @@ package com.office.firezonepjt_admin.detection;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -17,7 +19,7 @@ import java.util.List;
 @RequestMapping("/detections")
 public class DetectionController {
 
-    final DetectionService detectionService;
+    final private DetectionService detectionService;
 
     public DetectionController(DetectionService detectionService) {
         this.detectionService = detectionService;
@@ -25,7 +27,7 @@ public class DetectionController {
 
     // 탐지 기록 저장
     @PostMapping
-    public Integer saveDetection(@RequestBody DetectionDto dto) {
+    public Integer saveDetection(@Valid @RequestBody DetectionDto dto) {
         log.info("saveDetection()");
 
         return detectionService.saveDetection(dto);
@@ -33,13 +35,21 @@ public class DetectionController {
 
     // 탐지 목록 조회
     @GetMapping("/list")
-    public List<DetectionDto> getDetectionList(
+    public DetectionPageDto  getDetectionList(
             // 카메라 ID 검색
             @RequestParam(name = "cameraId", required = false)
             String cameraId,
             // zone(구역번호 조회)
             @RequestParam(name = "zoneNo", required = false)
             String zoneNo,
+            // 조회 시작일 (yyyy-MM-dd, 최초 탐지 날짜 기준)
+            @RequestParam(name = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate from,
+            // 조회 종료일 (yyyy-MM-dd, 해당 날짜 포함)
+            @RequestParam(name = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate to,
             // 페이지 번호
             @RequestParam(name = "page", defaultValue = "1")
             int page,
@@ -55,6 +65,8 @@ public class DetectionController {
         return detectionService.getDetectionList(
                 cameraId,
                 zoneNo,
+                from,
+                to,
                 page,
                 size,
                 direction

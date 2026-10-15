@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard/dashboard.css}">
+
+    <script th:src="@{/js/dashboard/dashboard.js}"></script>
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"/>
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+
+    <section id="dashboard_wrap">
+        <!-- 실시간 관제 화면 -->
+        <div class="monitoring">
+            <h2>실시간 관제</h2>
+
+            <div class="camera_info">
+                <span class="camera_id">-</span>
+                <span class="zone_no">-</span>
+                <span class="connection_status">연결대기</span>
+            </div>
+
+            <div class="stream_area">
+                <img id="live_stream" alt="실시간 관제 영상" hidden>
+                <p id="stream_message">연결 대기 중</p>
+            </div>
+
+        </div>
+
+        <!-- 실시간 탐지 -->
+        <div class="detection_log">
+
+            <div class="detection_img">
+                <img id="detection_img" alt="탐지된 차량 사진" hidden>
+            </div>
+
+            <dl class="detction_info">
+                <dt>탐지 구역</dt>
+                <dd id="zone_id">-</dd>
+
+                <dt>위반 유형</dt>
+                <dd id="violation_type">-</dd>
+
+                <dt>차량 번호</dt>
+                <dd id="car_number">-</dd>
+
+                <dt>최초 탐지 시간</dt>
+                <dd id="first_detected">-</dd>
+
+                <dt>마지막 탐지 시간</dt>
+                <dd id="last_detected">-</dd>
+            </dl>
+
+            <a th:href="@{/dashboard/list_detail}">탐지 상세 정보</a>
+
+        </div>
+
+        <tbody id="detection_log_list">
+            <tr>
+                <a id="detection_detail_link" hidden>탐지 상세 정보</a>
+                <p id="detection_message"> 탐지 정보를 불러오는 중입니다.</p>
+            </tr>
+        </tbody>
+
+    </section>
+
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>
