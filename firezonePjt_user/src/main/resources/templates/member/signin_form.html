@@ -24,6 +24,7 @@
             SIGN-IN FORM
         </div>
         <div class="content">
+            <p th:if="${accountWithdrawn}">회원 탈퇴가 완료되었습니다.</p>
             <form
             th:action="@{/member/signin_confirm}"
             name="signin_form"
@@ -34,11 +35,6 @@
                 <input type="button" value="sign-in" onclick="signinForm();">
                 <input type="reset" value="reset">
             </form>
-        </div>
-        <div class="other">
-            <a href="/member/findpassword">find-password</a>
-            |
-            <a href="/member/signup">Not a member yet? sign-up</a>
         </div>
     </div>
 </section>

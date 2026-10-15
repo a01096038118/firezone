@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,9 +52,12 @@ public class MemberController {
 
     // 로그인 양식 /signin
     @GetMapping("/signin")
-    public String signin() {
+    public String signin(
+            @RequestParam(value = "withdrawn", required = false) String withdrawn,
+            Model model) {
         System.out.println(CLASS_NAME.concat("signin()"));
 
+        model.addAttribute("accountWithdrawn", withdrawn != null);
         String nextPage = "member/signin_form";
 
         return nextPage;
@@ -111,6 +115,22 @@ public class MemberController {
 
     }
 
+    @PostMapping("/withdraw")
+    public String withdraw(
+            @RequestParam("currentPassword") String currentPassword,
+            Principal principal,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        if (!memberService.withdraw(principal.getName(), currentPassword)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "현재 비밀번호가 올바르지 않습니다. 탈퇴하지 않았습니다.");
+            return "redirect:/member/modify";
+        }
+
+        session.invalidate();
+        return "redirect:/member/signin?withdrawn";
+    }
+
     // 계정 수정 확인(/member/modify_confirm)
     @PostMapping("/modify_confirm")
     public String modifyConfirm(MemberDto memberDto, Principal principal, Model model) {
@@ -126,7 +146,7 @@ public class MemberController {
     }
 
     // 비밀번호 찾기 양식(/member/findpassword)
-    @GetMapping("/findpassword")
+    @GetMapping({"/findpassword"})
     public String findpassword(MemberDto memberDto, Model model) {
         System.out.println(CLASS_NAME.concat("findpassword()"));
 
@@ -137,7 +157,7 @@ public class MemberController {
     }
 
     // 비밀번호 찾기 확인(/member/findpassword_confirm)
-    @PostMapping("/findpassword_confirm")
+    @PostMapping({"/findpassword_confirm"})
     public String findpasswordConfirm(MemberDto memberDto, Model model) {
         System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
 

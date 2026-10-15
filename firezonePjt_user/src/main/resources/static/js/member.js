@@ -79,13 +79,13 @@ function findpasswordForm() {
     console.log('findpasswordForm()');
 
     let form = document.findpassword_form;
-    if (form.id.value === '') {
+    if (form.um_id.value === '') {
         alert('INPUT MEMBER ID!!')
-        form.id.focus();
+        form.um_id.focus();
 
-    } else if (form.mail.value === '') {
+    } else if (form.um_mail.value === '') {
         alert('INPUT MEMBER MAIL!!')
-        form.mail.focus();
+        form.um_mail.focus();
 
     } else {
         form.submit();

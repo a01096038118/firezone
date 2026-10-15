@@ -2,6 +2,10 @@ package com.office.firezonepjt_admin.admin;
 
 import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import com.office.firezonepjt_admin.admin.jpa.AdminRepository;
+import com.office.firezonepjt_admin.admin.jpa.AuthorityEntity;
+import com.office.firezonepjt_admin.admin.jpa.AuthorityRepository;
+import com.office.firezonepjt_admin.admin.jpa.UserMemberEntity;
+import com.office.firezonepjt_admin.admin.jpa.UserMemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,9 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -33,18 +35,22 @@ public class AdminService {
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
 
     final private AdminDao adminDao;
-    final private UserMemberDao userMemberDao;
+    final private UserMemberRepository userMemberRepository;
+    final private AuthorityRepository authorityRepository;
     final private PasswordEncoder passwordEncoder;
     final private JavaMailSender javaMailSender;
     final private AdminRepository adminRepository;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public AdminService(AdminDao adminDao,
-                         UserMemberDao userMemberDao,
+                         UserMemberRepository userMemberRepository,
+                         AuthorityRepository authorityRepository,
                          PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
                          AdminRepository adminRepository) {
         this.adminDao = adminDao;
-        this.userMemberDao = userMemberDao;
+        this.userMemberRepository = userMemberRepository;
+        this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.adminRepository = adminRepository;
@@ -120,8 +126,8 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> findAllUsers() {
-        return userMemberDao.findAll();
+    public List<UserMemberEntity> findAllUsers() {
+        return userMemberRepository.findAllByOrderByUserNoDesc();
     }
 
     @Transactional(readOnly = true)
@@ -131,13 +137,48 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Map<String, Object>> findUserByNo(int userNo) {
-        return userMemberDao.findByNo(userNo);
+    public Optional<UserMemberEntity> findUserByNo(int userNo) {
+        return userMemberRepository.findByUserNo(userNo);
     }
 
     @Transactional
     public boolean approveUser(int userNo) {
-        return userMemberDao.approve(userNo);
+        Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        UserMemberEntity user = optionalUser.get();
+        AuthorityEntity currentAuthority = user.getAuthorityEntity();
+        if (currentAuthority == null
+                || !"PRE_USER".equalsIgnoreCase(currentAuthority.getRoleName())) {
+            return false;
+        }
+
+        AuthorityEntity approvedAuthority = authorityRepository
+                .findByRoleNameIgnoreCase("APPR_USER")
+                .map(authority -> {
+                    authority.setRoleName("APPR_USER");
+                    return authority;
+                })
+                .orElseGet(() -> authorityRepository.save(AuthorityEntity.builder()
+                        .roleName("APPR_USER")
+                        .build()));
+
+        user.setAuthorityEntity(approvedAuthority);
+        return true;
+    }
+
+    @Transactional
+    public boolean deleteUser(int userNo) {
+        Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        userMemberRepository.deleteAuthorityLinkByUserNo(userNo);
+        userMemberRepository.delete(optionalUser.get());
+        return true;
     }
 
     @Transactional
@@ -162,10 +203,12 @@ public class AdminService {
     }
 
     @Transactional
-    public boolean deleteOwnAdmin(String currentUsername) {
+    public boolean deleteOwnAdmin(String currentUsername, String currentPassword) {
         log.info("deleteOwnAdmin()");
         Optional<AdminEntity> optionalAdmin = adminRepository.findByAdId(currentUsername);
-        if (optionalAdmin.isEmpty()) {
+        if (currentPassword == null || currentPassword.isBlank()
+                || optionalAdmin.isEmpty()
+                || !passwordEncoder.matches(currentPassword, optionalAdmin.get().getAdPw())) {
             return false;
         }
         adminRepository.delete(optionalAdmin.get());
@@ -183,6 +226,7 @@ public class AdminService {
         return value == null || value.isBlank();
     }
 
+    @Transactional
     public int findpasswordConfirm(AdminDto adminDto) {
         log.info("findpasswordConfirm()");
 
@@ -208,31 +252,20 @@ public class AdminService {
     private String createNewPassword() {
         log.info("createNewPassword()");
 
-        char[] chars = new char[] {
+        char[] chars = {
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
                 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
                 'u', 'v', 'w', 'x', 'y', 'z'
         };
 
-        StringBuffer stringBuffer = new StringBuffer();
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.setSeed(new Date().getTime());
-
-        int index = 0;
-        int length = chars.length;
-        for (int i = 0; i < 8; i++) {
-            index = secureRandom.nextInt(length);
-
-            if (index % 2 == 0)
-                stringBuffer.append(String.valueOf(chars[index]).toUpperCase());
-            else
-                stringBuffer.append(String.valueOf(chars[index]).toLowerCase());
+        StringBuilder password = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+                char character = chars[SECURE_RANDOM.nextInt(chars.length)];
+                password.append(i % 2 == 0 ? Character.toUpperCase(character) : character);
         }
 
-        log.info("NEW PASSWORD: " + stringBuffer.toString());
-
-        return stringBuffer.toString();
+        return password.toString();
 
     }
 
@@ -240,11 +273,9 @@ public class AdminService {
         log.info("sendNewPasswordByMail()");
 
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        // simpleMailMessage.setTo(toMailAddr);
-        simpleMailMessage.setTo("nikecafe@naver.com");
-        simpleMailMessage.setSubject("[MyCalendar] 새 비밀번호 안내입니다.");
+        simpleMailMessage.setTo(toMailAddr);
+        simpleMailMessage.setSubject("[Firezone] 새 비밀번호 안내입니다.");
         simpleMailMessage.setText("새 비밀번호: " + newPassword);
-        simpleMailMessage.setFrom("hohasic@gmail.com");
 
         javaMailSender.send(simpleMailMessage);
 

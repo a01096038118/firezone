@@ -1,5 +1,6 @@
 package com.office.firezonepjt_admin.admin;
 
+import com.office.firezonepjt_admin.admin.jpa.UserMemberEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.Map;
 
 @Slf4j
 @Controller
@@ -93,7 +92,7 @@ public class AdminController {
     @GetMapping("/members_list/user/{userNo}")
     public String userMemberDetail(@PathVariable int userNo, Model model) {
 
-        Map<String, Object> user = adminService.findUserByNo(userNo)
+        UserMemberEntity user = adminService.findUserByNo(userNo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         model.addAttribute("user", user);
@@ -116,8 +115,22 @@ public class AdminController {
         return "redirect:/admin/members_list/user/" + userNo;
     }
 
+    @PostMapping("/members_list/user/{userNo}/delete")
+    public String deleteUser(
+            @PathVariable int userNo,
+            RedirectAttributes redirectAttributes) {
+        if (!adminService.deleteUser(userNo)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "삭제할 회원이 이미 존재하지 않습니다.");
+            return "redirect:/admin/members_list";
+        }
+
+        redirectAttributes.addFlashAttribute("message", "일반 회원을 삭제했습니다.");
+        return "redirect:/admin/members_list";
+    }
+
     // 비밀번호 찾기 양식(/member/findpassword)
-    @GetMapping("/findpassword")
+    @GetMapping({"/findpassword"})
     public String findpassword(AdminDto adminDto, Model model) {
         log.info("findpassword()");
 
@@ -128,7 +141,7 @@ public class AdminController {
     }
 
     // 비밀번호 찾기 확인(/member/findpassword_confirm)
-    @PostMapping("/findpassword_confirm")
+    @PostMapping({"/findpassword_confirm"})
     public String findpasswordConfirm(AdminDto adminDto, Model model) {
         log.info("findpasswordConfirm()");
 
@@ -207,10 +220,14 @@ public class AdminController {
 
     @PostMapping("/myinfocheck/delete")
     public String deleteMyInfo(
+            @RequestParam("currentPassword") String currentPassword,
             Authentication authentication,
-            HttpServletRequest request) {
-        if (!adminService.deleteOwnAdmin(authentication.getName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        if (!adminService.deleteOwnAdmin(authentication.getName(), currentPassword)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "현재 비밀번호가 올바르지 않습니다. 탈퇴하지 않았습니다.");
+            return "redirect:/admin/myinfocheck";
         }
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
