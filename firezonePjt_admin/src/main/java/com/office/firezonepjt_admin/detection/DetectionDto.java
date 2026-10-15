@@ -1,14 +1,14 @@
 package com.office.firezonepjt_admin.detection;
 
 import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
-import com.office.firezonepjt_admin.detection.jpa.SystemLogEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.cglib.core.Local;
+
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Data
 @AllArgsConstructor
@@ -16,21 +16,34 @@ import java.time.format.DateTimeFormatter;
 public class DetectionDto {
 
     private int dl_no;                              // 탐지 기록 번호
+
+    @NotBlank(message = "카메라 ID가 필요합니다.")
     private String dl_camera_id;                    // 감지 카메라 ID
+
+    @NotBlank(message = "구역번호가 필요합니다.")
     private String dl_zone_no;                      // 탐지 구역번호
+
+    @NotBlank(message = "위반 유형이 필요합니다.")
     private String dl_violation_type;               // 위반 유형
+
+    @NotBlank(message = "차량번호가 필요합니다.")
     private String dl_car_number;                   // 인식 차량 번호
+
+    @NotBlank(message = "이미지 경로값이 필요합니다.")
     private String dl_image_path;                   // 탐지 이미지 경로
+
+    @NotNull(message = "최초 탐지시간이 필요합니다.")
     private LocalDateTime dl_first_detected_at;     // 최초 탐지 시간
+
+    @NotNull(message = "마지막 탐지시간이 필요합니다.")
     private LocalDateTime  dl_last_detected_at;     // 마지막 탐지 시간
 
 
 
     public DetectionEntity toEntity() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         return DetectionEntity.builder()
-                .dlNo(dl_no)                        // 탐지 기록 번호
+                //.dlNo(dl_no)                      // 탐지 기록 번호
                 .dlCameraId(dl_camera_id)           // 감지 카메라 ID
                 .dlZoneNo(dl_zone_no)               // 탐지 구역번호
                 .dlType(dl_violation_type)          // 위반 유형

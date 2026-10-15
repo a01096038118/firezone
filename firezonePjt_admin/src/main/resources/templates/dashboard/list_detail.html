@@ -18,16 +18,16 @@
 <nav th:replace="~{/include/header_nav_footer.html::nav}"/>
 
 
-    <section id="dashboard_wrap">
-        <!-- 탐지 정보 -->
-        <div class="detection">
+    <section id="list_wrap">
+        <!-- 탐지 상세 정보 -->
+        <div class="list">
             <h2>탐지 정보</h2>
 
             <div class="detection_img">
                 <img id="detection_img" alt="탐지된 차량 사진" hidden>
             </div>
 
-            <div class="detection_info">
+            <div class="list_info">
                 <dl>
                     <dt>탐지 번호</dt>
                     <dd id="detection_no">-</dd>
@@ -54,28 +54,6 @@
                 <a th:href="@{/dashboard/detection}">탐지 목록</a>
             </div>
         </div>
-
-
-
-        <!-- 최근 로그 기록 -->
-        <!--
-        <div class="recent_logs">
-            <h2>최근 로그 내역</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>차량 번호</th>
-                    <th>위반 유형</th>
-                    <th>최초 탐지 시간</th>
-                    <th>마지막 탐지 시간</th>
-                    <th>발생 시간</th>
-                </tr>
-                </thead>
-
-
-            </table>
-        </div>
-            -->
 
     </section>
 

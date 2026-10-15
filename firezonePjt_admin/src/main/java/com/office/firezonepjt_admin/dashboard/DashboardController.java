@@ -25,7 +25,7 @@ public class DashboardController {
     public String detection() {
         log.info("detection()");
 
-        String nextPage = "list_detail";
+        String nextPage = "dashboard/detection";
 
         return nextPage;
     }
@@ -40,25 +40,6 @@ public class DashboardController {
         return nextPage;
     }
 
-    // 로그 목록
-    @GetMapping("/logList")
-    public String logList() {
-        log.info("log_list()");
-
-        String nextPage = "dashboard/log_list";
-
-        return nextPage;
-    }
-
-    // 로그 목록 상세
-    @GetMapping("/logDetail")
-    public String logDetail() {
-        log.info("logDetail()");
-
-        String nextPage = "dashboard/log_detail";
-
-        return nextPage;
-    }
 
 
 }
