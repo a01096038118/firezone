@@ -3,6 +3,7 @@ import time
 
 from flask import Blueprint, Response, jsonify
 
+import config
 from camera.monitoring import get_all_camera_status, get_camera_monitor
 
 monitor_bp = Blueprint("monitor", __name__)
@@ -22,10 +23,14 @@ def _generate_mjpeg(camera_monitor):
         time.sleep(1 / STREAM_MAX_FPS)
 
 
-# 실시간 관제 영상 API(GET /api/monitor/<camera_id>)를 담당함.
+# 실시간 관제 영상 API(GET /api/monitor, /api/monitor/<camera_id>)를 담당함.
+@monitor_bp.route("/monitor", methods=["GET"])
 @monitor_bp.route("/monitor/<camera_id>", methods=["GET"])
-def stream_camera(camera_id):
-    """<img src="http://Flask주소:5000/api/monitor/DRONE01"> 로 바로 쓰는 MJPEG 영상."""
+def stream_camera(camera_id=None):
+    """<img src="http://Flask주소:5000/api/monitor/DRONE01"> 로 바로 쓰는 MJPEG 영상.
+    카메라 ID 없이 /api/monitor 로 부르면 첫 번째 카메라 (Boot 관제 화면 dashboard.js 가 이렇게 부름)."""
+    # 카메라를 지정하지 않으면 첫 번째 카메라(드론)
+    camera_id = camera_id or next(iter(config.CAMERAS), None)
     camera_monitor = get_camera_monitor(camera_id)
     if camera_monitor is None:
         return jsonify({"error": f"카메라 {camera_id} 가 없거나 꺼져 있습니다."}), 404
