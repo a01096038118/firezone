@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DetectionDto {
 
-    private int dl_no;                              // 탐지 기록 번호
+    private Integer dl_no;                              // 탐지 기록 번호
     private String dl_camera_id;                    // 감지 카메라 ID
     private String dl_zone_no;                      // 탐지 구역번호
     private String dl_violation_type;               // 위반 유형
