@@ -4,6 +4,7 @@ import com.office.firezonepjt_admin.admin.security.AdminAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,7 +25,13 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+                // Flask의 탐지 저장 요청 -> 로그인 토큰이 없으므로 경로 제외
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/detections")
+                )
                 .authorizeHttpRequests(auth -> auth
+                        // Flask 탐지 저장 :  로그인 없이 통과
+                        .requestMatchers(HttpMethod.POST, "/detections").permitAll()
                         .requestMatchers(
                                 "/",
                                 "/admin/signin",
@@ -39,10 +46,13 @@ public class SecurityConfig {
                                 "/img/**",
                                 "/include/**"
                         ).permitAll()
+                        // 탐지 삭제
+                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
+                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers(
                                 "/admin/**",
-                                "/monitoring/**",
-                                "/detection/**",
+                                "/dashboard/**",
+                                "/detections/**",
                                 "/planner/**",
                                 "/logs/**"
                         ).hasRole("ADMIN")

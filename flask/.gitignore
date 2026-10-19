@@ -1,24 +1,16 @@
-# Python 실행 시 자동 생성되는 파일
-__pycache__/
-*.py[cod]
-.pytest_cache/
-
-# Python 가상환경 (팀원이 각자 설치)
-.venv/
 venv/
-env/
-
-# 비밀번호, DB 접속 정보 등 환경변수
+__pycache__/
+*.pyc
 .env
-.env.*
-!.env.example
-
-# Flask 실행 중 생성되는 로컬 설정·데이터
-instance/
-
-# 로그
-*.log
-
-# IDE 개인 설정
-.idea/
+# 실행 중 생기는 파일 (사진, 로그, 같은 날 기록)
+data/
+logs/
+# AI 모델 파일은 용량이 커서 git에 올리지 않음 (팀원에게 따로 받기)
+*.pt
+# Claude Code 설정 (개인용)
+.claude/
+# 편집기·Windows가 만드는 파일
 .vscode/
+.idea/
+Thumbs.db
+desktop.ini
