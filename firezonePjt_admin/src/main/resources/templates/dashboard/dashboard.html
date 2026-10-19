@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"
+<html lang="ko"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/dashboard.css}">
 
-    <script th:src="@{/js/dashboard/dahboard.js}"></script>
+    <script th:src="@{/js/dashboard/dashboard.js}"></script>
 
 </head>
 <body>
@@ -44,7 +44,7 @@
                 <img id="detection_img" alt="탐지된 차량 사진" hidden>
             </div>
 
-            <dl class="detction_info">
+            <dl class="detection_info">
                 <dt>탐지 구역</dt>
                 <dd id="zone_id">-</dd>
 
@@ -61,16 +61,28 @@
                 <dd id="last_detected">-</dd>
             </dl>
 
-            <a th:href="@{/dashboard/list_detail}">탐지 상세 정보</a>
+            <a id="detection_detail_link" hidden>탐지 상세 정보</a>
 
         </div>
 
-        <tbody id="detection_log_list">
+        <!-- 최근 탐지 목록 -->
+        <table>
+            <thead>
             <tr>
-                <a id="detection_detail_link" hidden>탐지 상세 정보</a>
-                <p id="detection_message"> 탐지 정보를 불러오는 중입니다.</p>
+                <th>탐지 번호</th>
+                <th>카메라 ID</th>
+                <th>탐지 구역</th>
+                <th>차량 번호</th>
+                <th>최초 탐지 시간</th>
             </tr>
-        </tbody>
+            </thead>
+
+            <tbody id="detection_log_list">
+                <tr>
+                    <td colspan="5"> 탐지 정보를 불러오는 중입니다.</td>
+                </tr>
+            </tbody>
+        </table>ㄴ
 
     </section>
 

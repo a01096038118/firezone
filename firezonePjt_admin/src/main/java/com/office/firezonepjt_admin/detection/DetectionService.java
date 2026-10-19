@@ -3,6 +3,7 @@ package com.office.firezonepjt_admin.detection;
 import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
 import jakarta.persistence.criteria.Predicate;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,25 +29,38 @@ import java.util.Optional;
 public class DetectionService {
     private final DetectionRepository detectionRepository;
     private static final DateTimeFormatter LOG_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final int SAME_EVENT_SECONDS = 30;
+    private final long sameEventSeconds;
     private static final int MAX_PAGE_SIZE = 100;
 
-    public DetectionService(DetectionRepository detectionRepository
-                            ) {
+    public DetectionService(
+            DetectionRepository detectionRepository,
+            @Value("${detection.same-event-seconds:30}") long sameEventSeconds) {
         this.detectionRepository = detectionRepository;
+        this.sameEventSeconds = sameEventSeconds;
     }
 
 
     // 탐지 기록 저장
     @Transactional
-    public Integer saveDetection(DetectionDto dto) {
+    public DetectionSaveResponse saveDetection(DetectionDto dto) {
         log.info("saveDetection()");
 
         // Flask가 보낸 마지막 탐지 시간
-        LocalDateTime detectedAt = dto.getDl_last_detected_at();
+        LocalDateTime firstAt = dto.getDl_first_detected_at();
+        LocalDateTime lastdAt = dto.getDl_last_detected_at();
 
-        if (detectedAt == null) {
-            throw new IllegalArgumentException("마지막 탐지 시간이 필요합니다.");
+        if (firstAt == null || lastAt == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "탐지 시간이 필요합니다."
+            );
+        }
+
+        if (firstAt.isAfter(lastdAt)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "최초 탐지 시간이 마지막 탐지 시갖보다 늦을 수 없습니다."
+            );
         }
 
         String carNumber = dto.getDl_car_number();
@@ -77,15 +91,15 @@ public class DetectionService {
 
                 // 기존 마지막 탐지 시간과 30초 이내면 같은 기록으로 판단
                 if (lastTime != null
-                        && !detectedAt.isBefore(lastTime.minusSeconds(SAME_EVENT_SECONDS))
-                        && !detectedAt.isAfter(lastTime.plusSeconds(SAME_EVENT_SECONDS))) {
+                        && !lastdAt.isBefore(lastTime.minusSeconds(sameEventSeconds))
+                        && !lastdAt.isAfter(lastTime.plusSeconds(sameEventSeconds))) {
 
                     // 새로운 시간이 더 최근일 때만 수정
-                    if (detectedAt.isAfter(lastTime)) {
-                        entity.setDlLastTime(detectedAt);
+                    if (lastdAt.isAfter(lastTime)) {
+                        entity.setDlLastTime(lastdAt);
                     }
 
-                    return entity.getDlNo();
+                    return DetectionSaveResponse.update(entity.getDlNo());
                 }
             }
 
@@ -94,9 +108,9 @@ public class DetectionService {
         DetectionEntity entity = dto.toEntity();
 
         // detection_log 테이블에 저장
-        DetectionEntity saved = detectionRepository.save(entity);
+        DetectionEntity saved = detectionRepository.save(dto.toEntity());
 
-        return saved.getDlNo();
+        return DetectionSaveResponse.created(saved.getDlNo());
 
     }
 
