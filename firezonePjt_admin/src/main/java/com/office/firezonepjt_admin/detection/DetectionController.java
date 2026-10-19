@@ -1,15 +1,21 @@
 package com.office.firezonepjt_admin.detection;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -18,15 +24,28 @@ public class DetectionController {
 
     final private DetectionService detectionService;
 
-    public DetectionController(DetectionService detectionService) {
+    // 탐지 저장을 허용할 IP 목록
+    private final Set<String> allowedIps;
+
+    public DetectionController(
+            DetectionService detectionService,
+            @Value("${detection.allowed-ips:}") String allowedIps) {
         this.detectionService = detectionService;
+        this.allowedIps = Arrays.stream(allowedIps.split(","))
+                .map(String::trim)
+                .filter(ip -> !ip.isEmpty())
+                .collect(Collectors.toSet());
     }
 
-    // 탐지 기록 저장
+
+    // 탐지 기록 저장 (허용된 IP의 Flask 서버만 가능)
     @PostMapping
     public ResponseEntity<DetectionSaveResponse> saveDetection(
+            HttpServletRequest request,
             @Valid @RequestBody DetectionDto dto) {
         log.info("saveDetection()");
+
+        checkAllowedIp(request);
 
         DetectionSaveResponse response = detectionService.saveDetection(dto);
 
@@ -35,6 +54,18 @@ public class DetectionController {
                 : HttpStatus.OK;
 
         return ResponseEntity.status(status).body(response);
+    }
+
+    // 요청을 보낸 서버의 IP 확인
+    private void checkAllowedIp(HttpServletRequest request) {
+        String remoteIp = request.getRemoteAddr();
+
+        if (!allowedIps.contains(remoteIp)) {
+            log.warn("허용되지 않은 IP의 탐지 저장 요청: {}", remoteIp);
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "허용되지 않은 요청입니다.");
+        }
     }
 
     // 탐지 목록 조회
