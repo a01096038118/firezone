@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = document.createElement('td');
 
                 // 탐지 번호를 누르면 상세 화면 이동
-                if (index === 0) {
+                if (index === 1) {
                     const link = document.createElement('a');
 
                     link.href =
@@ -249,13 +249,14 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error('서버의 데이터 응답을 확인해주세요.');
         }
 
-        const detections = await response.json();
+        const data = await response.json();
+        const detections = data.content;
 
         if (!Array.isArray(detections)) {
             throw new Error('탐지 목록 응답 형식이 올바르지 않습니다.');
         }
 
-        if (detections.length === 0) {
+        if (detections.length === 1) {
             showListMessage('저장된 탐지 기록이 없습니다.');
             clearLatestDetection();
             return;

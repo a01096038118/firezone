@@ -4,18 +4,15 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Slf4j
-@Valid
-@Controller
-@ResponseBody
+@RestController
 @RequestMapping("/detections")
 public class DetectionController {
 
@@ -27,15 +24,22 @@ public class DetectionController {
 
     // 탐지 기록 저장
     @PostMapping
-    public Integer saveDetection(@Valid @RequestBody DetectionDto dto) {
+    public ResponseEntity<DetectionSaveResponse> saveDetection(
+            @Valid @RequestBody DetectionDto dto) {
         log.info("saveDetection()");
 
-        return detectionService.saveDetection(dto);
+        DetectionSaveResponse response = detectionService.saveDetection(dto);
+
+        HttpStatus status = DetectionSaveResponse.CREATED.equals(response.result())
+                ? HttpStatus.CREATED
+                : HttpStatus.OK;
+
+        return ResponseEntity.status(status).body(response);
     }
 
     // 탐지 목록 조회
     @GetMapping("/list")
-    public DetectionPageDto  getDetectionList(
+    public DetectionPageDto getDetectionList(
             // 카메라 ID 검색
             @RequestParam(name = "cameraId", required = false)
             String cameraId,
