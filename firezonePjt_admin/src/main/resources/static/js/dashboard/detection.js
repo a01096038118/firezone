@@ -1,37 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const PAGE_SIZE = 20;       // 한 페이지에 보여줄 기록 수
+    const COLUMN_COUNT = 8;     // 표의 열 개수
+
     const listBody = document.querySelector('#detection_log_list');
+    const listNotice = document.querySelector('#list_notice');
+    const totalCount = document.querySelector('#total_count');
+    const pageInfo = document.querySelector('#page_info');
+    const prevButton = document.querySelector('#prev_page');
+    const nextButton = document.querySelector('#next_page');
 
-    // 값이 없으면 미확인 표시
-    function displayValue(value) {
-        if (value === null
-            || value === undefined
-            || String(value).trim() === '') {
-            return '미확인';
-        }
+    const searchForm = document.querySelector('#search_form');
+    const cameraInput = document.querySelector('#search_camera_id');
+    const zoneInput = document.querySelector('#search_zone_no');
+    const fromInput = document.querySelector('#search_from');
+    const toInput = document.querySelector('#search_to');
+    const resetButton = document.querySelector('#search_reset');
 
-        return String(value);
+    // 현재 페이지 상태
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // '조회' 버튼으로 확정한 검색 조건
+    // (입력창만 고치고 페이지를 넘길 때 조건이 바뀌지 않게 따로 보관)
+    let appliedFilter = { cameraId: '', zoneNo: '', from: '', to: '' };
+
+
+    // 안내 문구 표시 / 숨김
+    function showNotice(message) {
+        listNotice.textContent = message;
+        listNotice.hidden = false;
     }
 
-    // 날짜 표시 형식 변경
-    function formatTime(value) {
-        if (!value) {
-            return '미확인';
-        }
-
-        return value.replace('T', ' ').split('.')[0];
+    function hideNotice() {
+        listNotice.textContent = '';
+        listNotice.hidden = true;
     }
 
-    // 로딩·빈 목록·오류 메시지 표시
+    // 로딩·빈 목록·오류 메시지를 표 안에 표시
     function showMessage(message) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
 
-        cell.colSpan = 5;
+        cell.colSpan = COLUMN_COUNT;
         cell.textContent = message;
 
         row.appendChild(cell);
         listBody.replaceChildren(row);
+    }
+
+    // 페이지 이동 버튼 상태 갱신
+    function updatePaging() {
+        pageInfo.textContent = `${currentPage} / ${totalPages}`;
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages;
+    }
+
+    // 현재 검색 조건이 있는지
+    function hasFilter() {
+        return Object.values(appliedFilter).some(value => value !== '');
+    }
+
+    // 목록 조회 주소 만들기
+    function buildListUrl(page) {
+        const params = new URLSearchParams({
+            page: String(page),
+            size: String(PAGE_SIZE),
+            direction: 'desc'
+        });
+
+        if (appliedFilter.cameraId) params.set('cameraId', appliedFilter.cameraId);
+        if (appliedFilter.zoneNo) params.set('zoneNo', appliedFilter.zoneNo);
+        if (appliedFilter.from) params.set('from', appliedFilter.from);
+        if (appliedFilter.to) params.set('to', appliedFilter.to);
+
+        return `/detections/list?${params.toString()}`;
     }
 
     // 조회한 목록을 표에 표시
@@ -41,20 +84,21 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const dto of detections) {
             const row = document.createElement('tr');
 
-            // 구역번호를 누르면 해당 기록의 상세 화면으로 이동
-            const zoneCell = document.createElement('td');
+            // 탐지 번호를 누르면 상세 화면으로 이동
+            const noCell = document.createElement('td');
             const detailLink = document.createElement('a');
 
             detailLink.href =
                 `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
+            detailLink.textContent = displayValue(dto.dl_no);
 
-            detailLink.textContent = displayValue(dto.dl_zone_no);
+            noCell.appendChild(detailLink);
+            row.appendChild(noCell);
 
-            zoneCell.appendChild(detailLink);
-            row.appendChild(zoneCell);
-
-            // 나머지 네 개의 열
+            // 나머지 여섯 개의 열
             const values = [
+                displayValue(dto.dl_camera_id),
+                displayValue(dto.dl_zone_no),
                 displayValue(dto.dl_violation_type),
                 displayValue(dto.dl_car_number),
                 formatTime(dto.dl_first_detected_at),
@@ -68,61 +112,143 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.appendChild(cell);
             }
 
+            // 삭제 버튼
+            const deleteCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+
+            deleteButton.type = 'button';
+            deleteButton.textContent = '삭제';
+            deleteButton.addEventListener('click', () => {
+                deleteDetection(dto.dl_no, deleteButton);
+            });
+
+            deleteCell.appendChild(deleteButton);
+            row.appendChild(deleteCell);
+
             listBody.appendChild(row);
         }
     }
 
     // 서버에서 탐지 목록 조회
-    async function fetchDetectionList() {
+    async function fetchDetectionList(page) {
         showMessage('탐지 기록을 불러오는 중입니다.');
+        prevButton.disabled = true;
+        nextButton.disabled = true;
 
         try {
-            const response = await fetch(
-                '/detections/list?page=0&size=20&direction=desc',
-                {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }
-            );
+            const data = await fetchJson(buildListUrl(page));
 
-            if (response.redirected || response.status === 401) {
-                throw new Error('로그인 상태를 확인해주세요.');
+            if (!data || !Array.isArray(data.content)) {
+                throw new ApiError('탐지 목록 응답 형식이 올바르지 않습니다.', 0);
             }
 
-            if (response.status === 403) {
-                throw new Error('탐지 목록 조회 권한이 없습니다.');
-            }
+            currentPage = data.page;
+            totalPages = Math.max(data.totalPages, 1);
+            totalCount.textContent = `총 ${data.totalElements}건`;
 
-            if (!response.ok) {
-                throw new Error('탐지 목록 조회에 실패했습니다.');
-            }
-
-            const contentType =
-                response.headers.get('content-type') || '';
-
-            if (!contentType.includes('application/json')) {
-                throw new Error('서버의 데이터 응답을 확인해주세요.');
-            }
-
-            const detections = await response.json();
-
-            if (!Array.isArray(detections)) {
-                throw new Error('탐지 목록 응답 형식이 올바르지 않습니다.');
-            }
-
-            if (detections.length === 0) {
-                showMessage('저장된 탐지 기록이 없습니다.');
+            // 삭제 등으로 현재 페이지가 없어졌으면 마지막 페이지를 다시 조회
+            if (data.content.length === 0
+                && data.totalElements > 0
+                && page > totalPages) {
+                await fetchDetectionList(totalPages);
                 return;
             }
 
-            showDetections(detections);
+            if (data.content.length === 0) {
+                showMessage(hasFilter()
+                    ? '조건에 맞는 탐지 기록이 없습니다.'
+                    : '저장된 탐지 기록이 없습니다.');
+            } else {
+                showDetections(data.content);
+            }
+
+            updatePaging();
 
         } catch (error) {
             console.error('탐지 목록 조회 오류:', error);
+            totalCount.textContent = '';
             showMessage(error.message);
+            updatePaging();
+            prevButton.disabled = true;
+            nextButton.disabled = true;
         }
     }
 
-    fetchDetectionList();
+    // 탐지 기록 삭제
+    async function deleteDetection(dlNo, button) {
+        const ok = window.confirm(
+            `탐지 번호 ${dlNo} 기록을 삭제할까요?\n삭제한 기록은 복구할 수 없습니다.`
+        );
+
+        if (!ok) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            await fetchJson(
+                `/detections/delete?dl_no=${encodeURIComponent(dlNo)}`,
+                { method: 'DELETE' }
+            );
+
+            await fetchDetectionList(currentPage);
+            showNotice('탐지 기록을 삭제했습니다.');
+
+        } catch (error) {
+            console.error('탐지 기록 삭제 오류:', error);
+            button.disabled = false;
+
+            showNotice(error.status === 403
+                ? '삭제 권한이 없습니다.'
+                : error.message);
+        }
+    }
+
+    // '조회' 버튼
+    searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        hideNotice();
+
+        const from = fromInput.value;
+        const to = toInput.value;
+
+        // 날짜는 yyyy-MM-dd 문자열이라 그대로 비교해도 됨
+        if (from && to && from > to) {
+            showNotice('시작일이 종료일보다 늦을 수 없습니다.');
+            return;
+        }
+
+        appliedFilter = {
+            cameraId: cameraInput.value.trim(),
+            zoneNo: zoneInput.value.trim(),
+            from: from,
+            to: to
+        };
+
+        fetchDetectionList(1);
+    });
+
+    // '초기화' 버튼
+    resetButton.addEventListener('click', () => {
+        searchForm.reset();
+        hideNotice();
+
+        appliedFilter = { cameraId: '', zoneNo: '', from: '', to: '' };
+
+        fetchDetectionList(1);
+    });
+
+    // 페이지 이동
+    prevButton.addEventListener('click', () => {
+        hideNotice();
+        fetchDetectionList(currentPage - 1);
+    });
+
+    nextButton.addEventListener('click', () => {
+        hideNotice();
+        fetchDetectionList(currentPage + 1);
+    });
+
+    fetchDetectionList(1);
 });

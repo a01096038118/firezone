@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/list_detail.css}">
 
+    <script th:src="@{/js/dashboard/common.js}"></script>
     <script th:src="@{/js/dashboard/list_detail.js}"></script>
 
 </head>
@@ -19,14 +20,22 @@
 <nav th:replace="~{/include/header_nav_footer.html::nav}"/>
 
 
-    <section id="list_wrap">
-        <!-- 탐지 상세 정보 -->
-        <div class="list">
-            <h2>탐지 정보</h2>
+<section id="list_wrap">
+    <!-- 탐지 상세 정보 -->
+    <div class="list">
+        <h2>탐지 정보</h2>
+
+        <!-- 불러오는 중, 오류 안내 -->
+        <p id="detail_message">탐지 정보를 불러오는 중입니다.</p>
+
+        <div id="detail_content" hidden>
 
             <div class="detection_img">
                 <img id="detection_img" alt="탐지된 차량 사진" hidden>
+                <p id="image_message">이미지를 불러오는 중입니다.</p>
             </div>
+
+            <p id="summary_message"></p>
 
             <div class="list_info">
                 <dl>
@@ -50,13 +59,18 @@
 
                     <dt>마지막 탐지 시간</dt>
                     <dd id="last_detected">-</dd>
+
+                    <dt>주정차 시간</dt>
+                    <dd id="duration">-</dd>
                 </dl>
 
-                <a th:href="@{/dashboard/detection}">탐지 목록</a>
+                <button type="button" id="delete_button">삭제</button>
             </div>
         </div>
 
-    </section>
+        <a th:href="@{/dashboard/detection}">탐지 목록</a>
+    </div>
+</section>
 
 
 <footer th:replace="~{/include/header_nav_footer.html::footer}"/>

@@ -3,8 +3,8 @@ package com.office.firezonepjt_admin.detection;
 import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
 import jakarta.persistence.criteria.Predicate;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -45,9 +45,9 @@ public class DetectionService {
     public DetectionSaveResponse saveDetection(DetectionDto dto) {
         log.info("saveDetection()");
 
-        // Flask가 보낸 마지막 탐지 시간
+        // Flask가 보낸 최초·마지막 탐지 시간
         LocalDateTime firstAt = dto.getDl_first_detected_at();
-        LocalDateTime lastdAt = dto.getDl_last_detected_at();
+        LocalDateTime lastAt = dto.getDl_last_detected_at();
 
         if (firstAt == null || lastAt == null) {
             throw new ResponseStatusException(
@@ -56,10 +56,10 @@ public class DetectionService {
             );
         }
 
-        if (firstAt.isAfter(lastdAt)) {
+        if (firstAt.isAfter(lastAt)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "최초 탐지 시간이 마지막 탐지 시갖보다 늦을 수 없습니다."
+                    "최초 탐지 시간이 마지막 탐지 시간보다 늦을 수 없습니다."
             );
         }
 
@@ -89,23 +89,19 @@ public class DetectionService {
                 // 기존 '마지막' 탐지시간
                 LocalDateTime lastTime = entity.getDlLastTime();
 
-                // 기존 마지막 탐지 시간과 30초 이내면 같은 기록으로 판단
+                // 기존 마지막 탐지 시간과 설정된 시간(초) 이내면 같은 기록으로 판단
                 if (lastTime != null
-                        && !lastdAt.isBefore(lastTime.minusSeconds(sameEventSeconds))
-                        && !lastdAt.isAfter(lastTime.plusSeconds(sameEventSeconds))) {
+                        && !lastAt.isBefore(lastTime.minusSeconds(sameEventSeconds))
+                        && !lastAt.isAfter(lastTime.plusSeconds(sameEventSeconds))) {
 
                     // 새로운 시간이 더 최근일 때만 수정
-                    if (lastdAt.isAfter(lastTime)) {
-                        entity.setDlLastTime(lastdAt);
+                    if (lastAt.isAfter(lastTime)) {
+                        entity.setDlLastTime(lastAt);
                     }
 
-                    return DetectionSaveResponse.update(entity.getDlNo());
+                    return DetectionSaveResponse.updated(entity.getDlNo());
                 }
             }
-
-
-        // Dto에 담긴 데이터를 Entity에 옮김
-        DetectionEntity entity = dto.toEntity();
 
         // detection_log 테이블에 저장
         DetectionEntity saved = detectionRepository.save(dto.toEntity());

@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/detection.css}">
 
+    <script th:src="@{/js/dashboard/common.js}"></script>
     <script th:src="@{/js/dashboard/detection.js}"></script>
 
 </head>
@@ -19,38 +20,71 @@
 <nav th:replace="~{/include/header_nav_footer.html::nav}"/>
 
 
-    <section id="detection_wrap">
-        <div class="detection">
-            <h2>탐지 목록</h2>
+<section id="detection_wrap">
+    <div class="detection">
+        <h2>탐지 목록</h2>
 
-            <!-- 탐지 목록 -->
-            <div class="detections">
+        <!-- 검색 조건 -->
+        <form id="search_form" class="search_form">
+            <label>카메라 ID
+                <input type="text" id="search_camera_id" maxlength="20">
+            </label>
+            <label>구역번호
+                <input type="text" id="search_zone_no" maxlength="20">
+            </label>
+            <label>시작일
+                <input type="date" id="search_from">
+            </label>
+            <label>종료일
+                <input type="date" id="search_to">
+            </label>
+            <button type="submit">조회</button>
+            <button type="button" id="search_reset">초기화</button>
+        </form>
 
-                <div class="detection_info">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>탐지 구역</th>
-                            <th>위반 유형</th>
-                            <th>차량 번호</th>
-                            <th>최초 탐지 시간</th>
-                            <th>마지막 탐지 시간</th>
-                        </tr>
-                        </thead>
+        <!-- 삭제 결과, 검색 오류 안내 -->
+        <p id="list_notice" hidden></p>
 
-                        <tbody id="detection_log_list">
-                        <tr>
-                            <td colspan="5">탐지 기록을 불러오는 중입니다.</td>
-                        </tr>
-                        </tbody>
+        <!-- 탐지 목록 -->
+        <div class="detections">
 
-                    </table>
-    
-                </div>
+            <div class="list_tools">
+                <span id="total_count"></span>
+                <a id="csv_download" th:href="@{/detections/csv}">CSV 다운로드</a>
+            </div>
+
+            <div class="detection_info">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>탐지 번호</th>
+                        <th>카메라 ID</th>
+                        <th>탐지 구역</th>
+                        <th>위반 유형</th>
+                        <th>차량 번호</th>
+                        <th>최초 탐지 시간</th>
+                        <th>마지막 탐지 시간</th>
+                        <th>삭제</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="detection_log_list">
+                    <tr>
+                        <td colspan="8">탐지 기록을 불러오는 중입니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 페이지 이동 -->
+            <div class="pagination">
+                <button type="button" id="prev_page">이전</button>
+                <span id="page_info">1 / 1</span>
+                <button type="button" id="next_page">다음</button>
             </div>
         </div>
-
-    </section>
+    </div>
+</section>
 
 
 <footer th:replace="~{/include/header_nav_footer.html::footer}"/>
