@@ -1,0 +1,167 @@
+.admin-members {
+    width: min(1240px, calc(100% - 48px));
+    margin: 42px auto 58px;
+}
+
+.page-heading {
+    margin-bottom: 25px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.page-heading .eyebrow {
+    margin: 0 0 5px;
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+.page-heading h1 {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: -0.055em;
+}
+
+.page-description { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+.member-count {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    color: var(--muted);
+    background: #fff;
+    font-size: 13px;
+}
+
+.member-count strong { color: var(--ink); font-size: 17px; }
+
+.notice {
+    margin: 0 0 16px;
+    padding: 13px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.notice.success { color: #176341; border-color: #c8e8d8; background: #effaf4; }
+.notice.error { color: #a53731; border-color: #f2ceca; background: #fff4f2; }
+
+.member-section,
+.detail-card {
+    margin-top: 20px;
+    padding: clamp(18px, 3vw, 28px);
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--surface);
+    box-shadow: 0 10px 28px rgb(20 39 51 / 5%);
+}
+
+.member-section h2 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+}
+
+.table-wrap { width: 100%; overflow-x: auto; }
+
+.member-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.member-table th {
+    padding: 12px 13px;
+    border-bottom: 1px solid #dce4e9;
+    color: var(--muted);
+    background: #f6f8f9;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.member-table th:first-child { border-radius: 7px 0 0; }
+.member-table th:last-child { border-radius: 0 7px 0 0; }
+
+.member-table td {
+    padding: 13px;
+    border-bottom: 1px solid #edf1f3;
+    color: #35444d;
+}
+
+.member-table tbody tr:last-child td { border-bottom: 0; }
+.member-table tbody tr:hover td { background: #f8fbfa; }
+.member-table .member-id { color: var(--ink); font-weight: 700; }
+
+.button {
+    min-height: 36px;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.button-primary { color: #fff; background: var(--teal); }
+.button-primary:hover { color: #fff; background: #11746e; }
+.button-secondary { color: #334650; border-color: var(--line); background: #fff; }
+.button-secondary:hover { color: var(--ink); background: #f3f6f7; }
+.button-danger { color: #fff; background: var(--red); }
+.button-danger:hover { color: #fff; background: var(--red-dark); }
+
+.empty-state {
+    padding: 32px 18px;
+    border: 1px dashed #cbd6dc;
+    border-radius: 8px;
+    color: var(--muted);
+    background: #fafcfc;
+    text-align: center;
+}
+
+.empty-state p { margin: 0; }
+
+.detail-list { margin: 0; }
+.detail-list > div {
+    min-height: 54px;
+    display: grid;
+    grid-template-columns: minmax(130px, 0.38fr) 1fr;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 1px solid #edf1f3;
+}
+
+.detail-list > div:last-child { border-bottom: 0; }
+.detail-list dt { color: var(--muted); font-size: 13px; }
+.detail-list dd { margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+
+.form-actions {
+    margin-top: 24px;
+    padding-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #edf1f3;
+}
+
+.form-actions form { margin: 0; }
+.form-actions button { font: inherit; }
+
+@media (max-width: 720px) {
+    .admin-members { width: calc(100% - 28px); margin-block: 26px 40px; }
+    .page-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+    .member-section,
+    .detail-card { padding: 17px; }
+    .detail-list > div { grid-template-columns: 110px minmax(0, 1fr); gap: 12px; }
+}

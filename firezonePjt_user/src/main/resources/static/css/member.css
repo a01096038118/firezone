@@ -1,0 +1,100 @@
+body:has(#section_wrap .word) > section {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 42px 20px 58px;
+}
+
+#section_wrap:has(.word) {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+#section_wrap .word {
+    padding: 23px 30px;
+    color: #fff;
+    background: var(--navy);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+#section_wrap .content {
+    padding: 30px;
+    color: var(--ink);
+    font-size: 15px;
+}
+
+#section_wrap .content form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+#section_wrap .content form br { display: none; }
+
+#section_wrap .content form input:not([type='button']):not([type='reset']):not([type='submit']) {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    background: #fbfcfc;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+#section_wrap .content form input::placeholder { color: #8b989f; }
+
+#section_wrap .content form input:focus {
+    border-color: var(--teal);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgb(22 138 131 / 10%);
+    outline: 0;
+}
+
+#section_wrap .content form input[type='button'],
+#section_wrap .content form input[type='submit'],
+#section_wrap .content form input[type='reset'] {
+    min-height: 46px;
+    padding: 0 15px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    transition: transform 160ms ease, background-color 160ms ease;
+}
+
+#section_wrap .content form input[type='button'],
+#section_wrap .content form input[type='submit'] {
+    color: #fff;
+    background: var(--red);
+}
+
+#section_wrap .content form input[type='button']:hover,
+#section_wrap .content form input[type='submit']:hover {
+    background: var(--red-dark);
+    transform: translateY(-1px);
+}
+
+#section_wrap .content form input[type='reset'] {
+    border-color: var(--line);
+    color: var(--muted);
+    background: #fff;
+}
+
+#section_wrap .content form input[type='reset']:hover { background: #f1f5f6; }
+#section_wrap .content p { margin: 0 0 12px; }
+#section_wrap .content a { font-weight: 700; }
+
+@media (max-width: 520px) {
+    body:has(#section_wrap .word) > section { padding: 28px 14px 40px; }
+    #section_wrap .word { padding: 19px 22px; }
+    #section_wrap .content { padding: 22px; }
+}
