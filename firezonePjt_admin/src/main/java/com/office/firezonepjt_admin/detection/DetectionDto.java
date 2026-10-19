@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DetectionDto {
 
-    private int dl_no;                              // 탐지 기록 번호
+    private Integer dl_no;                              // 탐지 기록 번호
 
     @NotBlank(message = "카메라 ID가 필요합니다.")
     @Size(max = 20, message = "카메라 ID는 20자 이하여야 합니다.")
@@ -35,7 +35,7 @@ public class DetectionDto {
     private String dl_car_number;                   // 인식 차량 번호
 
     @NotBlank(message = "이미지 경로값이 필요합니다.")
-    @Size(max = 20, message = "이미지 경로는 255자 이하여야 합니다.")
+    @Size(max = 255, message = "이미지 경로는 255자 이하여야 합니다.")
     private String dl_image_path;                   // 탐지 이미지 경로
 
     @NotNull(message = "최초 탐지시간이 필요합니다.")
