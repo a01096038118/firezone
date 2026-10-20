@@ -3,10 +3,12 @@ body:has(#section_wrap .word) > section {
     display: grid;
     place-items: center;
     padding: 42px 20px 58px;
+    min-width: 0;
 }
 
 #section_wrap:has(.word) {
     width: min(100%, 520px);
+    min-width: 0;
     margin: 0 auto;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -25,6 +27,7 @@ body:has(#section_wrap .word) > section {
 }
 
 #section_wrap .content {
+    min-width: 0;
     padding: 30px;
     color: var(--ink);
     font-size: 15px;
@@ -32,15 +35,19 @@ body:has(#section_wrap .word) > section {
 
 #section_wrap .content form {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
+    min-width: 0;
 }
 
-#section_wrap .content form br { display: none; }
+#section_wrap .content form br {
+    display: none;
+}
 
 #section_wrap .content form input:not([type='button']):not([type='reset']):not([type='submit']) {
     grid-column: 1 / -1;
     width: 100%;
+    min-width: 0;
     min-height: 48px;
     padding: 0 14px;
     border: 1px solid var(--line);
@@ -50,7 +57,9 @@ body:has(#section_wrap .word) > section {
     transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
-#section_wrap .content form input::placeholder { color: #8b989f; }
+#section_wrap .content form input::placeholder {
+    color: #8b989f;
+}
 
 #section_wrap .content form input:focus {
     border-color: var(--teal);
@@ -62,6 +71,7 @@ body:has(#section_wrap .word) > section {
 #section_wrap .content form input[type='button'],
 #section_wrap .content form input[type='submit'],
 #section_wrap .content form input[type='reset'] {
+    min-width: 0;
     min-height: 46px;
     padding: 0 15px;
     border: 1px solid transparent;
@@ -89,12 +99,39 @@ body:has(#section_wrap .word) > section {
     background: #fff;
 }
 
-#section_wrap .content form input[type='reset']:hover { background: #f1f5f6; }
-#section_wrap .content p { margin: 0 0 12px; }
-#section_wrap .content a { font-weight: 700; }
+#section_wrap .content form input[type='reset']:hover {
+    background: #f1f5f6;
+}
+
+#section_wrap .content p {
+    margin: 0 0 12px;
+}
+
+#section_wrap .content a {
+    font-weight: 700;
+}
 
 @media (max-width: 520px) {
-    body:has(#section_wrap .word) > section { padding: 28px 14px 40px; }
-    #section_wrap .word { padding: 19px 22px; }
-    #section_wrap .content { padding: 22px; }
+    body:has(#section_wrap .word) > section {
+        padding: 28px 14px 40px;
+    }
+
+    #section_wrap .word {
+        padding: 19px 22px;
+    }
+
+    #section_wrap .content {
+        padding: 22px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #section_wrap .content form input {
+        transition: none;
+    }
+
+    #section_wrap .content form input[type='button']:hover,
+    #section_wrap .content form input[type='submit']:hover {
+        transform: none;
+    }
 }

@@ -60,6 +60,12 @@ nav {
     background: rgb(255 255 255 / 10%);
 }
 
+#nav_wrap > a:focus-visible,
+#nav_wrap > form button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
 #nav_wrap > form {
     margin: 0 0 0 auto;
 }
@@ -84,7 +90,7 @@ footer {
     letter-spacing: 0.02em;
 }
 
-/* Home-page image panel: the existing template supplies the slideshow images. */
+/* Home-page slideshow */
 #section_wrap:has(.imgs) {
     width: min(1240px, calc(100% - 48px));
     margin: 30px auto 48px;
@@ -129,9 +135,32 @@ footer {
 }
 
 @keyframes firezone-slideshow {
-    0%, 2% { opacity: 0; transform: scale(1); }
-    5%, 15% { opacity: 1; }
-    18%, 100% { opacity: 0; transform: scale(1.035); }
+    0%, 2% {
+        opacity: 0;
+        transform: scale(1);
+    }
+
+    5%, 15% {
+        opacity: 1;
+    }
+
+    18%, 100% {
+        opacity: 0;
+        transform: scale(1.035);
+    }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .imgs img {
+        animation: none;
+        opacity: 0;
+        transform: none;
+    }
+
+    .imgs img:first-child {
+        opacity: 1;
+    }
 }
 
 @media (max-width: 720px) {
@@ -139,10 +168,12 @@ footer {
     #nav_wrap,
     #footer_wrap,
     #section_wrap:has(.imgs) {
-        width: min(100% - 28px, 1240px);
+        width: min(calc(100% - 28px), 1240px);
     }
 
-    #header_wrap { min-height: 74px; }
+    #header_wrap {
+        min-height: 74px;
+    }
 
     #nav_wrap {
         padding: 8px 0;
@@ -156,6 +187,12 @@ footer {
         font-size: 12px;
     }
 
-    #nav_wrap > form { margin-left: 0; }
-    .imgs { min-height: 58vh; border-radius: 12px; }
+    #nav_wrap > form {
+        margin-left: 0;
+    }
+
+    .imgs {
+        min-height: 58vh;
+        border-radius: 12px;
+    }
 }
