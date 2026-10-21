@@ -7,12 +7,12 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 # Boot·브라우저가 사진·영상에 접근할 Flask 주소 (다른 PC에서 접근하면 이 PC의 IP로 변경)
-FLASK_PUBLIC_URL = os.getenv("FLASK_PUBLIC_URL", f"http://localhost:{FLASK_PORT}")
+FLASK_PUBLIC_URL = os.getenv("FLASK_PUBLIC_URL", "http://192.168.0.141:5000")
 
 # ── Boot 연동 (Boot 관리자 앱 firezonePjt_admin 기준) ──
 # false 이면 Boot로 보내지 않고 보낼 내용만 로그로 출력 (Boot 없이 테스트용)
 BOOT_ENABLED = os.getenv("BOOT_ENABLED", "true").lower() == "true"
-BOOT_URL = os.getenv("BOOT_URL", "http://localhost:8090")
+BOOT_URL = os.getenv("BOOT_URL", "http://192.168.56.103:8090")
 BOOT_DETECTION_API_PATH = os.getenv("BOOT_DETECTION_API_PATH", "/detections")
 BOOT_REQUEST_TIMEOUT_SECONDS = float(os.getenv("BOOT_REQUEST_TIMEOUT_SECONDS", "3"))
 # Boot에 수정 API(PUT /detections/{dl_no})가 생기면 true
