@@ -11,7 +11,7 @@
 
     <nav th:fragment="nav">
         <div id="nav_wrap">
-            <a th:href="@{/admin}">HOME</a>
+            <a th:href="@{/}">HOME</a>
 
             <!-- 로그인 전 승인 상태 확인 -->
             <th:block sec:authorize="!hasAnyRole('ADMIN', 'SUPER_ADMIN')">
