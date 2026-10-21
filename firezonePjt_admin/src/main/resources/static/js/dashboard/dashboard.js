@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 영상 서버가 살아 있는지 확인하는 주소 (Flask 팀원에게 요청)
     // 비워 두면 영상 중단 감지를 하지 않음
-    const STREAM_STATUS_URL = '${FLASK_BASE_URL}/api/health';
+    const STREAM_STATUS_URL = `${FLASK_BASE_URL}/api/health`;
 
     // 로그인 화면 주소. 비워 두면 안내 문구만 표시
     const LOGIN_URL = '/admin/signin';
@@ -109,6 +109,117 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             window.clearTimeout(timer);
         }
+    }
+
+    // ---------- 경보 ----------
+
+    const alarmList = document.querySelector('#alarm_list');
+    const soundButton = document.querySelector('#alarm_sound_btn');
+
+    const MAX_ALARMS = 10;      // 화면에 보여줄 경보 최대 개수
+
+    let lastDlNo = null;        // 마지막으로 확인한 탐지 번호 (처음 조회 때 기준값으로 저장)
+    let soundOn = false;        // 경보 소리 사용 여부
+    let audioContext = null;    // 소리를 만드는 브라우저 기능
+
+
+    // 경보 소리 켜기/끄기 (브라우저 정책상 사용자가 한 번 눌러야 소리가 남)
+    soundButton.addEventListener('click', () => {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        audioContext.resume();
+
+        soundOn = !soundOn;
+        soundButton.textContent = soundOn ? '경보 소리 끄기' : '경보 소리 켜기';
+
+        // 켤 때 시험으로 한 번 울림
+        if (soundOn) {
+            playAlarmSound();
+        }
+    });
+
+    // 경보음 (삐- 삐- 삐- 3번, 소리 파일 없이 브라우저에서 만듦)
+    function playAlarmSound() {
+        if (!soundOn || !audioContext) {
+            return;
+        }
+
+        for (let i = 0; i < 3; i++) {
+            const start = audioContext.currentTime + i * 0.4;
+
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            oscillator.type = 'square';
+            oscillator.frequency.value = 880;   // 음 높이
+            gain.gain.value = 0.2;              // 음량 (0~1)
+
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+
+            oscillator.start(start);
+            oscillator.stop(start + 0.25);
+        }
+    }
+
+    // 경보 문구 (2026-10-21T15:30:12 → "15시 30분 12초에 Z01 구역에서 주정차 발생")
+    function alarmMessage(dto) {
+        const value = String(dto.dl_first_detected_at || '');
+        const time = value.includes('T')
+            ? value.split('T')[1].split('.')[0]
+            : '';
+
+        const [hour, minute, second] = time.split(':');
+
+        const timeText = hour
+            ? `${hour}시 ${minute}분 ${second}초`
+            : '시간 미확인';
+
+        return `${timeText}에 ${displayValue(dto.dl_zone_no)} 구역에서 주정차 발생`;
+    }
+
+    // 경보 목록 맨 위에 추가 (누르면 상세 화면 = 경보 내용 조회)
+    function addAlarm(dto) {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+
+        link.href =
+            `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
+        link.textContent = alarmMessage(dto);
+
+        item.appendChild(link);
+        alarmList.prepend(item);
+
+        // 오래된 경보는 지움
+        while (alarmList.children.length > MAX_ALARMS) {
+            alarmList.lastElementChild.remove();
+        }
+    }
+
+    // 새로 들어온 탐지가 있으면 경보 발생
+    function checkNewDetections(detections) {
+        const newestDlNo = Number(detections[0].dl_no);
+
+        // 처음 조회한 기록은 경보로 보지 않고 기준값으로만 저장
+        if (lastDlNo === null) {
+            lastDlNo = newestDlNo;
+            return;
+        }
+
+        // 기준값보다 큰 번호 = 새 탐지 (오래된 것부터 추가)
+        const newDetections = detections
+            .filter(dto => Number(dto.dl_no) > lastDlNo)
+            .reverse();
+
+        if (newDetections.length === 0) {
+            return;
+        }
+
+        newDetections.forEach(addAlarm);
+        playAlarmSound();
+
+        lastDlNo = newestDlNo;
     }
 
 
@@ -275,6 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
         hasData = true;
 
         if (detections.length === 0) {
+
+            // 기록이 하나도 없을 때는 0을 기준으로 → 첫 탐지부터 경보
+            if (lastDlNo === null) {        
+                lastDlNo = 0;
+            }
+
             showListMessage('저장된 탐지 기록이 없습니다.');
             clearLatestDetection();
             return;
