@@ -133,12 +133,16 @@ public class MemberController {
 
     // 계정 수정 확인(/member/modify_confirm)
     @PostMapping("/modify_confirm")
-    public String modifyConfirm(MemberDto memberDto, Principal principal, Model model) {
+    public String modifyConfirm(
+            MemberDto memberDto,
+            @RequestParam("currentPassword") String currentPassword,
+            Principal principal,
+            Model model) {
         System.out.println(CLASS_NAME.concat("modifyConfirm()"));
 
         String nextPage = "member/modify_result";
 
-        int result = memberService.modifyConfirm(principal.getName(), memberDto);
+        int result = memberService.modifyConfirm(principal.getName(), memberDto, currentPassword);
         model.addAttribute("result", result);
 
         return nextPage;

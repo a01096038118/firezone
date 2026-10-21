@@ -113,6 +113,9 @@ function modifyForm() {
     } else if (form.um_phone.value === '') {
         alert('INPUT MEMBER PHONE!!');
         form.um_phone.focus();
+    } else if (form.currentPassword.value === '') {
+        alert('현재 비밀번호를 입력해주세요.');
+        form.currentPassword.focus();
     } else {
         form.submit();
 
