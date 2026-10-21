@@ -196,23 +196,27 @@ public class AdminController {
     @PostMapping({"/myinfocheck", "/modify_confirm"})
     public String updateMyInfo(
             AdminDto form,
+            @RequestParam("currentPassword") String currentPassword,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         String password = form.getAm_pw();
         if (isBlank(form.getAm_name())
                 || isBlank(form.getAm_mail())
                 || isBlank(form.getAm_phone())
+                || isBlank(currentPassword)
                 || form.getAm_name().trim().length() > 20
                 || form.getAm_mail().trim().length() > 20
                 || form.getAm_phone().trim().length() > 20
                 || (password != null && !password.isBlank() && password.length() < 8)) {
             redirectAttributes.addFlashAttribute(
                     "errorMessage",
-                    "이름, 이메일, 전화번호를 입력해 주세요(각 20자 이하). 새 비밀번호는 입력할 경우 8자 이상이어야 합니다.");
+                    "현재 비밀번호와 이름, 이메일, 전화번호를 입력해 주세요(각 20자 이하). 새 비밀번호는 입력할 경우 8자 이상이어야 합니다.");
             return "redirect:/admin/myinfocheck";
         }
-        if (!adminService.updateOwnAdmin(authentication.getName(), form)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (!adminService.updateOwnAdmin(authentication.getName(), form, currentPassword)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "현재 비밀번호가 올바르지 않습니다. 변경 사항을 저장하지 않았습니다.");
+            return "redirect:/admin/myinfocheck";
         }
         redirectAttributes.addFlashAttribute("message", "내 정보를 수정했습니다.");
         return "redirect:/admin/myinfocheck";

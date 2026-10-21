@@ -31,10 +31,16 @@
 
                 <input type="hidden" name="no" th:value="${loginedMemberDto.no}">
 
-                <input type="text" name="id" th:value="${loginedMemberDto.id}" readonly disabled ><br>
-                <input type="password" name="pw" placeholder="INPUT ADMIN PW"><br>
-                <input type="email" name="mail" th:value="${loginedMemberDto.mail}" placeholder="INPUT ADMIN MAIL"><br>
-                <input type="text" name="phone" th:value="${loginedMemberDto.phone}" placeholder="INPUT ADMIN PHONE"><br>
+                <input type="text" name="am_id" th:value="${loginedMemberDto.am_id}" readonly><br>
+                <input type="password"
+                       name="currentPassword"
+                       placeholder="INPUT CURRENT ADMIN PW"
+                       autocomplete="current-password"
+                       required><br>
+                <input type="password" name="am_pw" placeholder="NEW ADMIN PW (OPTIONAL)" autocomplete="new-password"><br>
+                <input type="text" name="am_name" th:value="${loginedMemberDto.am_name}" placeholder="INPUT ADMIN NAME" required><br>
+                <input type="email" name="am_mail" th:value="${loginedMemberDto.am_mail}" placeholder="INPUT ADMIN MAIL" required><br>
+                <input type="text" name="am_phone" th:value="${loginedMemberDto.am_phone}" placeholder="INPUT ADMIN PHONE" required><br>
                 <input type="button" value="modify" onclick="modifyForm();">
                 <input type="reset" value="reset">
 

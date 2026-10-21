@@ -104,10 +104,13 @@ function modifyForm() {
 
     let form = document.modify_form;
 
-    if (form.am_pw.value === '') {
-        alert('INPUT ADMIN PW!!');
-        form.am_pw.focus();
+    if (form.currentPassword.value === '') {
+        alert('현재 비밀번호를 입력해주세요.');
+        form.currentPassword.focus();
 
+    } else if (form.am_name.value === '') {
+        alert('INPUT ADMIN NAME!!');
+        form.am_name.focus();
     } else if (form.am_mail.value === '') {
         alert('INPUT ADMIN MAIL!!');
         form.am_mail.focus();

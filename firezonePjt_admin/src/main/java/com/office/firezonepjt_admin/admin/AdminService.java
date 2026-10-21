@@ -182,13 +182,15 @@ public class AdminService {
     }
 
     @Transactional
-    public boolean updateOwnAdmin(String currentUsername, AdminDto form) {
+    public boolean updateOwnAdmin(String currentUsername, AdminDto form, String currentPassword) {
         log.info("updateOwnAdmin()");
         Optional<AdminEntity> optionalAdmin = adminRepository.findByAdId(currentUsername);
         if (optionalAdmin.isEmpty()
                 || isBlank(form.getAm_name())
                 || isBlank(form.getAm_mail())
-                || isBlank(form.getAm_phone())) {
+                || isBlank(form.getAm_phone())
+                || isBlank(currentPassword)
+                || !passwordEncoder.matches(currentPassword, optionalAdmin.get().getAdPw())) {
             return false;
         }
 
