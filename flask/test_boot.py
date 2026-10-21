@@ -1,4 +1,8 @@
 # test_boot.py  (테스트 끝나면 삭제)
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from datetime import datetime
 from boot import api as boot_client   # ← 1번에서 찾은 파일 이름으로 (.py 빼고)
 
