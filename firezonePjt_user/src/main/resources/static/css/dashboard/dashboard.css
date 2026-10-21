@@ -149,15 +149,15 @@
     text-align: center;
 }
 
-.detction_info {
+.detection_info {
     margin: 18px 0;
     display: grid;
     grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);
     gap: 0;
 }
 
-.detction_info dt,
-.detction_info dd {
+.detection_info dt,
+.detection_info dd {
     min-width: 0;
     margin: 0;
     padding: 9px 0;
@@ -165,11 +165,11 @@
     font-size: 13px;
 }
 
-.detction_info dt {
+.detection_info dt {
     color: var(--muted);
 }
 
-.detction_info dd {
+.detection_info dd {
     color: var(--ink);
     font-weight: 600;
     overflow-wrap: anywhere;

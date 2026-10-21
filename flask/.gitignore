@@ -14,3 +14,4 @@ logs/
 .idea/
 Thumbs.db
 desktop.ini
+test_boot.py

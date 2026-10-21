@@ -95,27 +95,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 경보음 (삐- 삐- 삐- 3번, 소리 파일 없이 브라우저에서 만듦)
+    const ALARM_REPEAT = 4;        // 울리는 횟수
+    const ALARM_TONE_SEC = 0.7;    // 한 번 울리는 길이 (초)
+    const ALARM_GAP_SEC = 0.3;     // 소리 사이 쉬는 시간 (초)
+    const ALARM_FREQ = 880;        // 음 높이 (Hz, 낮을수록 묵직함 / 기존 880)
+    const ALARM_VOLUME = 0.3;      // 음량 (0 ~ 1)
+
     function playAlarmSound() {
         if (!soundOn || !audioContext) {
             return;
         }
 
-        for (let i = 0; i < 3; i++) {
-            const start = audioContext.currentTime + i * 0.4;
+        const now = audioContext.currentTime;
 
-            const oscillator = audioContext.createOscillator();
+        for (let i = 0; i < ALARM_REPEAT; i++) {
+            const start = now + i * (ALARM_TONE_SEC + ALARM_GAP_SEC);
+            const end = start + ALARM_TONE_SEC;
+
+            // 기본음 + 한 옥타브 아래 저음(작게)
+            const mainTone = audioContext.createOscillator();
+            const subTone = audioContext.createOscillator();
             const gain = audioContext.createGain();
+            const subGain = audioContext.createGain();
 
-            oscillator.type = 'square';
-            oscillator.frequency.value = 880;   // 음 높이
-            gain.gain.value = 0.2;              // 음량 (0~1)
+            mainTone.type = 'sawtooth';
+            mainTone.frequency.value = ALARM_FREQ;
 
-            oscillator.connect(gain);
+            subTone.type = 'sine';
+            subTone.frequency.value = ALARM_FREQ / 2;
+            subGain.gain.value = 0;      // 저음 크기 (0 = 없음, 1 = 원래 크기)
+
+            // 시작·끝을 부드럽게 (뚝 끊기는 잡음 방지)
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(ALARM_VOLUME, start + 0.05);
+            gain.gain.setValueAtTime(ALARM_VOLUME, end - 0.1);
+            gain.gain.linearRampToValueAtTime(0, end);
+
+            // 연결: 기본음 → gain, 저음 → subGain → gain → 스피커
+            mainTone.connect(gain);
+            subTone.connect(subGain);
+            subGain.connect(gain);
             gain.connect(audioContext.destination);
 
-            oscillator.start(start);
-            oscillator.stop(start + 0.25);
+            mainTone.start(start);
+            subTone.start(start);
+            mainTone.stop(end);
+            subTone.stop(end);
         }
     }
 
@@ -343,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearLatestDetection();
             return;
         }
+        checkNewDetections(detections);
 
         showLatestDetection(detections[0]);
         showDetectionList(detections);
