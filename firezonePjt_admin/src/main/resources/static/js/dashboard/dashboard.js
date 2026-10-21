@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * 아래 영상 연결 코드는 <img>로 표시할 수 있는
      * MJPEG 스트림을 사용하는 경우의 코드
      */
-    const STREAM_URL = 'http://192.168.0.106:5000/api/monitor';
+    const STREAM_URL = `${FLASK_BASE_URL}/api/monitor`;
 
     // 영상 서버가 살아 있는지 확인하는 주소 (Flask 팀원에게 요청)
     // 비워 두면 영상 중단 감지를 하지 않음
-    const STREAM_STATUS_URL = '';
+    const STREAM_STATUS_URL = '${FLASK_BASE_URL}/api/health';
 
     // 로그인 화면 주소. 비워 두면 안내 문구만 표시
     const LOGIN_URL = '/admin/signin';

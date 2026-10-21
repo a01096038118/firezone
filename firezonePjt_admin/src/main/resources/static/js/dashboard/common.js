@@ -1,6 +1,6 @@
 // Flask 서버 주소 (이미지·영상을 제공하는 서버). 팀원에게 확인 후 입력
 // 예: 'http://192.168.56.xx:5000'
-const FLASK_BASE_URL = 'http://192.168.0.106:5000';
+const FLASK_BASE_URL = 'http://192.168.0.141:5000';
 
 // 서버 오류를 상태 코드와 함께 전달하는 오류 클래스
 class ApiError extends Error {
