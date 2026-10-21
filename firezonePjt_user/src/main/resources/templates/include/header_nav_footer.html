@@ -24,7 +24,6 @@
             <th:block sec:authorize="hasAnyRole('APPR_USER', 'USER')">
                 <a th:href="@{/dashboard/monitoring}">관제화면</a>
                 <a th:href="@{/dashboard/detection}">탐지 목록</a>
-                <a sec:authorize="hasAnyRole('APPR_USER', 'USER')" th:href="@{/planner}">Planner</a>
                 <a th:href="@{/member/modify}">내 정보 조회</a>
 
                 <form th:action="@{/member/signout_confirm}"
