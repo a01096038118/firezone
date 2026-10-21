@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/detections")
 public class DetectionController {
 
+
+
     final private DetectionService detectionService;
 
     // 탐지 저장을 허용할 IP 목록
@@ -38,12 +40,15 @@ public class DetectionController {
     }
 
 
+
+
     // 탐지 기록 저장 (허용된 IP의 Flask 서버만 가능)
     @PostMapping
     public ResponseEntity<DetectionSaveResponse> saveDetection(
             HttpServletRequest request,
             @Valid @RequestBody DetectionDto dto) {
-        log.info("saveDetection()");
+        log.info("[Flask 요청 도착] IP={}, 데이터={}",
+                request.getRemoteAddr(), dto);
 
         checkAllowedIp(request);
 
