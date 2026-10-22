@@ -1,6 +1,8 @@
 package com.office.firezonepjt_admin.admin;
 
 import com.office.firezonepjt_admin.admin.jpa.UserMemberEntity;
+import com.office.firezonepjt_admin.admin.AdminService.AdminPermissionRole;
+import org.springframework.security.core.GrantedAuthority;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -66,10 +68,15 @@ public class AdminController {
     }
 
     @GetMapping("/members_list")
-    public String membersList(Model model) {
+    public String membersList(Authentication authentication, Model model) {
         log.info("membersList()");
         model.addAttribute("admins", adminService.findAllAdmins());
-        model.addAttribute("users", adminService.findAllUsers());
+        boolean canViewUserMembers = hasRole(authentication, "ROLE_MEMBER_LIST")
+                || hasRole(authentication, "ROLE_MEMBER_MODIFY");
+        model.addAttribute("canViewUserMembers", canViewUserMembers);
+        if (canViewUserMembers) {
+            model.addAttribute("users", adminService.findAllUsers());
+        }
 
         String nextPage = "admin/members";
 
@@ -77,16 +84,51 @@ public class AdminController {
     }
 
     @GetMapping("/members_list/admin/{adminNo}")
-    public String adminMemberDetail(@PathVariable int adminNo, Model model) {
+    public String adminMemberDetail(
+            @PathVariable int adminNo,
+            Authentication authentication,
+            Model model) {
 
         AdminDto findAdminOr404 = adminService.findAdminByNo(adminNo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        AdminPermissionRole permissionRole = adminService.findCurrentRole(adminNo);
         model.addAttribute("admin", findAdminOr404);
+        model.addAttribute("permissionRole", permissionRole.getRoleName());
+        model.addAttribute("permissionLabel", permissionRole.getRoleName());
+        model.addAttribute("masterRole", permissionRole.isMaster());
+        model.addAttribute("canManagePermissions",
+                hasMasterRole(authentication)
+                        && !authentication.getName().equals(findAdminOr404.getAm_id())
+                        && !permissionRole.isMaster());
 
         String nextPage = "admin/admin_member_detail";
 
         return nextPage;
+    }
+
+    @PostMapping("/members_list/admin/{adminNo}/authority")
+    public String updateAdminPermissions(
+            @PathVariable int adminNo,
+            @RequestParam String permissionRole,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        boolean changed = adminService.updatePermissions(
+                adminNo, permissionRole, authentication.getName());
+        redirectAttributes.addFlashAttribute(
+                "message",
+                changed ? "관리자 권한을 변경했습니다." : "변경된 권한이 없습니다.");
+        return "redirect:/admin/members_list/admin/" + adminNo;
+    }
+
+    private boolean hasMasterRole(Authentication authentication) {
+        return hasRole(authentication, "ROLE_MASTER");
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role::equals);
     }
 
     @GetMapping("/members_list/user/{userNo}")

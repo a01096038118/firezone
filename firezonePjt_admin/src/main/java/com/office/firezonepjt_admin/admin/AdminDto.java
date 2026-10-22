@@ -3,9 +3,6 @@ package com.office.firezonepjt_admin.admin;
 import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 //@Getter
 //@Setter
 @Data
@@ -88,9 +85,6 @@ public class AdminDto {
     }
 
     public AdminEntity toEntity() {
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
         return AdminEntity.builder()
                 .adNo(am_no)
                 .adId(am_id)
@@ -98,10 +92,7 @@ public class AdminDto {
                 .adName(am_name)
                 .adMail(am_mail)
                 .adPhone(am_phone)
-                .adRegDate(am_reg_date != null ? LocalDateTime.parse(am_reg_date, formatter) : null)
-                .adModDate(am_mod_date != null ? LocalDateTime.parse(am_mod_date, formatter) : null)
                 .build();
-
     }
 
 }

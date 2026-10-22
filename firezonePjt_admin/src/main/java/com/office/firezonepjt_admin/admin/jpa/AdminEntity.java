@@ -42,6 +42,13 @@ public class AdminEntity {
     @Column(name = "am_mod_date")
     private LocalDateTime adModDate;        // 사용자 정보 수정일
 
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.adRegDate = now;
+        this.adModDate = now;
+    }
+
     @PreUpdate
     protected void onUpdate() {
         this.adModDate = LocalDateTime.now();

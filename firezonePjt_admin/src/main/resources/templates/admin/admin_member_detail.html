@@ -18,7 +18,7 @@
         <div>
             <p class="eyebrow">ADMINISTRATION</p>
             <h1>관리자 계정 조회</h1>
-            <p class="page-description">관리자 계정은 회원 조회 화면에서 확인만 할 수 있습니다.</p>
+            <p class="page-description">관리자 계정 정보와 접근 권한을 확인합니다.</p>
         </div>
     </div>
 
@@ -33,11 +33,38 @@
             <div><dt>전화번호</dt><dd th:text="${admin.am_phone}">010-0000-0000</dd></div>
             <div><dt>가입일</dt><dd th:text="${admin.am_reg_date != null ? admin.am_reg_date : '-'}">-</dd></div>
             <div><dt>수정일</dt><dd th:text="${admin.am_mod_date != null ? admin.am_mod_date : '-'}">-</dd></div>
+            <div>
+                <dt>권한 조합</dt>
+                <dd th:text="${permissionLabel}">[]</dd>
+            </div>
+            <div>
+                <dt>권한 관리</dt>
+                <dd th:text="${masterRole ? 'Master' : '일반 관리자'}">일반 관리자</dd>
+            </div>
         </dl>
 
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">목록</a>
         </div>
+    </section>
+
+    <section class="detail-card" th:if="${canManagePermissions}">
+        <h2>관리자 권한 설정</h2>
+        <form th:action="@{/admin/members_list/admin/{adminNo}/authority(adminNo=${admin.am_no})}"
+              method="post">
+            <div class="form-group">
+                <label for="permissionRole">권한 조합</label>
+                <select id="permissionRole" name="permissionRole" required>
+                    <option value="" th:selected="${permissionRole == ''}">권한 없음</option>
+                    <option value="MODIFY, USER" th:selected="${permissionRole == 'MODIFY, USER'}">MODIFY, USER</option>
+                    <option value="LIST, USER" th:selected="${permissionRole == 'LIST, USER'}">LIST, USER</option>
+                    <option value="LIST, MODIFY" th:selected="${permissionRole == 'LIST, MODIFY'}">LIST, MODIFY</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button class="button button-primary" type="submit">권한 저장</button>
+            </div>
+        </form>
     </section>
 </main>
 

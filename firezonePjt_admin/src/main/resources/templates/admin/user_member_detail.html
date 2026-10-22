@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,12 +54,14 @@
         </dl>
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">회원 목록</a>
-            <form th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
+            <form sec:authorize="hasRole('MEMBER_MODIFY')"
+                  th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
                   th:action="@{/admin/members_list/user/{userNo}/approve(userNo=${user.userNo})}"
                   method="post">
                 <button class="button button-primary" type="submit">회원 승인</button>
             </form>
-            <form th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
+            <form sec:authorize="hasRole('MEMBER_MODIFY')"
+                  th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
                   method="post"
                   onsubmit="return confirm('이 회원을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">
                 <button class="button button-danger" type="submit">회원 삭제</button>
