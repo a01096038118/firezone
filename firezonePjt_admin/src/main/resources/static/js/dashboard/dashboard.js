@@ -112,16 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---------- 경보 ----------
-
-    const alarmList = document.querySelector('#alarm_list');
     const soundButton = document.querySelector('#alarm_sound_btn');
-
-    const MAX_ALARMS = 10;      // 화면에 보여줄 경보 최대 개수
 
     let lastDlNo = null;        // 마지막으로 확인한 탐지 번호 (처음 조회 때 기준값으로 저장)
     let soundOn = false;        // 경보 소리 사용 여부
     let audioContext = null;    // 소리를 만드는 브라우저 기능
-
 
     // 경보 소리 켜기/끄기 (브라우저 정책상 사용자가 한 번 눌러야 소리가 남)
     soundButton.addEventListener('click', () => {
@@ -138,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playAlarmSound();
         }
     });
+
     const ALARM_REPEAT = 4;        // 울리는 횟수
     const ALARM_TONE_SEC = 0.7;    // 한 번 울리는 길이 (초)
     const ALARM_GAP_SEC = 0.3;     // 소리 사이 쉬는 시간 (초)
@@ -203,23 +199,65 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${timeText}에 ${displayValue(dto.dl_zone_no)} 구역에서 주정차 발생`;
     }
 
-    // 경보 목록 맨 위에 추가 (누르면 상세 화면 = 경보 내용 조회)
-    function addAlarm(dto) {
-        const item = document.createElement('li');
-        const link = document.createElement('a');
+    // ---------- 경보 팝업 ----------
 
-        link.href =
+    const popupArea = document.querySelector('#alarm_popup_area');
+
+    const POPUP_CLOSE_MS = 0;       // 팝업 자동 닫힘 시간 (0이면 ✕를 눌러야 닫힘)
+    const MAX_POPUPS = 3;           // 한 번에 보여줄 팝업 최대 개수
+
+    // 경보 팝업 띄우기
+    function showAlarmPopup(dto) {
+        const popup = document.createElement('div');
+        popup.className = 'alarm_popup';
+
+        // 제목 + 닫기 버튼
+        const header = document.createElement('div');
+        header.className = 'alarm_popup_header';
+
+        const title = document.createElement('strong');
+        title.textContent = '🚨 주정차 경보';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'alarm_popup_close';
+        closeButton.textContent = '✕';
+        closeButton.addEventListener('click', () => popup.remove());
+
+        header.append(title, closeButton);
+
+        // 경보 문구
+        const message = document.createElement('p');
+        message.textContent = alarmMessage(dto);
+
+        // 차량 번호 + 상세 보기
+        const footer = document.createElement('div');
+        footer.className = 'alarm_popup_footer';
+
+        const carNumber = document.createElement('span');
+        carNumber.textContent = displayValue(dto.dl_car_number);
+
+        const detail = document.createElement('a');
+        detail.href =
             `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-        link.textContent = alarmMessage(dto);
+        detail.textContent = '상세 보기';
 
-        item.appendChild(link);
-        alarmList.prepend(item);
+        footer.append(carNumber, detail);
 
-        // 오래된 경보는 지움
-        while (alarmList.children.length > MAX_ALARMS) {
-            alarmList.lastElementChild.remove();
+        popup.append(header, message, footer);
+        popupArea.prepend(popup);
+
+        // 너무 많이 쌓이면 오래된 팝업부터 닫음
+        while (popupArea.children.length > MAX_POPUPS) {
+            popupArea.lastElementChild.remove();
+        }
+
+        // 일정 시간이 지나면 자동으로 닫힘
+        if (POPUP_CLOSE_MS > 0) {
+            window.setTimeout(() => popup.remove(), POPUP_CLOSE_MS);
         }
     }
+
 
     // 새로 들어온 탐지가 있으면 경보 발생
     function checkNewDetections(detections) {
@@ -240,7 +278,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        newDetections.forEach(addAlarm);
+        newDetections.forEach(showAlarmPopup);
+        playAlarmSound();
+
+        lastDlNo = newestDlNo;
+    }
+
+
+
+    // 새로 들어온 탐지가 있으면 경보 발생
+    function checkNewDetections(detections) {
+        const newestDlNo = Number(detections[0].dl_no);
+
+        // 처음 조회한 기록은 경보로 보지 않고 기준값으로만 저장
+        if (lastDlNo === null) {
+            lastDlNo = newestDlNo;
+            return;
+        }
+
+        // 기준값보다 큰 번호 = 새 탐지 (오래된 것부터 추가)
+        const newDetections = detections
+            .filter(dto => Number(dto.dl_no) > lastDlNo)
+            .reverse();
+
+        if (newDetections.length === 0) {
+            return;
+        }
+
+        newDetections.forEach(showAlarmPopup());
         playAlarmSound();
 
         lastDlNo = newestDlNo;
