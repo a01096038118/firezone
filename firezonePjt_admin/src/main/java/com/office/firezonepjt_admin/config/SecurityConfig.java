@@ -1,5 +1,7 @@
 package com.office.firezonepjt_admin.config;
 
+import com.office.firezonepjt_admin.admin.security.AdminDetailsService;
+import com.office.firezonepjt_admin.admin.security.AdminPermissionRefreshFilter;
 import com.office.firezonepjt_admin.admin.security.AdminAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Slf4j
@@ -22,7 +25,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, AdminDetailsService adminDetailsService) throws Exception {
 
         http
                 // Flask의 탐지 저장 요청 -> 로그인 토큰이 없으므로 경로 제외
@@ -32,6 +35,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Flask 탐지 저장 :  로그인 없이 통과
                         .requestMatchers(HttpMethod.POST, "/detections").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
+                        .hasRole("MEMBER_MODIFY")
+                        .requestMatchers(
+                                "/admin/members_list",
+                                "/admin/members_list/admin/**"
+                        ).hasAnyRole("MEMBER_LIST", "MEMBER_MODIFY", "MASTER")
+                        .requestMatchers("/admin/members_list/user/**")
+                        .hasAnyRole("MEMBER_LIST", "MEMBER_MODIFY")
+                        .requestMatchers("/dashboard/**", "/detections/**")
+                        .hasAnyRole("USER", "CONTROL")
                         .requestMatchers(
                                 "/",
                                 "/admin/signin",
@@ -71,7 +86,10 @@ public class SecurityConfig {
                         .logoutUrl("/admin/logout")
                         .logoutSuccessUrl("/admin/signin?logout")
                         .permitAll()
-                );
+                )
+                .addFilterBefore(
+                        new AdminPermissionRefreshFilter(adminDetailsService),
+                        AuthorizationFilter.class);
 
         return http.build();
     }

@@ -48,10 +48,6 @@ public class UserMemberEntity {
     private String phone;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_member_authority",
-            joinColumns = @JoinColumn(name = "um_no", referencedColumnName = "um_no"),
-            inverseJoinColumns = @JoinColumn(name = "aa_no", referencedColumnName = "aa_no"))
     private AuthorityEntity authorityEntity;
 
     @Column(name = "um_reg_date", updatable = false)

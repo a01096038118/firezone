@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AuthorityDto {
 
-    private int aa_no;              // 권한 고유 번호
-    private String aa_role_name;    // 권한 이름
+    private int ua_no;              // 권한 고유 번호
+    private String ua_role_name;    // 권한 이름
 
     public AuthorityEntity toEntity() {
         return AuthorityEntity.builder()
-                .authNo(aa_no)
-                .authRoleName(aa_role_name)
+                .authNo(ua_no)
+                .authRoleName(ua_role_name)
                 .build();
     }
 

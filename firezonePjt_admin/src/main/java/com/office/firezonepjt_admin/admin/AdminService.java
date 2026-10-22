@@ -2,6 +2,10 @@ package com.office.firezonepjt_admin.admin;
 
 import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import com.office.firezonepjt_admin.admin.jpa.AdminRepository;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityEntity;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityHistoryEntity;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityHistoryRepository;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityRepository;
 import com.office.firezonepjt_admin.admin.jpa.AuthorityEntity;
 import com.office.firezonepjt_admin.admin.jpa.AuthorityRepository;
 import com.office.firezonepjt_admin.admin.jpa.UserMemberEntity;
@@ -17,12 +21,123 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class AdminService {
+
+    public enum AdminPermissionRole {
+        NONE("", false, false, false, false),
+        MASTER("MASTER", true, true, true, true),
+        MODIFY_USER("MODIFY, USER", true, true, true, false),
+        LIST_USER("LIST, USER", true, false, true, false),
+        LIST_MODIFY("LIST, MODIFY", true, true, false, false),
+        LEGACY_LIST("LIST", true, false, false, false),
+        LEGACY_CONTROL("CONTROL", false, false, true, false);
+
+        private final String roleName;
+        private final boolean memberList;
+        private final boolean memberModify;
+        private final boolean control;
+        private final boolean master;
+
+        AdminPermissionRole(
+                String roleName,
+                boolean memberList,
+                boolean memberModify,
+                boolean control,
+                boolean master) {
+            this.roleName = roleName;
+            this.memberList = memberList;
+            this.memberModify = memberModify;
+            this.control = control;
+            this.master = master;
+        }
+
+        public String getMemberAccess() {
+            if (memberModify) {
+                return "MODIFY";
+            }
+            return memberList ? "LIST" : "NONE";
+        }
+
+        public String getRoleName() {
+            return roleName;
+        }
+
+        public boolean hasControl() {
+            return control;
+        }
+
+        public boolean isMaster() {
+            return master;
+        }
+
+        public List<String> toSpringRoles() {
+            List<String> roles = new ArrayList<>();
+            if (memberList) {
+                roles.add("MEMBER_LIST");
+            }
+            if (memberModify) {
+                roles.add("MEMBER_MODIFY");
+            }
+            if (control) {
+                roles.add("USER");
+                roles.add("CONTROL");
+            }
+            if (master) {
+                roles.add("MASTER");
+            }
+            return roles;
+        }
+
+        private static AdminPermissionRole fromRoleName(String roleName) {
+            if ("".equals(roleName) || "NONE".equalsIgnoreCase(roleName)) {
+                return NONE;
+            }
+            if ("MODIFY".equalsIgnoreCase(roleName)) {
+                return LIST_MODIFY;
+            }
+            if ("LIST".equalsIgnoreCase(roleName)) {
+                return LEGACY_LIST;
+            }
+            if ("CONTROL".equalsIgnoreCase(roleName)) {
+                return LEGACY_CONTROL;
+            }
+            if ("LIST_CONTROL".equalsIgnoreCase(roleName)) {
+                return LIST_USER;
+            }
+            if ("MODIFY_CONTROL".equalsIgnoreCase(roleName)) {
+                return MODIFY_USER;
+            }
+            for (AdminPermissionRole role : values()) {
+                if (role.roleName.equalsIgnoreCase(roleName.trim())) {
+                    return role;
+                }
+            }
+            throw new IllegalStateException("Unknown admin permission role: " + roleName);
+        }
+
+        private static AdminPermissionRole fromRoleNameForUpdate(String roleName) {
+            if (roleName == null) {
+                throw new IllegalArgumentException("Permission set is required");
+            }
+            String normalizedRoleName = roleName.trim().toUpperCase(java.util.Locale.ROOT);
+            for (AdminPermissionRole role : values()) {
+                if (role.roleName.equalsIgnoreCase(normalizedRoleName)
+                        && role != MASTER
+                        && role != LEGACY_LIST
+                        && role != LEGACY_CONTROL) {
+                    return role;
+                }
+            }
+            throw new IllegalArgumentException("Invalid admin permission set: " + roleName);
+        }
+    }
 
     final public static int ADMIN_ID_ALREADY_EXIST   = 0;
     final public static int ADMIN_SIGNUP_SUCCESS     = 1;
@@ -40,6 +155,8 @@ public class AdminService {
     final private PasswordEncoder passwordEncoder;
     final private JavaMailSender javaMailSender;
     final private AdminRepository adminRepository;
+    final private AdminAuthorityRepository adminAuthorityRepository;
+    final private AdminAuthorityHistoryRepository adminAuthorityHistoryRepository;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public AdminService(AdminDao adminDao,
@@ -47,16 +164,91 @@ public class AdminService {
                          AuthorityRepository authorityRepository,
                          PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
-                         AdminRepository adminRepository) {
+                         AdminRepository adminRepository,
+                         AdminAuthorityRepository adminAuthorityRepository,
+                         AdminAuthorityHistoryRepository adminAuthorityHistoryRepository) {
         this.adminDao = adminDao;
         this.userMemberRepository = userMemberRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.adminRepository = adminRepository;
+        this.adminAuthorityRepository = adminAuthorityRepository;
+        this.adminAuthorityHistoryRepository = adminAuthorityHistoryRepository;
     }
 
+    @Transactional(readOnly = true)
+    public AdminPermissionRole findCurrentRole(int adminNo) {
+        return latestPermissionHistory(adminNo)
+                .map(history -> adminAuthorityRepository.findById(history.getAfterAuthorityNo())
+                        .map(authority -> AdminPermissionRole.fromRoleName(authority.getRoleName()))
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Authority not found: " + history.getAfterAuthorityNo())))
+                .orElse(AdminPermissionRole.NONE);
+    }
 
+    @Transactional
+    public boolean updatePermissions(
+            int adminNo,
+            String roleName,
+            String changedByUsername) {
+        AdminPermissionRole newRole;
+        try {
+            newRole = AdminPermissionRole.fromRoleNameForUpdate(roleName);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
+
+        AdminEntity targetAdmin = adminRepository.findById(adminNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        AdminEntity changedBy = adminRepository.findByAdId(changedByUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        if (targetAdmin.getAdNo() == changedBy.getAdNo()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change your own permissions");
+        }
+
+        Optional<AdminAuthorityHistoryEntity> previousHistory = latestPermissionHistory(adminNo);
+        AdminPermissionRole currentRole = previousHistory
+                .map(history -> adminAuthorityRepository.findById(history.getAfterAuthorityNo())
+                        .map(authority -> AdminPermissionRole.fromRoleName(authority.getRoleName()))
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Authority not found: " + history.getAfterAuthorityNo())))
+                .orElse(AdminPermissionRole.NONE);
+
+        if (currentRole.isMaster()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Master permissions can only be changed in the database");
+        }
+        if (currentRole == newRole) {
+            return false;
+        }
+
+        AdminAuthorityEntity newAuthority = adminAuthorityRepository
+                .findByRoleNameIgnoreCase(newRole.getRoleName())
+                .orElseGet(() -> adminAuthorityRepository.save(AdminAuthorityEntity.builder()
+                        .roleName(newRole.getRoleName())
+                        .build()));
+
+        AdminAuthorityHistoryEntity history = AdminAuthorityHistoryEntity.builder()
+                .adminNo(adminNo)
+                .beforeAuthorityNo(previousHistory
+                        .map(AdminAuthorityHistoryEntity::getAfterAuthorityNo)
+                        .orElse(null))
+                .afterAuthorityNo(newAuthority.getAuthorityNo())
+                .changedBy(changedBy.getAdNo())
+                .changedAt(LocalDateTime.now())
+                .build();
+        adminAuthorityHistoryRepository.save(history);
+        return true;
+    }
+
+    private Optional<AdminAuthorityHistoryEntity> latestPermissionHistory(int adminNo) {
+        return adminAuthorityHistoryRepository
+                .findFirstByAdminNoOrderByChangedAtDescHistoryNoDesc(adminNo);
+    }
+
+    @Transactional
     public int signupConfirm(AdminDto adminDto) {
         log.info("signupConfirm()");
 
@@ -68,10 +260,22 @@ public class AdminService {
 
             AdminEntity savedAdminEntity = adminRepository.save(adminDto.toEntity());
 
-            if (savedAdminEntity != null)
-                return ADMIN_SIGNUP_SUCCESS;
-            else
+            if (savedAdminEntity == null) {
                 return ADMIN_SIGNUP_FAIL;
+            }
+
+            AdminAuthorityEntity emptyAuthority = adminAuthorityRepository.save(
+                    AdminAuthorityEntity.builder()
+                            .roleName("")
+                            .build());
+            adminAuthorityHistoryRepository.save(AdminAuthorityHistoryEntity.builder()
+                    .adminNo(savedAdminEntity.getAdNo())
+                    .beforeAuthorityNo(null)
+                    .afterAuthorityNo(emptyAuthority.getAuthorityNo())
+                    .changedBy(savedAdminEntity.getAdNo())
+                    .changedAt(LocalDateTime.now())
+                    .build());
+            return ADMIN_SIGNUP_SUCCESS;
 
         } else {
             return ADMIN_ID_ALREADY_EXIST;
