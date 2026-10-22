@@ -34,7 +34,6 @@ public class AdminService {
     final public static int NEW_PASSWORD_CREATION_SUCCESS   = 1;
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
 
-    final private AdminDao adminDao;
     final private UserMemberRepository userMemberRepository;
     final private AuthorityRepository authorityRepository;
     final private PasswordEncoder passwordEncoder;
@@ -42,13 +41,11 @@ public class AdminService {
     final private AdminRepository adminRepository;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    public AdminService(AdminDao adminDao,
-                         UserMemberRepository userMemberRepository,
+    public AdminService( UserMemberRepository userMemberRepository,
                          AuthorityRepository authorityRepository,
                          PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
                          AdminRepository adminRepository) {
-        this.adminDao = adminDao;
         this.userMemberRepository = userMemberRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
