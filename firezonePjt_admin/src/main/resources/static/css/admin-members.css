@@ -510,3 +510,143 @@
         transition: none;
     }
 }
+
+/* =========================================================
+   admin_member_detail / user_member_detail 전용 오버라이드
+   (myinfocheck 화면과 100% 똑같은 디자인으로 변경)
+   ========================================================= */
+
+/* 1. 바깥 레이아웃 및 너비 설정 (중앙 정렬) */
+.admin-members:has(.detail-card) {
+    width: min(100%, 520px);
+    margin: 42px auto 58px;
+}
+
+/* 2. 상단 네이비 바 (page-heading 디자인 변경) */
+.admin-members:has(.detail-card) .page-heading {
+    background: var(--navy);
+    color: #fff;
+    padding: 23px 30px;
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+    border-bottom: none;
+    display: block;
+}
+
+.admin-members:has(.detail-card) .page-heading .eyebrow {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+}
+
+.admin-members:has(.detail-card) .page-heading h1 {
+    color: #fff;
+    font-size: 18px;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.admin-members:has(.detail-card) .page-heading .page-description {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+/* 3. 하얀색 카드 영역 (detail-card 디자인 변경) */
+.admin-members:has(.detail-card) .detail-card {
+    border-radius: 0 0 16px 16px;
+    margin-top: 0;
+    border-top: none;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* 4. 정보 리스트(dl)를 세로 1열로 배치 (myinfocheck 스타일) */
+.admin-members:has(.detail-card) .detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+}
+
+.admin-members:has(.detail-card) .detail-list div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-left: none;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.admin-members:has(.detail-card) .detail-list div:last-child {
+    border-bottom: none;
+}
+
+.admin-members:has(.detail-card) .detail-list dt {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.admin-members:has(.detail-card) .detail-list dd {
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* 5. 하단 버튼 영역 (목록/삭제 버튼을 세로로 꽉 차게 정렬) */
+.admin-members:has(.detail-card) .form-actions {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column; /* 버튼들을 위아래로 정렬 */
+    gap: 10px; /* 버튼 사이 간격 */
+}
+
+/* form 태그가 버튼을 감싸고 있을 경우 너비 100% */
+.admin-members:has(.detail-card) .form-actions form {
+    width: 100%;
+    margin: 0;
+}
+
+/* 모든 버튼을 꽉 차고 예쁘게 (내 정보 저장 버튼과 동일한 크기로) */
+.admin-members:has(.detail-card) .form-actions .button {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* 회원 목록 버튼 (기존 빨간색 유지) */
+.admin-members:has(.detail-card) .form-actions .button-secondary {
+    background: var(--red);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.admin-members:has(.detail-card) .form-actions .button-secondary:hover {
+    background: var(--red-dark);
+}
+
+/* 회원 삭제 버튼 (조금 더 진한 빨간색으로 위험함을 표시) */
+.admin-members:has(.detail-card) .form-actions .button-danger {
+    background: #b23c3c; /* 기존 삭제 버튼 색상 */
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.admin-members:has(.detail-card) .form-actions .button-danger:hover {
+    background: #8c2e2e;
+}
