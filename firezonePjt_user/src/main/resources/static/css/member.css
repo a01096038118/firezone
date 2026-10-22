@@ -1,3 +1,4 @@
+/* ===== 페이지 레이아웃 ===== */
 body:has(#section_wrap .word) > section {
     flex: 1;
     display: grid;
@@ -11,6 +12,7 @@ body:has(#section_wrap .word) > section {
     min-width: 0;
     margin: 0 auto;
     overflow: hidden;
+    box-sizing: border-box;
     border: 1px solid var(--line);
     border-radius: 16px;
     background: var(--surface);
@@ -31,8 +33,10 @@ body:has(#section_wrap .word) > section {
     padding: 30px;
     color: var(--ink);
     font-size: 15px;
+    box-sizing: border-box;
 }
 
+/* ===== 폼 그리드 ===== */
 #section_wrap .content form {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -44,17 +48,35 @@ body:has(#section_wrap .word) > section {
     display: none;
 }
 
-#section_wrap .content form input:not([type='button']):not([type='reset']):not([type='submit']) {
+/* ===== 입력 필드 ===== */
+#section_wrap .content form input:not([type='button']):not([type='reset']):not([type='submit']):not([type='hidden']) {
     grid-column: 1 / -1;
     width: 100%;
     min-width: 0;
     min-height: 48px;
     padding: 0 14px;
+    box-sizing: border-box;
     border: 1px solid var(--line);
     border-radius: 8px;
     color: var(--ink);
     background: #fbfcfc;
+    font-size: 14px;
     transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+/* label로 감싼 입력 필드 (user 폼) */
+#section_wrap .content form > label {
+    grid-column: 1 / -1;
+    display: block;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+#section_wrap .content form > label input {
+    display: block;
+    margin-top: 6px;
 }
 
 #section_wrap .content form input::placeholder {
@@ -68,16 +90,31 @@ body:has(#section_wrap .word) > section {
     outline: 0;
 }
 
+#section_wrap .content form input[readonly] {
+    background: #f1f5f6;
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+#section_wrap .content form input[readonly]:focus {
+    border-color: var(--line);
+    background: #f1f5f6;
+    box-shadow: none;
+}
+
+/* ===== 버튼 ===== */
 #section_wrap .content form input[type='button'],
 #section_wrap .content form input[type='submit'],
 #section_wrap .content form input[type='reset'] {
     min-width: 0;
     min-height: 46px;
     padding: 0 15px;
+    box-sizing: border-box;
     border: 1px solid transparent;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 700;
+    cursor: pointer;
     transition: transform 160ms ease, background-color 160ms ease;
 }
 
@@ -103,14 +140,118 @@ body:has(#section_wrap .word) > section {
     background: #f1f5f6;
 }
 
-#section_wrap .content p {
-    margin: 0 0 12px;
+/* ===== 에러/안내 메시지 (form 앞 direct p) ===== */
+#section_wrap .content > p {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px solid #feb2b2;
+    border-radius: 8px;
+    background: #fff5f5;
+    color: #b23c3c;
+    font-size: 13px;
 }
 
-#section_wrap .content a {
+/* ===== 가입일 / 최근 수정일 (form 내 p) ===== */
+#section_wrap .content form > p {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 10px 0;
+    color: var(--muted);
+    font-size: 13px;
+    border-bottom: 1px solid var(--line);
+}
+
+#section_wrap .content form > p:last-of-type {
+    border-bottom: none;
+}
+
+#section_wrap .content form > p span {
+    color: var(--ink);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+/* ===== 회원 탈퇴 (danger-zone, user 폼) ===== */
+#section_wrap .content .danger-zone {
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid #feb2b2;
+    border-radius: 10px;
+    background: #fffdfd;
+}
+
+#section_wrap .content .danger-zone h3 {
+    margin: 0 0 8px;
+    color: #b23c3c;
+    font-size: 15px;
     font-weight: 700;
 }
 
+#section_wrap .content .danger-zone p {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+#section_wrap .content .danger-zone form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#section_wrap .content .danger-zone label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+#section_wrap .content .danger-zone input {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
+    font-size: 14px;
+    width: 100%;
+}
+
+#section_wrap .content .danger-zone input:focus {
+    border-color: var(--teal);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgb(22 138 131 / 10%);
+}
+
+#section_wrap .content .danger-zone button {
+    min-height: 44px;
+    padding: 0 15px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #b23c3c;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 160ms ease;
+}
+
+#section_wrap .content .danger-zone button:hover {
+    background: #8f2f2f;
+}
+
+/* ===== 링크 ===== */
+#section_wrap .content a {
+    font-weight: 700;
+    color: var(--teal);
+}
+
+#section_wrap .content a:hover {
+    color: #11746e;
+}
+
+/* ===== 반응형 ===== */
 @media (max-width: 520px) {
     body:has(#section_wrap .word) > section {
         padding: 28px 14px 40px;
@@ -123,10 +264,15 @@ body:has(#section_wrap .word) > section {
     #section_wrap .content {
         padding: 22px;
     }
+
+    #section_wrap .content .danger-zone {
+        padding: 14px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #section_wrap .content form input {
+    #section_wrap .content form input,
+    #section_wrap .content .danger-zone button {
         transition: none;
     }
 
