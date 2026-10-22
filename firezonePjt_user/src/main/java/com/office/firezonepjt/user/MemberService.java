@@ -27,6 +27,7 @@ public class MemberService {
 
     final public static int MODIFY_SUCCESS          = 1;
     final public static int MODIFY_FAIL             = 0;
+    final public static int MODIFY_PASSWORD_MISMATCH = -1;
 
     final public static int NEW_PASSWORD_CREATION_SUCCESS   = 1;
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
@@ -115,12 +116,13 @@ public class MemberService {
     }
 
     @Transactional
-    public int modifyConfirm(String loginedID, MemberDto memberDto) {
+    public int modifyConfirm(String loginedID, MemberDto memberDto, String currentPassword) {
         System.out.println(CLASS_NAME.concat("modifyConfirm()"));
 
         if (memberDto.getUm_name() == null || memberDto.getUm_name().isBlank()
                 || memberDto.getUm_mail() == null || memberDto.getUm_mail().isBlank()
-                || memberDto.getUm_phone() == null || memberDto.getUm_phone().isBlank()) {
+                || memberDto.getUm_phone() == null || memberDto.getUm_phone().isBlank()
+                || currentPassword == null || currentPassword.isBlank()) {
             return MODIFY_FAIL;
         }
 
@@ -128,6 +130,9 @@ public class MemberService {
                 memberRepository.findByMemId(loginedID);
         if (optionalMember.isPresent()) {
             MemberEntity memberEntity = optionalMember.get();
+            if (!passwordEncoder.matches(currentPassword, memberEntity.getMemPw())) {
+                return MODIFY_PASSWORD_MISMATCH;
+            }
             if (memberDto.getUm_pw() != null && !memberDto.getUm_pw().isBlank()) {
                 memberEntity.setMemPw(passwordEncoder.encode(memberDto.getUm_pw()));
             }

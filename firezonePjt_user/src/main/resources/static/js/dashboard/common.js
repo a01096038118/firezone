@@ -1,5 +1,5 @@
 // Flask 서버 주소 (영상·이미지 서버). 서버에 올릴 때 이 값만 바꿈
-const FLASK_BASE_URL = 'http://192.168.56.107:5000';
+const FLASK_BASE_URL = 'http://192.168.0.141:5000';
 
 // 로그인 화면 주소
 const LOGIN_URL = '/member/signin';
