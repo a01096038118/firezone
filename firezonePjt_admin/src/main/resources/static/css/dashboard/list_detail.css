@@ -62,6 +62,56 @@
     word-break: normal;
 }
 
+/* =========================================================
+   [CSS만으로 어드민을 유저 화면과 100% 일치시키는 마법]
+   ========================================================= */
+
+/* 1. 어드민에만 있는 텍스트/버튼/필드를 보이지 않게 숨김 */
+#detail_message,
+#summary_message,
+#image_message,
+#delete_button,
+.list_info dl > dt:last-of-type,
+.list_info dl > dd:last-of-type {
+    display: none !important;
+}
+
+/* 2. 중간 래퍼(#detail_content)가 그리드 레이아웃을 방해하지 않도록 평탄화 (유저 화면처럼 보이게 함) */
+#detail_content {
+    display: contents !important;
+}
+
+/* 3. .list_info가 이미지 높이에 맞춰 아래로 늘어나지 않게 설정 (유저 화면과 동일) */
+.list_info {
+    align-self: start !important;
+}
+
+/* 4. '탐지 목록' 링크를 2번째 컬럼(정보 영역) 아래로 배치하고, 유저 화면의 버튼 스타일 그대로 적용 */
+#list_wrap > .list > a {
+    grid-column: 2;
+    margin-top: -22px; /* Grid row 갭(22px)을 상쇄하여 dl 바로 밑에 딱 붙임 */
+    justify-self: start; /* 버튼 크기가 가로로 늘어나지 않게 */
+
+    /* 🚨 유저 화면의 .list_info > a 스타일과 동일하게 맞춤 */
+    align-self: flex-start;
+    padding: 10px 14px;
+    border-radius: 7px;
+    color: #fff;
+    background: var(--teal);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#list_wrap > .list > a:hover {
+    color: #fff;
+    background: #11746e;
+}
+
+
+/* =========================================================
+   반응형 (모바일) 대응
+   ========================================================= */
 @media (max-width: 760px) {
     #list_wrap > .list {
         grid-template-columns: minmax(0, 1fr);
@@ -79,10 +129,24 @@
     .list_info dl {
         grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);
     }
+
+    #list_wrap > .list > a {
+        grid-column: auto;
+        margin-top: -18px; /* 모바일 Grid row 갭(18px) 상쇄 */
+    }
 }
 
 @media (max-width: 420px) {
     .list_info dl {
-        grid-template-columns: minmax(85px, 0.75fr) minmax(0, 1.25fr);
+        grid-template-columns: minmax(85px, 0.75fr) minmax(0, 1.25fr) !important;
+    }
+
+    .list_info dt {
+        padding-bottom: 4px;
+        border-bottom: 0;
+    }
+
+    .list_info dd {
+        padding-top: 4px;
     }
 }

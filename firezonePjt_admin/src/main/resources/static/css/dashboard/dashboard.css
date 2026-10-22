@@ -8,13 +8,12 @@
 #dashboard_wrap {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
-    gap: 22px;
+    gap: 32px; /* 🚨 [수정] 기존 22px에서 32px로 늘려 상하좌우 여백 확보 */
 }
 
 /* 카드 공통 (경보/최근목록 포함) */
 #dashboard_wrap .monitoring,
 #dashboard_wrap .detection_log,
-#dashboard_wrap .alarm_area,
 #dashboard_wrap > .detection_list,
 #dashboard_wrap > table {
     min-width: 0;
@@ -41,6 +40,12 @@
 }
 
 /* ===== 실시간 관제 ===== */
+/* 🚨 [수정] 카드 내부를 Flex 컬럼으로 만들어 영상이 남는 공간을 채우도록 함 */
+#dashboard_wrap .monitoring {
+    display: flex;
+    flex-direction: column;
+}
+
 .camera_info {
     display: flex;
     align-items: center;
@@ -64,9 +69,11 @@
     background: #fff8e8;
 }
 
+/* 🚨 [수정] 영상 영역 높이를 대폭 키움 (화면 높이의 60%, 최소 450px ~ 최대 650px) */
 .stream_area {
     position: relative;
-    min-height: 300px;
+    flex: 1; /* 남는 공간 모두 차지 */
+    min-height: clamp(450px, 60vh, 650px);
     display: grid;
     place-items: center;
     overflow: hidden;
@@ -135,10 +142,13 @@
 #dashboard_wrap .detection_log {
     display: flex;
     flex-direction: column;
+    height: 100%; /* 🚨 [수정] 좌측 영상 높이에 맞춰 우측 카드도 늘어나도록 함 */
 }
 
+/* 🚨 [수정] 우측 이미지 영역이 남는 공간을 채우도록 flex: 1 적용 */
 .detection_img {
-    min-height: 180px;
+    flex: 1;
+    min-height: 250px; /* 기존 180px에서 증가 */
     display: grid;
     place-items: center;
     overflow: hidden;
@@ -149,9 +159,11 @@
     font-size: 13px;
 }
 
+/* 🚨 [수정] 이미지가 영역에 꽉 차도록 max-height 제한 해제 */
 .detection_img img {
     width: 100%;
-    max-height: 250px;
+    height: 100%;
+    max-height: none;
     object-fit: contain;
 }
 
@@ -160,12 +172,14 @@
     text-align: center;
 }
 
+/* 🚨 [수정] 정보 텍스트가 세로로 너무 퍼지지 않게 고정 */
 .detection_info,
 .detction_info {
     margin: 18px 0;
     display: grid;
     grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);
     gap: 0;
+    flex: 0 0 auto;
 }
 
 .detection_info dt,
@@ -209,55 +223,25 @@
     background: #11746e;
 }
 
-/* ===== 경보 영역 (버튼은 빠지고 타이틀/목록만 남음) ===== */
+/* ===== 경보 영역 ===== */
 #dashboard_wrap .alarm_area {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: contents;
 }
 
 #dashboard_wrap .alarm_area h3 {
-    margin: 0;
-    color: var(--ink);
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
+    display: none;
 }
 
-#dashboard_wrap .alarm_area #alarm_list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 8px;
-}
-
-#dashboard_wrap .alarm_area #alarm_list li {
-    padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--teal);
-    border-radius: 8px;
-    background: #f7f9fa;
-    color: var(--ink);
-    font-size: 13px;
-}
-
-#dashboard_wrap .alarm_area #alarm_list:empty::before {
-    content: '경보 없음';
-    display: block;
-    padding: 10px 14px;
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
-    border: 1px dashed var(--line);
-    border-radius: 8px;
+/* 🚨 [수정] 빈 팝업 영역이 그리드 레이아웃에 영향을 주지 않도록 처리 */
+#alarm_popup_area {
+    display: contents;
 }
 
 /* ===== 경보 버튼을 로그아웃 옆으로 띄우기 (Absolute) ===== */
 #alarm_sound_btn {
-    position: absolute; /* fixed -> absolute (스크롤 시 같이 올라감) */
+    position: absolute;
     top: 98px;
-    right: 165px;
+    right: calc(max(24px, (100vw - 1240px) / 2) + 90px);
     z-index: 9999;
     margin: 0;
     padding: 8px 14px;
@@ -378,15 +362,6 @@
         grid-column: auto;
     }
 
-    /* 모바일에서는 버튼 위치를 하단 우측에 고정(Fixed) */
-    #alarm_sound_btn {
-        position: fixed;
-        top: auto;
-        bottom: 24px;
-        right: 24px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-
     #dashboard_wrap > table {
         table-layout: fixed;
         font-size: 12px;
@@ -403,13 +378,13 @@
 @media (max-width: 520px) {
     #dashboard_wrap .monitoring,
     #dashboard_wrap .detection_log,
-    #dashboard_wrap .alarm_area,
     #dashboard_wrap > .detection_list {
         padding: 17px;
     }
 
+    /* 🚨 [수정] 모바일에서도 영상 영역이 너무 작아지지 않게 조정 */
     .stream_area {
-        min-height: 230px;
+        min-height: 300px;
     }
 
     .camera_info {
