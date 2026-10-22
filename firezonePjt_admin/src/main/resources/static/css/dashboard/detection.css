@@ -1,25 +1,29 @@
+/* ===== 페이지 컨테이너 (admin/user 공통) ===== */
 #detection_wrap {
     width: min(1240px, calc(100% - 48px));
     min-width: 0;
     min-height: 58vh;
     margin: 38px auto 54px;
-    padding: clamp(18px, 3vw, 28px);
+    padding: clamp(20px, 4vw, 38px);
     box-sizing: border-box;
     border: 1px solid var(--line);
-    border-radius: 13px;
+    border-radius: 14px;
     background: var(--surface);
-    box-shadow: 0 10px 28px rgb(20 39 51 / 5%);
+    box-shadow: var(--shadow, 0 10px 28px rgb(20 39 51 / 5%));
 }
 
+/* ===== 타이틀 ===== */
 #detection_wrap .detection > h2 {
-    margin: 0 0 16px;
+    margin: 0 0 22px;
     color: var(--ink);
-    font-size: clamp(21px, 2.6vw, 28px);
+    font-size: clamp(22px, 3vw, 30px);
     letter-spacing: -0.045em;
 }
 
+/* .detection_info = admin HTML, .detction_info = user HTML(오타) — 둘 다 지원 */
 .detections,
-.detection_info {
+.detection_info,
+.detction_info {
     min-width: 0;
 }
 
@@ -27,7 +31,7 @@
     max-width: 100%;
 }
 
-/* 검색 폼 스타일 보완 */
+/* ===== 검색 폼 (admin 전용이지만 무해) ===== */
 .search_form {
     display: flex;
     flex-wrap: wrap;
@@ -53,6 +57,7 @@
     border: 1px solid var(--line);
     border-radius: 6px;
     font-size: 13px;
+    background: #fff;
 }
 
 .search_form button {
@@ -62,21 +67,46 @@
     background: #fff;
     cursor: pointer;
     font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.search_form button:hover {
+    border-color: var(--teal);
+    color: var(--teal);
 }
 
 .search_form button[type="submit"] {
     background: var(--navy);
     color: #fff;
-    border: none;
+    border-color: var(--navy);
 }
 
-/* CSV 및 상단 도구 영역 */
+.search_form button[type="submit"]:hover {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+}
+
+/* ===== 공지 (admin 전용) ===== */
+#list_notice {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f7f9fa;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* ===== 상단 도구 (admin 전용) ===== */
 .list_tools {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
     font-size: 14px;
+    color: var(--muted);
 }
 
 .list_tools a {
@@ -85,19 +115,25 @@
     text-decoration: none;
 }
 
-/* 테이블 스타일 (오타 수정: detection_info) */
-.detection_info table {
+.list_tools a:hover {
+    text-decoration: underline;
+}
+
+/* ===== 테이블 ===== */
+.detection_info table,
+.detction_info table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     overflow: hidden;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 9px;
     background: #fff;
     font-size: 13px;
 }
 
-.detection_info th {
+.detection_info th,
+.detction_info th {
     padding: 14px 13px;
     color: #eaf1f3;
     background: var(--navy);
@@ -106,34 +142,69 @@
     white-space: nowrap;
 }
 
-.detection_info td {
+.detection_info td,
+.detction_info td {
     padding: 14px 13px;
     border-bottom: 1px solid #edf1f3;
     color: var(--ink);
     overflow-wrap: anywhere;
 }
 
-.detection_info tbody tr:last-child td {
+.detection_info tbody tr:last-child td,
+.detction_info tbody tr:last-child td {
     border-bottom: 0;
 }
 
-.detection_info tbody tr:hover td {
+.detection_info tbody tr:hover td,
+.detction_info tbody tr:hover td {
     background: #f7faf9;
 }
 
-.detection_info tbody td[colspan] {
+.detection_info tbody td[colspan],
+.detction_info tbody td[colspan] {
     padding: 38px 16px;
     color: var(--muted);
     text-align: center;
 }
 
-.detection_info td a {
+.detection_info td a,
+.detction_info td a {
     color: var(--teal);
     font-weight: 700;
     overflow-wrap: anywhere;
 }
 
-/* 페이지네이션 */
+/* ===== 삭제 버튼 (admin 전용) ===== */
+.detection_info td a[href*="delete"],
+.detection_info td a[href*="Delete"],
+.detction_info td a[href*="delete"],
+.detction_info td a[href*="Delete"],
+.detection_info td button,
+.detction_info td button {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #e6c8c8;
+    border-radius: 6px;
+    background: #fff5f5;
+    color: #b23c3c;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.detection_info td a[href*="delete"]:hover,
+.detection_info td a[href*="Delete"]:hover,
+.detction_info td a[href*="delete"]:hover,
+.detction_info td a[href*="Delete"]:hover,
+.detection_info td button:hover,
+.detction_info td button:hover {
+    background: #b23c3c;
+    color: #fff;
+    border-color: #b23c3c;
+}
+
+/* ===== 페이지네이션 ===== */
 .pagination {
     display: flex;
     justify-content: center;
@@ -148,9 +219,29 @@
     border-radius: 6px;
     background: #fff;
     cursor: pointer;
+    font-size: 13px;
+    color: var(--ink);
 }
 
-/* 모바일 반응형 */
+.pagination button:hover {
+    background: var(--teal);
+    color: #fff;
+    border-color: var(--teal);
+}
+
+.pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #f3f6f7;
+    color: var(--muted);
+}
+
+.pagination #page_info {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* ===== 반응형 ===== */
 @media (max-width: 760px) {
     #detection_wrap {
         width: calc(100% - 28px);
@@ -164,7 +255,8 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    .detection_info table {
-        min-width: 680px;
+    .detection_info table,
+    .detction_info table {
+        min-width: 800px;
     }
 }

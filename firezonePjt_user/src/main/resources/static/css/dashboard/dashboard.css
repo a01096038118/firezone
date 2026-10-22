@@ -11,15 +11,24 @@
     gap: 22px;
 }
 
+/* 카드 공통 (경보/최근목록 포함) */
 #dashboard_wrap .monitoring,
 #dashboard_wrap .detection_log,
-#dashboard_wrap > #detection_log_list {
+#dashboard_wrap .alarm_area,
+#dashboard_wrap > .detection_list,
+#dashboard_wrap > table {
     min-width: 0;
     padding: 24px;
     border: 1px solid var(--line);
     border-radius: 14px;
     background: var(--surface);
     box-shadow: 0 10px 28px rgb(20 39 51 / 5%);
+}
+
+/* 최근 탐지 목록: 전체폭 */
+#dashboard_wrap > .detection_list,
+#dashboard_wrap > table {
+    grid-column: 1 / -1;
 }
 
 #dashboard_wrap .monitoring h2,
@@ -31,6 +40,7 @@
     letter-spacing: -0.045em;
 }
 
+/* ===== 실시간 관제 ===== */
 .camera_info {
     display: flex;
     align-items: center;
@@ -73,8 +83,8 @@
     pointer-events: none;
     opacity: 0.32;
     background-image:
-        linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
+            linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
+            linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
     background-size: 32px 32px;
 }
 
@@ -88,9 +98,9 @@
     background: #101d25;
 }
 
-/* 숨김 상태의 이미지가 표시되지 않도록 처리 */
-.stream_area #live_stream[hidden],
-.detection_img img[hidden] {
+#live_stream[hidden],
+#detection_img[hidden],
+#detection_detail_link[hidden] {
     display: none !important;
 }
 
@@ -121,6 +131,7 @@
     background: var(--teal);
 }
 
+/* ===== 실시간 탐지 ===== */
 #dashboard_wrap .detection_log {
     display: flex;
     flex-direction: column;
@@ -149,6 +160,7 @@
     text-align: center;
 }
 
+.detection_info,
 .detction_info {
     margin: 18px 0;
     display: grid;
@@ -156,6 +168,8 @@
     gap: 0;
 }
 
+.detection_info dt,
+.detection_info dd,
 .detction_info dt,
 .detction_info dd {
     min-width: 0;
@@ -165,10 +179,12 @@
     font-size: 13px;
 }
 
+.detection_info dt,
 .detction_info dt {
     color: var(--muted);
 }
 
+.detection_info dd,
 .detction_info dd {
     color: var(--ink);
     font-weight: 600;
@@ -193,35 +209,158 @@
     background: #11746e;
 }
 
-#dashboard_wrap > #detection_log_list {
-    grid-column: 1 / -1;
-    min-width: 0;
+/* ===== 경보 영역 (버튼은 빠지고 타이틀/목록만 남음) ===== */
+#dashboard_wrap .alarm_area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#dashboard_wrap .alarm_area h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+#dashboard_wrap .alarm_area #alarm_list {
     margin: 0;
     padding: 0;
     list-style: none;
+    display: grid;
+    gap: 8px;
 }
 
-#dashboard_wrap > #detection_log_list tr {
+#dashboard_wrap .alarm_area #alarm_list li {
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--teal);
+    border-radius: 8px;
+    background: #f7f9fa;
+    color: var(--ink);
+    font-size: 13px;
+}
+
+#dashboard_wrap .alarm_area #alarm_list:empty::before {
+    content: '경보 없음';
     display: block;
-}
-
-#dashboard_wrap > #detection_log_list td {
-    display: block;
-    padding: 14px 18px;
+    padding: 10px 14px;
     color: var(--muted);
-}
-
-#dashboard_wrap > #detection_log_list #detection_message {
-    margin: 0;
-    padding: 14px 18px;
-    color: var(--muted);
+    font-size: 13px;
     text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
 }
 
-#dashboard_wrap > #detection_log_list #detection_detail_link[hidden] {
-    display: none !important;
+/* ===== 경보 버튼을 로그아웃 옆으로 띄우기 (Absolute) ===== */
+#alarm_sound_btn {
+    position: absolute; /* fixed -> absolute (스크롤 시 같이 올라감) */
+    top: 98px;
+    right: 165px;
+    z-index: 9999;
+    margin: 0;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
+#alarm_sound_btn:hover {
+    color: #fff;
+    background: var(--teal);
+    border-color: var(--teal);
+}
+
+/* ===== 최근 탐지 목록 (table / .detection_list) ===== */
+#dashboard_wrap > table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#dashboard_wrap > table thead th {
+    padding: 14px 18px;
+    background: #f3f6f7;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+#dashboard_wrap > table thead th:first-child { padding-left: 24px; }
+#dashboard_wrap > table thead th:last-child { padding-right: 24px; }
+
+#dashboard_wrap > table tbody td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #edf1f3;
+    color: var(--ink);
+    vertical-align: middle;
+}
+
+#dashboard_wrap > table tbody td:first-child { padding-left: 24px; }
+#dashboard_wrap > table tbody td:last-child { padding-right: 24px; }
+
+#dashboard_wrap > table tbody tr:hover { background: #f7f9fa; }
+#dashboard_wrap > table tbody tr:last-child td { border-bottom: none; }
+
+#dashboard_wrap > table tbody td[colspan] {
+    padding: 22px 14px;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* user용 .detection_list 내부 테이블 */
+#dashboard_wrap > .detection_list h3 {
+    margin: 0 0 14px;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+#dashboard_wrap > .detection_list table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#dashboard_wrap > .detection_list thead th {
+    padding: 12px 14px;
+    background: #f3f6f7;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+#dashboard_wrap > .detection_list tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #edf1f3;
+    color: var(--ink);
+    vertical-align: middle;
+}
+
+#dashboard_wrap > .detection_list tbody tr:hover { background: #f7f9fa; }
+#dashboard_wrap > .detection_list tbody tr:last-child td { border-bottom: none; }
+#dashboard_wrap > .detection_list tbody td[colspan] {
+    padding: 22px 14px;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* ===== 반응형 ===== */
 @media (max-width: 820px) {
     #dashboard_wrap,
     #detection_wrap,
@@ -234,14 +373,38 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    #dashboard_wrap > #detection_log_list {
+    #dashboard_wrap > .detection_list,
+    #dashboard_wrap > table {
         grid-column: auto;
+    }
+
+    /* 모바일에서는 버튼 위치를 하단 우측에 고정(Fixed) */
+    #alarm_sound_btn {
+        position: fixed;
+        top: auto;
+        bottom: 24px;
+        right: 24px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    #dashboard_wrap > table {
+        table-layout: fixed;
+        font-size: 12px;
+    }
+
+    #dashboard_wrap > table thead th,
+    #dashboard_wrap > table tbody td {
+        padding: 10px 8px;
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 }
 
 @media (max-width: 520px) {
     #dashboard_wrap .monitoring,
-    #dashboard_wrap .detection_log {
+    #dashboard_wrap .detection_log,
+    #dashboard_wrap .alarm_area,
+    #dashboard_wrap > .detection_list {
         padding: 17px;
     }
 
