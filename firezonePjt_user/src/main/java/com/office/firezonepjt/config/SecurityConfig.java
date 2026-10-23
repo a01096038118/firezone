@@ -39,6 +39,7 @@ public class SecurityConfig {
                                 "/include/**",
                                 "/member/signup",
                                 "/member/signup_confirm",
+                                "/member/id-check",
                                 "/member/signin",
                                 "/member/signin_confirm",
                                 "/member/signin_result",

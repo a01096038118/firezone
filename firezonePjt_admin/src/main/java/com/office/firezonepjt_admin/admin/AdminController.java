@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
@@ -48,9 +49,16 @@ public class AdminController {
 
         int result = adminService.signupConfirm(adminDto);
         model.addAttribute("result", result);
+        model.addAttribute("duplicateId", result == AdminService.ADMIN_ID_ALREADY_EXIST);
 
         return nextPage;
 
+    }
+
+    @GetMapping(value = "/id-check", produces = "text/plain")
+    @ResponseBody
+    public String checkAdminId(@RequestParam String am_id) {
+        return Boolean.toString(adminService.isAdminIdAvailable(am_id));
     }
 
     // 로그인 양식 /signin

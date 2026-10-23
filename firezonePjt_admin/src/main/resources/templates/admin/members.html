@@ -49,7 +49,7 @@
                     <td th:text="${user.name}">회원</td>
                     <td th:text="${user.email}">user@example.com</td>
                     <td th:text="${user.phone}">010-0000-0000</td>
-                    <td th:text="${user.registeredAt != null ? user.registeredAt : '-'}">-</td>
+                    <td th:text="${user.registeredAt != null ? #temporals.format(user.registeredAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
                     <td>
                         <a class="button button-secondary"
                            th:href="@{/admin/members_list/user/{userNo}(userNo=${user.userNo})}">상세</a>

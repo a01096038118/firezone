@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.Principal;
 
@@ -45,9 +46,16 @@ public class MemberController {
 
         int result = memberService.signupConfirm(memberDto);
         model.addAttribute("result", result);
+        model.addAttribute("duplicateId", result == MemberService.USER_ID_ALREADY_EXIST);
 
         return nextPage;
 
+    }
+
+    @GetMapping(value = "/id-check", produces = "text/plain")
+    @ResponseBody
+    public String checkMemberId(@RequestParam String um_id) {
+        return Boolean.toString(memberService.isMemberIdAvailable(um_id));
     }
 
     // 로그인 양식 /signin

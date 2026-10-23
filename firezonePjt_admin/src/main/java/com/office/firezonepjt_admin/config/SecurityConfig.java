@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/admin/signin",
                                 "/admin/signup",
                                 "/admin/signup_confirm",
+                                "/admin/id-check",
                                 "/admin/findpassword",
                                 "/admin/findpassword_confirm",
                                 "/admin/signin_result",

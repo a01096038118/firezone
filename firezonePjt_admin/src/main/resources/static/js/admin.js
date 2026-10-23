@@ -1,4 +1,47 @@
 // 회원가입 유효성 검사
+let checkedAdminId = null;
+
+function resetAdminIdCheck() {
+    checkedAdminId = null;
+    document.getElementById('admin-id-check-message').textContent = '';
+}
+
+async function checkAdminId() {
+    const form = document.forms.signup_form;
+    const id = form.am_id.value.trim();
+    const message = document.getElementById('admin-id-check-message');
+    const idRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9._-]{5,19}$/;
+
+    checkedAdminId = null;
+    if (!idRegex.test(id)) {
+        message.textContent = '아이디를 먼저 입력해주세요. (영문/숫자 포함 5~19자)';
+        form.am_id.focus();
+        return;
+    }
+
+    message.textContent = '중복 여부를 확인하고 있습니다.';
+    try {
+        const url = new URL(form.dataset.idCheckUrl, window.location.origin);
+        url.searchParams.set('am_id', id);
+        const response = await fetch(url, { headers: { Accept: 'text/plain' } });
+        if (!response.ok) {
+            throw new Error(`ID check failed with status ${response.status}`);
+        }
+        const available = (await response.text()).trim() === 'true';
+        if (form.am_id.value.trim() !== id) {
+            message.textContent = '아이디가 변경되었습니다. 다시 중복확인해주세요.';
+            return;
+        }
+        checkedAdminId = available ? id : null;
+        message.textContent = available
+            ? '사용할 수 있는 아이디입니다.'
+            : '이미 사용 중인 아이디입니다.';
+    } catch (error) {
+        message.textContent = '중복확인에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        console.error(error);
+    }
+}
+
 function signupForm() {
     console.log('signupForm() CALLED!!');
 
@@ -29,6 +72,11 @@ function signupForm() {
 
     } else if (!idRegex.test(form.am_id.value)) {
         alert('아이디는 5~19자의 영문과 숫자를 포함해야 하며, -, _, .만 추가로 사용할 수 있습니다.');
+        form.am_id.focus();
+        return false;
+
+    } else if (checkedAdminId !== form.am_id.value.trim()) {
+        alert('아이디 중복확인을 완료해주세요.');
         form.am_id.focus();
         return false;
 
