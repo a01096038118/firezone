@@ -25,8 +25,11 @@
             <th:block th:if="${result > 0}">
                 SIGN-UP SUCCESS
             </th:block>
+            <th:block th:if="${duplicateId}">
+                이미 사용 중인 아이디입니다. 다른 아이디를 사용해주세요.
+            </th:block>
             <th:block th:if="${result <= 0}">
-                SIGN-UP FAIL
+                <span th:unless="${duplicateId}">SIGN-UP FAIL</span>
             </th:block>
         </div>
     </div>

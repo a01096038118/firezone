@@ -260,6 +260,12 @@ public class AdminService {
 
     }
 
+    @Transactional(readOnly = true)
+    public boolean isAdminIdAvailable(String adminId) {
+        return adminId != null && !adminId.isBlank()
+                && !adminRepository.existsByAdId(adminId.trim());
+    }
+
     public String signinConfirm(AdminDto adminDto) {
         log.info("signinConfirm()");
 

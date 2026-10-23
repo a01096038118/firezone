@@ -82,6 +82,12 @@ public class MemberService {
 
     }
 
+    @Transactional(readOnly = true)
+    public boolean isMemberIdAvailable(String memberId) {
+        return memberId != null && !memberId.isBlank()
+                && !memberRepository.existsByMemId(memberId.trim());
+    }
+
     public String signinConfirm(MemberDto memberDto) {
         System.out.println(CLASS_NAME.concat("signinConfirm()"));
 
