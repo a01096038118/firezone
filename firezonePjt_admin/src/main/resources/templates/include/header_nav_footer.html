@@ -28,6 +28,12 @@
                    th:href="@{/admin/members_list}">회원 조회</a>
                 <a th:href="@{/admin/myinfocheck}">내 정보 조회</a>
 
+                <!-- 경보 소리 켜기/끄기 : 관제 권한(CONTROL, MASTER)만, 모든 화면에서 로그아웃 왼쪽 -->
+                <button type="button"
+                        id="alarm_sound_btn"
+                        aria-pressed="false"
+                        sec:authorize="hasAnyRole('CONTROL', 'MASTER')">경보 소리 켜기</button>
+
                 <form th:action="@{/admin/logout}"
                       method="post"
                       style="display: inline;">
@@ -35,6 +41,9 @@
                 </form>
             </th:block>
         </div>
+
+        <!-- 경보 소리 공통 기능 (관제 권한만) -->
+        <script sec:authorize="hasAnyRole('CONTROL', 'MASTER')" th:src="@{/js/alarm.js}"></script>
     </nav>
 
     <footer th:fragment="footer">
