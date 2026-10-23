@@ -37,6 +37,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/detections").permitAll()
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
                         .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
+                        .hasRole("MASTER")
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
                         .hasRole("MEMBER_MODIFY")
                         .requestMatchers(

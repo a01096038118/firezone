@@ -32,12 +32,12 @@ public class AdminService {
 
     public enum AdminPermissionRole {
         NONE("", false, false, false, false),
+        USER("USER", false, false, true, false),
+        LIST("LIST", true, false, false, false),
+        MODIFY("MODIFY", true, true, false, false),
         MASTER("MASTER", true, true, true, true),
-        MODIFY_USER("MODIFY, USER", true, true, true, false),
-        LIST_USER("LIST, USER", true, false, true, false),
-        LIST_MODIFY("LIST, MODIFY", true, true, false, false),
-        LEGACY_LIST("LIST", true, false, false, false),
-        LEGACY_CONTROL("CONTROL", false, false, true, false);
+        USER_LIST("USER, LIST", true, false, true, false),
+        USER_MODIFY("USER, MODIFY", true, true, true, false);
 
         private final String roleName;
         private final boolean memberList;
@@ -96,23 +96,17 @@ public class AdminService {
         }
 
         private static AdminPermissionRole fromRoleName(String roleName) {
-            if ("".equals(roleName) || "NONE".equalsIgnoreCase(roleName)) {
+            if (roleName == null || roleName.isBlank() || "NONE".equalsIgnoreCase(roleName)) {
                 return NONE;
             }
-            if ("MODIFY".equalsIgnoreCase(roleName)) {
-                return LIST_MODIFY;
-            }
-            if ("LIST".equalsIgnoreCase(roleName)) {
-                return LEGACY_LIST;
-            }
             if ("CONTROL".equalsIgnoreCase(roleName)) {
-                return LEGACY_CONTROL;
+                return USER;
             }
             if ("LIST_CONTROL".equalsIgnoreCase(roleName)) {
-                return LIST_USER;
+                return USER_LIST;
             }
             if ("MODIFY_CONTROL".equalsIgnoreCase(roleName)) {
-                return MODIFY_USER;
+                return USER_MODIFY;
             }
             for (AdminPermissionRole role : values()) {
                 if (role.roleName.equalsIgnoreCase(roleName.trim())) {
@@ -128,10 +122,7 @@ public class AdminService {
             }
             String normalizedRoleName = roleName.trim().toUpperCase(java.util.Locale.ROOT);
             for (AdminPermissionRole role : values()) {
-                if (role.roleName.equalsIgnoreCase(normalizedRoleName)
-                        && role != MASTER
-                        && role != LEGACY_LIST
-                        && role != LEGACY_CONTROL) {
+                if (role.roleName.equalsIgnoreCase(normalizedRoleName)) {
                     return role;
                 }
             }
@@ -192,6 +183,14 @@ public class AdminService {
             int adminNo,
             String roleName,
             String changedByUsername) {
+        AdminEntity changedBy = adminRepository.findByAdId(changedByUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!findCurrentRole(changedBy.getAdNo()).isMaster()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only a MASTER can change administrator permissions");
+        }
+        adminAuthorityRepository.findAllByRoleNameForUpdate("MASTER");
+
         AdminPermissionRole newRole;
         try {
             newRole = AdminPermissionRole.fromRoleNameForUpdate(roleName);
@@ -201,11 +200,14 @@ public class AdminService {
 
         AdminEntity targetAdmin = adminRepository.findById(adminNo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        AdminEntity changedBy = adminRepository.findByAdId(changedByUsername)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
         if (targetAdmin.getAdNo() == changedBy.getAdNo()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change your own permissions");
+        }
+        if (newRole.isMaster()
+                && adminAuthorityHistoryRepository.existsAnotherCurrentMaster(adminNo)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only one administrator can have MASTER permission");
         }
 
         Optional<AdminAuthorityHistoryEntity> previousHistory = latestPermissionHistory(adminNo);
@@ -216,10 +218,6 @@ public class AdminService {
                                 "Authority not found: " + history.getAfterAuthorityNo())))
                 .orElse(AdminPermissionRole.NONE);
 
-        if (currentRole.isMaster()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Master permissions can only be changed in the database");
-        }
         if (currentRole == newRole) {
             return false;
         }
@@ -241,6 +239,20 @@ public class AdminService {
                 .build();
         adminAuthorityHistoryRepository.save(history);
         return true;
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminDto> findPermissionHistory(int adminNo, String viewerUsername) {
+        AdminEntity viewer = adminRepository.findByAdId(viewerUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!findCurrentRole(viewer.getAdNo()).isMaster()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only a MASTER can view administrator permission history");
+        }
+
+        AdminEntity targetAdmin = adminRepository.findById(adminNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return adminAuthorityHistoryRepository.findPermissionHistory(targetAdmin.getAdNo());
     }
 
     private Optional<AdminAuthorityHistoryEntity> latestPermissionHistory(int adminNo) {
