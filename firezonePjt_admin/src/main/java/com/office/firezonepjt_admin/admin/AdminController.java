@@ -99,7 +99,8 @@ public class AdminController {
         model.addAttribute("masterRole", permissionRole.isMaster());
         model.addAttribute("canManagePermissions",
                 hasMasterRole(authentication)
-                        && !authentication.getName().equals(findAdminOr404.getAm_id()));
+                        && !authentication.getName().equals(findAdminOr404.getAm_id())
+                        && !permissionRole.isMaster());
 
         String nextPage = "admin/admin_member_detail";
 

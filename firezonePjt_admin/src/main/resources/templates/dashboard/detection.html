@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <!-- 탐지 삭제 권한(MASTER)이 있을 때만 생김 -> JS가 삭제 버튼 표시 여부 판단 -->
+    <meta name="can_delete" content="true" sec:authorize="hasRole('MASTER')">
     <title th:replace="~{/include/title.html::title}"/>
 
     <link rel="stylesheet" th:href="@{/css/common.css}">
@@ -52,7 +55,7 @@
 
             <div class="list_tools">
                 <span id="total_count"></span>
-                <a id="csv_download" th:href="@{/detections/csv}">CSV 다운로드</a>
+                <a id="csv_download" sec:authorize="hasRole('MEMBER_MODIFY')" th:href="@{/detections/csv}">CSV 다운로드</a>
             </div>
 
             <div class="detection_info">
@@ -66,7 +69,7 @@
                         <th>차량 번호</th>
                         <th>최초 탐지 시간</th>
                         <th>마지막 탐지 시간</th>
-                        <th>삭제</th>
+                        <th sec:authorize="hasRole('MASTER')">삭제</th>
                     </tr>
                     </thead>
 

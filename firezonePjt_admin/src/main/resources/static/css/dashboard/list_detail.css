@@ -70,7 +70,6 @@
 #detail_message,
 #summary_message,
 #image_message,
-#delete_button,
 .list_info dl > dt:last-of-type,
 .list_info dl > dd:last-of-type {
     display: none !important;

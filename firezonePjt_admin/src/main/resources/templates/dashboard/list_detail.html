@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="_csrf" th:content="${_csrf.token}">
@@ -66,7 +67,7 @@
                     <dd id="duration">-</dd>
                 </dl>
 
-                <button type="button" id="delete_button">삭제</button>
+                <button type="button" id="delete_button" sec:authorize="hasRole('MASTER')">삭제</button>
             </div>
         </div>
 

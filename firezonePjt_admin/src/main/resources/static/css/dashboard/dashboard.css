@@ -238,6 +238,7 @@
 }
 
 /* ===== 경보 버튼을 로그아웃 옆으로 띄우기 (Absolute) ===== */
+
 #alarm_sound_btn {
     position: absolute;
     top: 98px;
@@ -261,6 +262,7 @@
     background: var(--teal);
     border-color: var(--teal);
 }
+
 
 /* ===== 최근 탐지 목록 (table / .detection_list) ===== */
 #dashboard_wrap > table {
@@ -345,6 +347,7 @@
 }
 
 /* ===== 반응형 ===== */
+
 @media (max-width: 820px) {
     #dashboard_wrap,
     #detection_wrap,
@@ -395,3 +398,5 @@
         margin-left: 0;
     }
 }
+
+

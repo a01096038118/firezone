@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const PAGE_SIZE = 20;       // 한 페이지에 보여줄 기록 수
-    const COLUMN_COUNT = 8;     // 표의 열 개수
+    // 탐지 삭제 권한(MASTER) 여부: HTML의 can_delete meta 태그가 있을 때만 true
+    const canDelete = document.querySelector('meta[name="can_delete"]') !== null;
+    const COLUMN_COUNT = canDelete ? 8 : 7;     // 표의 열 개수 (삭제 열은 MASTER만)
 
     const listBody = document.querySelector('#detection_log_list');
     const listNotice = document.querySelector('#list_notice');
@@ -112,18 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.appendChild(cell);
             }
 
-            // 삭제 버튼
-            const deleteCell = document.createElement('td');
-            const deleteButton = document.createElement('button');
+            // 삭제 버튼 (MASTER만)
+            if (canDelete) {
+                const deleteCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
 
-            deleteButton.type = 'button';
-            deleteButton.textContent = '삭제';
-            deleteButton.addEventListener('click', () => {
-                deleteDetection(dto.dl_no, deleteButton);
-            });
+                deleteButton.type = 'button';
+                deleteButton.textContent = '삭제';
+                deleteButton.addEventListener('click', () => {
+                    deleteDetection(dto.dl_no, deleteButton);
+                });
 
-            deleteCell.appendChild(deleteButton);
-            row.appendChild(deleteCell);
+                deleteCell.appendChild(deleteButton);
+                row.appendChild(deleteCell);
+            }
 
             listBody.appendChild(row);
         }
