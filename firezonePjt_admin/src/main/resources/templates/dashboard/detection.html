@@ -55,7 +55,7 @@
 
             <div class="list_tools">
                 <span id="total_count"></span>
-                <a id="csv_download" sec:authorize="hasRole('MEMBER_MODIFY')" th:href="@{/detections/csv}">CSV 다운로드</a>
+                <a id="csv_download" sec:authorize="hasRole('MODIFY')" th:href="@{/detections/csv}">CSV 다운로드</a>
             </div>
 
             <div class="detection_info">

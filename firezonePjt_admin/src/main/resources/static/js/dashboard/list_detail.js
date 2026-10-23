@@ -124,9 +124,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const startText = formatKoreanDate(dto.dl_first_detected_at);
 
         if (startText && dto.dl_car_number && duration !== '미확인') {
-            document.getElementById('summary_message').textContent =
-                `${startText} ${dto.dl_car_number} 차량 ${duration} 동안 `
-                + `주정차로 판단됩니다.`;
+            const summary = document.getElementById('summary_message');
+
+            // 차량번호와 주정차 시간은 강조 표시 (textContent로 넣어 HTML로 해석되지 않게 함)
+            const car = document.createElement('strong');
+            car.textContent = dto.dl_car_number;
+
+            const time = document.createElement('strong');
+            time.textContent = duration;
+
+            summary.replaceChildren(
+                `${startText} `, car, ' 차량 ', time, ' 동안 주정차로 판단됩니다.'
+            );
         }
 
         showImage(dto.dl_image_path);

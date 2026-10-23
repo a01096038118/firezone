@@ -34,7 +34,7 @@ public class DetectionDto {
     @Size(max = 20, message = "차량번호는 20자 이하여야 합니다.")
     private String dl_car_number;                   // 인식 차량 번호
 
-    @NotBlank(message = "이미지 경로값이 필요합니다.")
+    // 이미지 파일을 함께 보내면 Boot가 저장 후 경로를 채움 (파일 없이 보낼 때만 필수)
     @Size(max = 255, message = "이미지 경로는 255자 이하여야 합니다.")
     private String dl_image_path;                   // 탐지 이미지 경로
 
