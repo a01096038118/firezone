@@ -9,6 +9,13 @@ nav { position: relative; z-index: 2; background: var(--navy); box-shadow: 0 8px
 #nav_wrap > form button:hover { color: #fff; background: rgb(255 255 255 / 10%); }
 #nav_wrap > form { margin: 0 0 0 auto; }
 #nav_wrap > form button { border: 1px solid rgb(255 255 255 / 24%); }
+
+/* 경보 소리 버튼 : 로그아웃 바로 왼쪽 (모든 화면 같은 위치) */
+#nav_wrap > #alarm_sound_btn { margin-left: auto; min-height: 38px; padding: 8px 13px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgb(255 255 255 / 24%); border-radius: 7px; color: #dce7eb; background: transparent; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease; }
+#nav_wrap > #alarm_sound_btn:hover { color: #fff; background: rgb(255 255 255 / 10%); }
+#nav_wrap > #alarm_sound_btn[aria-pressed='true'] { color: #fff; border-color: var(--teal); background: var(--teal); }
+#nav_wrap > #alarm_sound_btn[aria-pressed='true']:hover { background: #11746e; }
+#nav_wrap > #alarm_sound_btn + form { margin-left: 8px; }
 footer { margin-top: auto; color: #9aabb4; background: var(--navy-deep); }
 #footer_wrap { width: min(1240px, calc(100% - 48px)); min-height: 70px; margin: 0 auto; display: flex; align-items: center; font-size: 12px; letter-spacing: 0.02em; }
 
@@ -35,5 +42,7 @@ footer { margin-top: auto; color: #9aabb4; background: var(--navy-deep); }
     #nav_wrap > a,
     #nav_wrap > form button { padding-inline: 9px; font-size: 12px; }
     #nav_wrap > form { margin-left: 0; }
+    #nav_wrap > #alarm_sound_btn { margin-left: 0; padding-inline: 9px; font-size: 12px; }
+    #nav_wrap > #alarm_sound_btn + form { margin-left: 2px; }
     .imgs { min-height: 58vh; border-radius: 12px; }
 }
