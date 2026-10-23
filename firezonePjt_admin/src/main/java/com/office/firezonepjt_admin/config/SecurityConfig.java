@@ -32,6 +32,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Flask 탐지 저장 :  로그인 없이 통과
                         .requestMatchers(HttpMethod.POST, "/detections").permitAll()
+                        // 탐지 삭제 : MASTER만 (/detections/** 규칙보다 반드시 위에 있어야 함)
+                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
+                        .hasRole("MASTER")
+                        // CSV 다운로드 : MODIFY 이상 (MASTER도 MODIFY를 가짐)
+                        .requestMatchers(HttpMethod.GET, "/detections/csv")
+                        .hasRole("MODIFY")
+                        // 관리자 권한 변경 / 권한 이력 조회 : MASTER만
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
+                        .hasRole("MASTER")
                         .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
                         .hasRole("MASTER")
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
@@ -42,7 +51,7 @@ public class SecurityConfig {
                         ).hasAnyRole("CONTROL", "MODIFY", "MASTER")
                         .requestMatchers("/admin/members_list/user/**")
                         .hasAnyRole("CONTROL", "MODIFY", "MASTER")
-                        .requestMatchers("/dashboard/**", "/detections/**")
+                        .requestMatchers("/dashboard/**", "/detections/**", "/uploads/detections/**")
                         .hasAnyRole("CONTROL", "MASTER")
                         .requestMatchers(
                                 "/",
@@ -59,13 +68,8 @@ public class SecurityConfig {
                                 "/img/**",
                                 "/include/**"
                         ).permitAll()
-                        // 탐지 삭제
-                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
-                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers(
                                 "/admin/**",
-                                "/dashboard/**",
-                                "/detections/**",
                                 "/planner/**",
                                 "/logs/**"
                         ).hasRole("ADMIN")

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -42,8 +43,8 @@ public class DetectionController {
 
 
 
-    // 탐지 기록 저장 (허용된 IP의 Flask 서버만 가능)
-    @PostMapping
+    // 탐지 기록 저장 - JSON만 보내는 방식 (이미지 경로만 저장, 기존 방식)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DetectionSaveResponse> saveDetection(
             HttpServletRequest request,
             @Valid @RequestBody DetectionDto dto) {
@@ -52,7 +53,27 @@ public class DetectionController {
 
         checkAllowedIp(request);
 
-        DetectionSaveResponse response = detectionService.saveDetection(dto);
+        return toResponse(detectionService.saveDetection(dto, null));
+    }
+
+    // 탐지 기록 저장 - 탐지 정보(data) + 이미지 파일(image)을 함께 보내는 방식
+    // data : application/json 형식의 탐지 정보, image : jpg/png/webp 파일
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DetectionSaveResponse> saveDetectionWithImage(
+            HttpServletRequest request,
+            @Valid @RequestPart("data") DetectionDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        log.info("[Flask 요청 도착] IP={}, 데이터={}, 이미지={}",
+                request.getRemoteAddr(), dto,
+                image == null ? "없음" : image.getOriginalFilename() + " (" + image.getSize() + " bytes)");
+
+        checkAllowedIp(request);
+
+        return toResponse(detectionService.saveDetection(dto, image));
+    }
+
+    // 신규 저장이면 201, 기존 기록 갱신이면 200
+    private ResponseEntity<DetectionSaveResponse> toResponse(DetectionSaveResponse response) {
 
         HttpStatus status = DetectionSaveResponse.CREATED.equals(response.result())
                 ? HttpStatus.CREATED

@@ -67,11 +67,9 @@
    ========================================================= */
 
 /* 1. 어드민에만 있는 텍스트/버튼/필드를 보이지 않게 숨김 */
+/* (주정차 시간 칸과 요약 문장은 관리자 화면에서 보이도록 숨김에서 제외) */
 #detail_message,
-#summary_message,
-#image_message,
-.list_info dl > dt:last-of-type,
-.list_info dl > dd:last-of-type {
+#image_message {
     display: none !important;
 }
 
@@ -108,6 +106,61 @@
 }
 
 
+/* 5. 주정차 요약 문구 : 제목 바로 아래 전체 폭 안내 박스
+   (그리드에서 제목 다음 줄에 고정해 사진·정보 배치를 밀어내지 않게 함) */
+#summary_message {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    padding: 14px 18px;
+    border: 1px solid #cfe5e3;
+    border-left: 4px solid var(--teal);
+    border-radius: 10px;
+    background: #f2f8f8;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+#summary_message strong {
+    color: var(--teal);
+    font-weight: 700;
+    white-space: nowrap;    /* 차량번호, '5분 0초'가 중간에서 줄바꿈되지 않게 */
+}
+
+/* 문구를 만들 수 없는 경우(시간·차량번호 없음) 빈 박스가 남지 않게 숨김 */
+#summary_message:empty {
+    display: none;
+}
+
+/* 6. 삭제 버튼 (MASTER에게만 보임) : '탐지 목록' 버튼과 같은 크기, 위험 동작이라 빨간색 */
+#delete_button {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 22px;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 7px;
+    color: #fff;
+    background: var(--red);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 160ms ease;
+}
+
+#delete_button:hover {
+    background: var(--red-dark);
+}
+
+#delete_button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
 /* =========================================================
    반응형 (모바일) 대응
    ========================================================= */
@@ -119,6 +172,11 @@
 
     #list_wrap h2 {
         grid-column: auto;
+    }
+
+    #summary_message {
+        padding: 12px 14px;
+        font-size: 13px;
     }
 
     #list_wrap .detection_img {

@@ -106,7 +106,11 @@ function toImageUrl(path) {
         return '';
     }
 
-    const base = FLASK_BASE_URL || window.location.origin;
+    // Boot에 저장된 이미지(/uploads/detections/...)는 Boot 서버에서,
+    // 예전 기록(Flask 쪽 경로)은 Flask 서버에서 불러옴
+    const base = trimmed.startsWith('/uploads/detections/')
+        ? window.location.origin
+        : (FLASK_BASE_URL || window.location.origin);
 
     let url;
     try {
