@@ -1,8 +1,6 @@
 /* ===== admin-members.css ===== */
 
 .admin-members {
-    width: min(1400px, calc(100% - 48px));
-    margin: 40px auto 60px;
     padding: 0;
     box-sizing: border-box;
 }
@@ -163,7 +161,100 @@
     margin-top: 6px;
 }
 
+<<<<<<< Updated upstream
 /* ===== 버튼 ===== */
+=======
+/* 가입일 / 수정일 상세 리스트 */
+.admin-members .detail-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 20px 0 0;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.admin-members .detail-card {
+    margin-bottom: 20px;
+    padding: 24px 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgb(20 39 51 / 5%);
+}
+
+.admin-members .detail-card h2 {
+    margin: 0;
+    color: #18232d;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.admin-members .detail-list > div {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(96px, 140px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    padding: 13px 16px;
+    border-bottom: 1px solid #edf1f3;
+    font-size: 14px;
+}
+
+.admin-members .detail-list > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.admin-members .detail-list dt {
+    color: #697985;
+    font-weight: 600;
+}
+
+.admin-members .detail-list dd {
+    min-width: 0;
+    margin: 0;
+    color: #18232d;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.admin-members .form-group {
+    margin-top: 20px;
+}
+
+.admin-members .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #344550;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-members .form-group select {
+    width: min(100%, 480px);
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid #cbd6dc;
+    border-radius: 8px;
+    color: #18232d;
+    background: #fff;
+}
+
+.admin-members .detail-card .form-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.admin-members .detail-card .button-primary {
+    width: auto;
+    min-width: 140px;
+}
+
+/* 버튼 공통 및 액션 */
+>>>>>>> Stashed changes
 .admin-members .button {
     display: inline-flex;
     align-items: center;
@@ -219,6 +310,7 @@
     border-top: 1px solid var(--line);
 }
 
+<<<<<<< Updated upstream
 .admin-members .form-actions form {
     margin: 0;
     display: inline-flex;
@@ -230,6 +322,37 @@
 }
 
 /* ===== 위험 구역 ===== */
+=======
+@media (max-width: 640px) {
+    .admin-members {
+        width: calc(100% - 28px);
+        margin: 28px auto 44px;
+    }
+
+    .admin-members .page-heading {
+        align-items: flex-start;
+    }
+
+    .admin-members .detail-card {
+        padding: 18px;
+    }
+
+    .admin-members .detail-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-members .detail-list > div {
+        grid-template-columns: minmax(92px, 112px) minmax(0, 1fr);
+        border-bottom: 1px solid #edf1f3 !important;
+    }
+
+    .admin-members .detail-list > div:last-child {
+        border-bottom: 0 !important;
+    }
+}
+
+/* 위험 구역 (계정 삭제) */
+>>>>>>> Stashed changes
 .admin-members .danger-zone {
     border-color: #feb2b2;
     background-color: #fffdfd;
@@ -360,6 +483,7 @@
     font-size: 14px;
 }
 
+<<<<<<< Updated upstream
 /* =========================================================
    myinfocheck.html 전용 오버라이드 (member.css 톤 통일)
    ========================================================= */
@@ -649,4 +773,24 @@
 
 .admin-members:has(.detail-card) .form-actions .button-danger:hover {
     background: #8c2e2e;
+=======
+.admin-members .authority-history-table {
+    min-width: 960px;
+}
+
+.admin-members .table-wrap:has(.authority-history-table) {
+    overflow-x: auto;
+}
+
+.admin-members .authority-history-table .empty-history {
+    padding: 28px 16px;
+    color: #697985;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .admin-members .authority-history-table {
+        min-width: 840px;
+    }
+>>>>>>> Stashed changes
 }

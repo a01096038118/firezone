@@ -5,6 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,4 +45,20 @@ public class AdminAuthorityHistoryEntity {
 
     @Column(name = "aah_changed_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime changedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aah_admin_no", insertable = false, updatable = false)
+    private AdminEntity admin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aah_before_auth_no", insertable = false, updatable = false)
+    private AdminAuthorityEntity beforeAuthority;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aah_after_auth_no", insertable = false, updatable = false)
+    private AdminAuthorityEntity afterAuthority;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aah_changed_by", insertable = false, updatable = false)
+    private AdminEntity changedByAdmin;
 }

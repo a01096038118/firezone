@@ -45,6 +45,11 @@
 
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">목록</a>
+            <a class="button button-secondary"
+               th:if="${canManagePermissions}"
+               th:href="@{/admin/members_list/admin/{adminNo}/authority-history(adminNo=${admin.am_no})}">
+                권한 변경 이력
+            </a>
         </div>
     </section>
 
@@ -56,10 +61,14 @@
                 <label for="permissionRole">권한 조합</label>
                 <select id="permissionRole" name="permissionRole" required>
                     <option value="" th:selected="${permissionRole == ''}">권한 없음</option>
-                    <option value="MODIFY, USER" th:selected="${permissionRole == 'MODIFY, USER'}">MODIFY, USER</option>
-                    <option value="LIST, USER" th:selected="${permissionRole == 'LIST, USER'}">LIST, USER</option>
-                    <option value="LIST, MODIFY" th:selected="${permissionRole == 'LIST, MODIFY'}">LIST, MODIFY</option>
+                    <option value="USER" th:selected="${permissionRole == 'USER'}">USER — 관제/탐지</option>
+                    <option value="LIST" th:selected="${permissionRole == 'LIST'}">LIST — 회원 조회</option>
+                    <option value="MODIFY" th:selected="${permissionRole == 'MODIFY'}">MODIFY — 회원 조회/수정</option>
+                    <option value="MASTER" th:selected="${permissionRole == 'MASTER'}">MASTER — 전체 권한 및 권한 관리</option>
+                    <option value="USER, LIST" th:selected="${permissionRole == 'USER, LIST'}">USER, LIST</option>
+                    <option value="USER, MODIFY" th:selected="${permissionRole == 'USER, MODIFY'}">USER, MODIFY</option>
                 </select>
+                <small>MASTER는 동시에 한 명에게만 부여할 수 있습니다.</small>
             </div>
             <div class="form-actions">
                 <button class="button button-primary" type="submit">권한 저장</button>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>관리자 권한 변경 이력</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-members.css}">
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}"></header>
+<nav th:replace="~{/include/header_nav_footer.html::nav}"></nav>
+
+<main class="admin-members">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">ADMINISTRATION</p>
+            <h1>권한 변경 이력</h1>
+            <p class="page-description">관리자 권한의 변경 전후 값과 변경자를 확인합니다.</p>
+        </div>
+    </div>
+
+    <section class="detail-card">
+        <div class="table-wrap">
+            <table class="member-table authority-history-table">
+                <thead>
+                <tr>
+                    <th>이력 번호</th>
+                    <th>관리자 번호</th>
+                    <th>변경 전 권한 번호</th>
+                    <th>변경 전 권한명</th>
+                    <th>변경 후 권한 번호</th>
+                    <th>변경 후 권한명</th>
+                    <th>변경자</th>
+                    <th>변경 시각</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${history}">
+                    <td th:text="${item.historyNo}">1</td>
+                    <td th:text="${item.historyAdminNo + ' (' + item.historyAdminId + ')'}">1</td>
+                    <td th:text="${item.beforeAuthorityNo != null ? item.beforeAuthorityNo : '-'}">-</td>
+                    <td th:text="${item.beforeRoleName}">없음</td>
+                    <td th:text="${item.afterAuthorityNo}">1</td>
+                    <td th:text="${item.afterRoleName}">MASTER</td>
+                    <td th:text="${item.changedBy + ' (' + item.changedById + ')'}">1</td>
+                    <td th:text="${item.changedAt != null ? #temporals.format(item.changedAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(history)}">
+                    <td class="empty-history" colspan="8">권한 변경 이력이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="form-actions">
+            <a class="button button-secondary"
+               th:href="@{/admin/members_list/admin/{adminNo}(adminNo=${adminNo})}">관리자 상세로</a>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"></footer>
+</body>
+</html>

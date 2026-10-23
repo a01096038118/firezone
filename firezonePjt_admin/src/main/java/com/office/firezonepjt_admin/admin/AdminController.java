@@ -99,8 +99,7 @@ public class AdminController {
         model.addAttribute("masterRole", permissionRole.isMaster());
         model.addAttribute("canManagePermissions",
                 hasMasterRole(authentication)
-                        && !authentication.getName().equals(findAdminOr404.getAm_id())
-                        && !permissionRole.isMaster());
+                        && !authentication.getName().equals(findAdminOr404.getAm_id()));
 
         String nextPage = "admin/admin_member_detail";
 
@@ -119,6 +118,17 @@ public class AdminController {
                 "message",
                 changed ? "관리자 권한을 변경했습니다." : "변경된 권한이 없습니다.");
         return "redirect:/admin/members_list/admin/" + adminNo;
+    }
+
+    @GetMapping("/members_list/admin/{adminNo}/authority-history")
+    public String adminPermissionHistory(
+            @PathVariable int adminNo,
+            Authentication authentication,
+            Model model) {
+        model.addAttribute("history", adminService.findPermissionHistory(
+                adminNo, authentication.getName()));
+        model.addAttribute("adminNo", adminNo);
+        return "admin/admin_authority_history";
     }
 
     private boolean hasMasterRole(Authentication authentication) {
