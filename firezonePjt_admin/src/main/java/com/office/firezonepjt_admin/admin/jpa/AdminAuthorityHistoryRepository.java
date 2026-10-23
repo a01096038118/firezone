@@ -18,9 +18,9 @@ public interface AdminAuthorityHistoryRepository extends JpaRepository<AdminAuth
                 history.adminNo,
                 admin.adId,
                 history.beforeAuthorityNo,
-                coalesce(beforeAuthority.roleName, '없음'),
+                coalesce(nullif(beforeAuthority.roleName, ''), '권한 없음'),
                 history.afterAuthorityNo,
-                coalesce(afterAuthority.roleName, '삭제된 권한'),
+                coalesce(nullif(afterAuthority.roleName, ''), '권한 없음'),
                 history.changedBy,
                 coalesce(changedByAdmin.adId, '삭제된 관리자'),
                 history.changedAt
@@ -36,7 +36,7 @@ public interface AdminAuthorityHistoryRepository extends JpaRepository<AdminAuth
     List<AdminDto> findPermissionHistory(@Param("adminNo") int adminNo);
 
     @Query(value = """
-            SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+            SELECT COUNT(*)
             FROM admin_authority_history current_history
             JOIN admin_authority authority
               ON authority.aa_no = current_history.aah_after_auth_no
@@ -50,5 +50,5 @@ public interface AdminAuthorityHistoryRepository extends JpaRepository<AdminAuth
                   LIMIT 1
               )
             """, nativeQuery = true)
-    boolean existsAnotherCurrentMaster(@Param("excludedAdminNo") int excludedAdminNo);
+    long countAnotherCurrentMaster(@Param("excludedAdminNo") int excludedAdminNo);
 }

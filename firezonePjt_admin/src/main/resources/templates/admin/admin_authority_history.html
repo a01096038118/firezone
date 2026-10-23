@@ -45,7 +45,7 @@
                     <td th:text="${item.beforeAuthorityNo != null ? item.beforeAuthorityNo : '-'}">-</td>
                     <td th:text="${item.beforeRoleName}">없음</td>
                     <td th:text="${item.afterAuthorityNo}">1</td>
-                    <td th:text="${item.afterRoleName}">MASTER</td>
+                    <td th:text="${item.afterRoleName}">master</td>
                     <td th:text="${item.changedBy + ' (' + item.changedById + ')'}">1</td>
                     <td th:text="${item.changedAt != null ? #temporals.format(item.changedAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
                 </tr>

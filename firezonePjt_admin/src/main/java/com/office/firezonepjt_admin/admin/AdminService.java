@@ -31,44 +31,29 @@ import java.util.Optional;
 public class AdminService {
 
     public enum AdminPermissionRole {
-        // 권한 세트: NONE(가입 직후) / CONTROL / CONTROL, MODIFY / MASTER(DB에서만 부여)
-        NONE("", false, false, false, false),
-        CONTROL("CONTROL", false, false, true, false),
-        CONTROL_MODIFY("CONTROL, MODIFY", true, true, true, false),
-        MASTER("MASTER", true, true, true, true);
+        NONE("", false, false, false),
+        CONTROL("CONTROL", false, true, false),
+        CONTROL_AND_MODIFY("CONTROL, MODIFY", true, true, false),
+        MASTER("MASTER", true, true, true);
 
         private final String roleName;
-        private final boolean memberList;
         private final boolean memberModify;
         private final boolean control;
         private final boolean master;
 
         AdminPermissionRole(
                 String roleName,
-                boolean memberList,
                 boolean memberModify,
                 boolean control,
                 boolean master) {
             this.roleName = roleName;
-            this.memberList = memberList;
             this.memberModify = memberModify;
             this.control = control;
             this.master = master;
         }
 
-        public String getMemberAccess() {
-            if (memberModify) {
-                return "MODIFY";
-            }
-            return memberList ? "LIST" : "NONE";
-        }
-
         public String getRoleName() {
             return roleName;
-        }
-
-        public boolean hasControl() {
-            return control;
         }
 
         public boolean isMaster() {
@@ -77,15 +62,11 @@ public class AdminService {
 
         public List<String> toSpringRoles() {
             List<String> roles = new ArrayList<>();
-            if (memberList) {
-                roles.add("MEMBER_LIST");
+            if (control) {
+                roles.add("CONTROL");
             }
             if (memberModify) {
-                roles.add("MEMBER_MODIFY");
-            }
-            if (control) {
-                roles.add("USER");
-                roles.add("CONTROL");
+                roles.add("MODIFY");
             }
             if (master) {
                 roles.add("MASTER");
@@ -93,50 +74,27 @@ public class AdminService {
             return roles;
         }
 
-        // 공백 제거 + 대문자로 맞춰서 비교 ("control, modify" -> "CONTROL,MODIFY")
-        private static String normalize(String roleName) {
-            return roleName == null
-                    ? ""
-                    : roleName.replaceAll("\\s", "").toUpperCase(java.util.Locale.ROOT);
-        }
-
-        // DB에 저장된 권한 이름 -> 권한 세트 (예전 이름도 읽을 수 있게 변환)
         private static AdminPermissionRole fromRoleName(String roleName) {
-            switch (normalize(roleName)) {
-                case "": case "NONE":
-                    return NONE;
-                case "CONTROL": case "USER":
-                    return CONTROL;
-                case "CONTROL,MODIFY": case "USER,MODIFY": case "MODIFY,USER": case "MODIFY_CONTROL":
-                    return CONTROL_MODIFY;
-                case "MASTER":
-                    return MASTER;
-                // 예전 권한 세트: 회원 조회 권한은 없어졌으므로 관제 권한만 유지
-                case "USER,LIST": case "LIST,USER": case "LIST_CONTROL":
-                    return CONTROL;
-                // 예전 권한 세트: 관제 권한이 없던 회원 조회/수정 전용 -> 권한 없음
-                case "LIST": case "MODIFY": case "LIST,MODIFY":
-                    return NONE;
-                default:
-                    throw new IllegalStateException("Unknown admin permission role: " + roleName);
+            if (roleName == null || roleName.isBlank()) {
+                return NONE;
             }
+            return fromRoleNameForUpdate(roleName);
         }
 
         private static AdminPermissionRole fromRoleNameForUpdate(String roleName) {
             if (roleName == null) {
                 throw new IllegalArgumentException("Permission set is required");
             }
-            // 화면에서 부여할 수 있는 권한: NONE, CONTROL, CONTROL, MODIFY (MASTER는 DB에서만)
-            switch (normalize(roleName)) {
-                case "": case "NONE":
-                    return NONE;
-                case "CONTROL":
-                    return CONTROL;
-                case "CONTROL,MODIFY":
-                    return CONTROL_MODIFY;
-                default:
-                    throw new IllegalArgumentException("Invalid admin permission set: " + roleName);
+            String normalizedRoleName = roleName.trim().toLowerCase(java.util.Locale.ROOT);
+            if (normalizedRoleName.isEmpty()) {
+                return NONE;
             }
+            for (AdminPermissionRole role : values()) {
+                if (role.roleName.equalsIgnoreCase(normalizedRoleName)) {
+                    return role;
+                }
+            }
+            throw new IllegalArgumentException("Invalid admin permission set: " + roleName);
         }
     }
 
@@ -194,8 +152,10 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         if (!findCurrentRole(changedBy.getAdNo()).isMaster()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only a MASTER can change administrator permissions");
+                    "Only the master administrator can change administrator permissions");
         }
+        adminAuthorityRepository.findAllByRoleNameForUpdate("MASTER");
+
         AdminPermissionRole newRole;
         try {
             newRole = AdminPermissionRole.fromRoleNameForUpdate(roleName);
@@ -209,6 +169,11 @@ public class AdminService {
         if (targetAdmin.getAdNo() == changedBy.getAdNo()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change your own permissions");
         }
+        if (newRole.isMaster()
+                && adminAuthorityHistoryRepository.countAnotherCurrentMaster(adminNo) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only one administrator can have master permission");
+        }
 
         Optional<AdminAuthorityHistoryEntity> previousHistory = latestPermissionHistory(adminNo);
         AdminPermissionRole currentRole = previousHistory
@@ -218,11 +183,6 @@ public class AdminService {
                                 "Authority not found: " + history.getAfterAuthorityNo())))
                 .orElse(AdminPermissionRole.NONE);
 
-        // MASTER의 권한은 화면에서 바꿀 수 없음 (DB에서만 변경)
-        if (currentRole.isMaster()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "MASTER permissions can only be changed in the database");
-        }
         if (currentRole == newRole) {
             return false;
         }
@@ -252,7 +212,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         if (!findCurrentRole(viewer.getAdNo()).isMaster()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only a MASTER can view administrator permission history");
+                    "Only the master administrator can view administrator permission history");
         }
 
         AdminEntity targetAdmin = adminRepository.findById(adminNo)

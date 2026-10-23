@@ -23,6 +23,7 @@
     </div>
 
     <p class="notice success" th:if="${message}" th:text="${message}"></p>
+    <p class="notice error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
 
     <section class="detail-card">
         <dl class="detail-list">
@@ -60,11 +61,12 @@
             <div class="form-group">
                 <label for="permissionRole">권한 조합</label>
                 <select id="permissionRole" name="permissionRole" required>
-                    <option value="NONE" th:selected="${permissionRole == ''}">NONE — 권한 없음</option>
-                    <option value="CONTROL" th:selected="${permissionRole == 'CONTROL'}">CONTROL — 관제/탐지</option>
-                    <option value="CONTROL, MODIFY" th:selected="${permissionRole == 'CONTROL, MODIFY'}">CONTROL, MODIFY — 관제/탐지 + 회원 조회/수정</option>
+                    <option value="" th:selected="${permissionRole == ''}">권한 없음</option>
+                    <option value="control" th:selected="${permissionRole == 'control'}">control — 회원 조회/관제·탐지</option>
+                    <option value="control, modify" th:selected="${permissionRole == 'control, modify'}">control, modify — 회원 조회/수정/관제·탐지</option>
+                    <option value="master" th:selected="${permissionRole == 'master'}">master — 회원 조회/수정, 관제·탐지 및 권한 관리</option>
                 </select>
-                <small>MASTER 권한은 화면에서 부여할 수 없으며 DB에서만 지정합니다.</small>
+                <small>master 권한은 동시에 한 명에게만 부여할 수 있습니다.</small>
             </div>
             <div class="form-actions">
                 <button class="button button-primary" type="submit">권한 저장</button>

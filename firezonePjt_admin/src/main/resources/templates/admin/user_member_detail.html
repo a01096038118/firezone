@@ -35,11 +35,11 @@
             <div><dt>전화번호</dt><dd th:text="${user.phone}">010-0000-0000</dd></div>
             <div>
                 <dt>가입일</dt>
-                <dd th:text="${user.registeredAt != null ? user.registeredAt : '-'}">-</dd>
+                <dd th:text="${user.registeredAt != null ? #temporals.format(user.registeredAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">-</dd>
             </div>
             <div>
                 <dt>수정일</dt>
-                <dd th:text="${user.modifiedAt != null ? user.modifiedAt : '-'}">-</dd>
+                <dd th:text="${user.modifiedAt != null ? #temporals.format(user.modifiedAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">-</dd>
             </div>
             <div>
                 <dt>권한</dt>
@@ -54,13 +54,13 @@
         </dl>
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">회원 목록</a>
-            <form sec:authorize="hasRole('MEMBER_MODIFY')"
+            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
                   th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
                   th:action="@{/admin/members_list/user/{userNo}/approve(userNo=${user.userNo})}"
                   method="post">
                 <button class="button button-primary" type="submit">회원 승인</button>
             </form>
-            <form sec:authorize="hasRole('MEMBER_MODIFY')"
+            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
                   th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
                   method="post"
                   onsubmit="return confirm('이 회원을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">

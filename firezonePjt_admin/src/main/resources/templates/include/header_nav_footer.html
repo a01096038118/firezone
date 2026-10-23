@@ -22,9 +22,9 @@
 
             <!-- 로그인 후 목록 -->
             <th:block sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">
-                <a sec:authorize="hasAnyRole('USER', 'CONTROL')" th:href="@{/dashboard/monitoring}">관제화면</a>
-                <a sec:authorize="hasAnyRole('USER', 'CONTROL')" th:href="@{/dashboard/detection}">탐지 목록</a>
-                <a sec:authorize="hasAnyRole('MEMBER_LIST', 'MEMBER_MODIFY', 'MASTER')"
+                <a sec:authorize="hasAnyRole('CONTROL', 'MASTER')" th:href="@{/dashboard/monitoring}">관제화면</a>
+                <a sec:authorize="hasAnyRole('CONTROL', 'MASTER')" th:href="@{/dashboard/detection}">탐지 목록</a>
+                <a sec:authorize="hasAnyRole('CONTROL', 'MODIFY', 'MASTER')"
                    th:href="@{/admin/members_list}">회원 조회</a>
                 <a th:href="@{/admin/myinfocheck}">내 정보 조회</a>
 
