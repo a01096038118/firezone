@@ -51,7 +51,10 @@ public class SecurityConfig {
                         ).hasAnyRole("CONTROL", "MODIFY", "MASTER")
                         .requestMatchers("/admin/members_list/user/**")
                         .hasAnyRole("CONTROL", "MODIFY", "MASTER")
-                        .requestMatchers("/dashboard/**", "/detections/**", "/uploads/detections/**")
+                        // 탐지 사진 : user 화면에서도 불러갈 수 있게 로그인 없이 허용
+                        // (파일 이름이 임의의 긴 값이라 주소를 모르면 열 수 없음)
+                        .requestMatchers(HttpMethod.GET, "/uploads/detections/**").permitAll()
+                        .requestMatchers("/dashboard/**", "/detections/**")
                         .hasAnyRole("CONTROL", "MASTER")
                         .requestMatchers(
                                 "/",

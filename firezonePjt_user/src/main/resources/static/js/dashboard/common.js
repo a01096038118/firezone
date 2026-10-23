@@ -1,6 +1,13 @@
 // Flask 서버 주소 (영상·이미지 서버). 서버에 올릴 때 이 값만 바꿈
 const FLASK_BASE_URL = 'http://192.168.0.141:5000';
 
+// admin 서버 주소 (탐지 사진은 admin 서버에 저장됨). 서버에 올릴 때 이 값만 바꿈
+// admin-dev VM : 'http://192.168.56.103:8090'
+// admin-prod VM : 'http://192.168.56.104:8090'
+const ADMIN_BASE_URL = 'http://localhost:8090';
+//const ADMIN_BASE_URL = 'http://192.168.56.103:8090';
+//const ADMIN_BASE_URL = 'http://192.168.56.104:8090';
+
 // 로그인 화면 주소
 const LOGIN_URL = '/member/signin';
 
@@ -38,7 +45,11 @@ function toImageUrl(path) {
     }
 
     try {
-        const base = new URL(FLASK_BASE_URL);
+        // admin이 저장한 사진(/uploads/detections/...)은 admin 서버에서,
+        // 예전 기록(Flask 쪽 경로)은 Flask 서버에서 불러옴
+        const base = String(path).trim().startsWith('/uploads/detections/')
+            ? new URL(ADMIN_BASE_URL)
+            : new URL(FLASK_BASE_URL);
         const url = new URL(path, base);
 
         return url.origin === base.origin ? url.href : '';

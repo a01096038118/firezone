@@ -69,74 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------- 경보 ----------
-    const soundButton = document.querySelector('#alarm_sound_btn');
-
     let lastDlNo = null;        // 마지막으로 확인한 탐지 번호 (처음 조회 때 기준값으로 저장)
-    let soundOn = false;        // 경보 소리 사용 여부
-    let audioContext = null;    // 소리를 만드는 브라우저 기능
 
-    // 경보 소리 켜기/끄기 (브라우저 정책상 사용자가 한 번 눌러야 소리가 남)
-    soundButton.addEventListener('click', () => {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        audioContext.resume();
-
-        soundOn = !soundOn;
-        soundButton.textContent = soundOn ? '경보 소리 끄기' : '경보 소리 켜기';
-
-        // 켤 때 시험으로 한 번 울림
-        if (soundOn) {
-            playAlarmSound();
-        }
-    });
-
-    const ALARM_REPEAT = 4;        // 울리는 횟수
-    const ALARM_TONE_SEC = 0.7;    // 한 번 울리는 길이 (초)
-    const ALARM_GAP_SEC = 0.3;     // 소리 사이 쉬는 시간 (초)
-    const ALARM_FREQ = 880;        // 음 높이 (Hz, 낮을수록 묵직함 / 기존 880)
-    const ALARM_VOLUME = 0.3;      // 음량 (0 ~ 1)
-
+    // 경보 소리는 nav의 공통 버튼(js/alarm.js)에서 켜고 끔
     function playAlarmSound() {
-        if (!soundOn || !audioContext) {
-            return;
-        }
-
-        const now = audioContext.currentTime;
-
-        for (let i = 0; i < ALARM_REPEAT; i++) {
-            const start = now + i * (ALARM_TONE_SEC + ALARM_GAP_SEC);
-            const end = start + ALARM_TONE_SEC;
-
-            // 기본음 + 한 옥타브 아래 저음(작게)
-            const mainTone = audioContext.createOscillator();
-            const subTone = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            const subGain = audioContext.createGain();
-
-            mainTone.type = 'sawtooth';
-            mainTone.frequency.value = ALARM_FREQ;
-
-            subTone.type = 'sine';
-            subTone.frequency.value = ALARM_FREQ / 2;
-            subGain.gain.value = 0;      // 저음 크기 (0 = 없음, 1 = 원래 크기)
-
-            // 시작·끝을 부드럽게 (뚝 끊기는 잡음 방지)
-            gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(ALARM_VOLUME, start + 0.05);
-            gain.gain.setValueAtTime(ALARM_VOLUME, end - 0.1);
-            gain.gain.linearRampToValueAtTime(0, end);
-
-            // 연결: 기본음 → gain, 저음 → subGain → gain → 스피커
-            mainTone.connect(gain);
-            subTone.connect(subGain);
-            subGain.connect(gain);
-            gain.connect(audioContext.destination);
-
-            mainTone.start(start);
-            subTone.start(start);
-            mainTone.stop(end);
-            subTone.stop(end);
+        if (window.FirezoneAlarm) {
+            window.FirezoneAlarm.play();
         }
     }
 

@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/list_detail.css}">
 
 
@@ -25,6 +26,9 @@
         <!-- 탐지 상세 정보 -->
         <div class="list">
             <h2>탐지 정보</h2>
+
+            <!-- 주정차 요약 문구 (예: 2026년 10월 23일 17시 50분 12가3456 차량 5분 0초 동안 주정차로 판단됩니다.) -->
+            <p id="summary_message"></p>
 
             <div class="detection_img">
                 <img id="detection_img" alt="탐지된 차량 사진" hidden>
@@ -52,6 +56,9 @@
 
                     <dt>마지막 탐지 시간</dt>
                     <dd id="last_detected">-</dd>
+
+                    <dt>주정차 시간</dt>
+                    <dd id="duration">-</dd>
                 </dl>
 
                 <a th:href="@{/dashboard/detection}">탐지 목록</a>
