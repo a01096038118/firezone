@@ -89,8 +89,10 @@ public class DetectionService {
                 // 기존 '마지막' 탐지시간
                 LocalDateTime lastTime = entity.getDlLastTime();
 
-                // 기존 마지막 탐지 시간과 설정된 시간(초) 이내면 같은 기록으로 판단
+                // 기존 마지막 탐지 시간과 설정된 시간(초) 이내이고, 같은 날짜일 때만 같은 기록으로 판단
+                // (자정을 넘기면 계속 서 있던 차량이라도 다음 날짜의 새 기록으로 저장)
                 if (lastTime != null
+                        && lastTime.toLocalDate().equals(lastAt.toLocalDate())
                         && !lastAt.isBefore(lastTime.minusSeconds(sameEventSeconds))
                         && !lastAt.isAfter(lastTime.plusSeconds(sameEventSeconds))) {
 
@@ -102,6 +104,12 @@ public class DetectionService {
                     return DetectionSaveResponse.updated(entity.getDlNo());
                 }
             }
+
+        // 최초 탐지 시간이 전날이면 마지막 탐지 날짜의 00:00으로 맞춤
+        // (자정을 넘겨 새로 만드는 기록이 다음 날짜로 조회되도록)
+        if (firstAt.toLocalDate().isBefore(lastAt.toLocalDate())) {
+            dto.setDl_first_detected_at(lastAt.toLocalDate().atStartOfDay());
+        }
 
         // detection_log 테이블에 저장
         DetectionEntity saved = detectionRepository.save(dto.toEntity());

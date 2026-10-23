@@ -541,3 +541,4 @@ document.addEventListener('DOMContentLoaded', () => {
         window.setInterval(checkStreamStatus, STATUS_CHECK_MS);
     }
 });
+

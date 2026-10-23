@@ -23,11 +23,11 @@ public class DetectionDto {
     private String dl_camera_id;                    // 감지 카메라 ID
 
     @NotBlank(message = "구역번호가 필요합니다.")
-    @Size(max = 20, message = "구역번호는 이하여야 합니다.")
+    @Size(max = 20, message = "구역번호는 20자 이하여야 합니다.")
     private String dl_zone_no;                      // 탐지 구역번호
 
     @NotBlank(message = "위반 유형이 필요합니다.")
-    @Size(max = 20, message = "위반유형은 30자 이하여야 합니다.")
+    @Size(max = 30, message = "위반유형은 30자 이하여야 합니다.")
     private String dl_violation_type;               // 위반 유형
 
     @NotBlank(message = "차량번호가 필요합니다.")

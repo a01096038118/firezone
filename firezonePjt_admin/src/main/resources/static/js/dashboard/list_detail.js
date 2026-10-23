@@ -150,8 +150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 삭제 버튼
-    deleteButton.addEventListener('click', async () => {
+    // 삭제 버튼 (MASTER가 아니면 HTML에 버튼이 없으므로 ?.로 건너뜀)
+    deleteButton?.addEventListener('click', async () => {
         const ok = window.confirm(
             `탐지 번호 ${dlNo} 기록을 삭제할까요?\n삭제한 기록은 복구할 수 없습니다.`
         );

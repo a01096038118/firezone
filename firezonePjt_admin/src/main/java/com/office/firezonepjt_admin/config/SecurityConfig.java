@@ -35,6 +35,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Flask 탐지 저장 :  로그인 없이 통과
                         .requestMatchers(HttpMethod.POST, "/detections").permitAll()
+                        // 탐지 삭제 : MASTER만
+                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
+                        .hasRole("MASTER")
+                        // CSV 다운로드 : CONTROL, MODIFY 이상 (MASTER 포함)
+                        .requestMatchers(HttpMethod.GET, "/detections/csv")
+                        .hasRole("MEMBER_MODIFY")
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
                         .hasRole("MASTER")
                         .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
@@ -63,13 +69,9 @@ public class SecurityConfig {
                                 "/img/**",
                                 "/include/**"
                         ).permitAll()
-                        // 탐지 삭제
-                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
-                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
+
                         .requestMatchers(
                                 "/admin/**",
-                                "/dashboard/**",
-                                "/detections/**",
                                 "/planner/**",
                                 "/logs/**"
                         ).hasRole("ADMIN")
