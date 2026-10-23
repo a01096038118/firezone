@@ -2,8 +2,6 @@ package com.office.firezonepjt_admin.config;
 
 import com.office.firezonepjt_admin.admin.security.AdminDetailsService;
 import com.office.firezonepjt_admin.admin.security.AdminPermissionRefreshFilter;
-import com.office.firezonepjt_admin.admin.security.AdminAccessDeniedHandler;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -35,26 +32,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Flask 탐지 저장 :  로그인 없이 통과
                         .requestMatchers(HttpMethod.POST, "/detections").permitAll()
-                        // 탐지 삭제 : MASTER만
-                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
-                        .hasRole("MASTER")
-                        // CSV 다운로드 : CONTROL, MODIFY 이상 (MASTER 포함)
-                        .requestMatchers(HttpMethod.GET, "/detections/csv")
-                        .hasRole("MEMBER_MODIFY")
-                        .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
-                        .hasRole("MASTER")
                         .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
                         .hasRole("MASTER")
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
-                        .hasRole("MEMBER_MODIFY")
+                        .hasRole("MODIFY")
                         .requestMatchers(
                                 "/admin/members_list",
                                 "/admin/members_list/admin/**"
-                        ).hasAnyRole("MEMBER_LIST", "MEMBER_MODIFY", "MASTER")
+                        ).hasAnyRole("CONTROL", "MODIFY", "MASTER")
                         .requestMatchers("/admin/members_list/user/**")
-                        .hasAnyRole("MEMBER_LIST", "MEMBER_MODIFY")
+                        .hasAnyRole("CONTROL", "MODIFY", "MASTER")
                         .requestMatchers("/dashboard/**", "/detections/**")
-                        .hasAnyRole("USER", "CONTROL")
+                        .hasAnyRole("CONTROL", "MASTER")
                         .requestMatchers(
                                 "/",
                                 "/admin/signin",
@@ -69,9 +58,13 @@ public class SecurityConfig {
                                 "/img/**",
                                 "/include/**"
                         ).permitAll()
-
+                        // 탐지 삭제
+                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
+                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers(
                                 "/admin/**",
+                                "/dashboard/**",
+                                "/detections/**",
                                 "/planner/**",
                                 "/logs/**"
                         ).hasRole("ADMIN")
@@ -98,81 +91,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
-//@Slf4j
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig {
-//
-//    @Bean PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//
-//    }
-//
-//    @Bean SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .cors(cors -> cors.disable())
-//                .csrf(csrf -> csrf.disable());
-//
-//        http
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(
-//                                "/",
-//                                "/css/*",
-//                                "/img/*",
-//                                "/js/*",
-//                                "/member/signup",
-//                                "/member/signup_confirm",
-//                                "/member/signin",
-//                                "/member/signin_confirm",
-//                                "/member/findpassword",
-//                                "/member/findpassword_confirm").permitAll()
-//                        .requestMatchers("/planner/**").hasAnyRole("USER")
-//                        .anyRequest().authenticated()
-//                );
-//
-//        http
-//                .formLogin(login -> login
-//                        .loginPage("/member/signin")
-//                        .loginProcessingUrl("/member/signin_confirm")
-//                        .usernameParameter("id")
-//                        .passwordParameter("pw")
-//                        .successHandler((request, response, authentication) -> {
-//                            log.info("SIGNIN SUCCESS HANDLER()");
-//
-//                            User user = (User) authentication.getPrincipal();
-//                            String targetURI = "/member/signin_result?loginedID=" + user.getUsername();
-//                            response.sendRedirect(targetURI);
-//
-//                        })
-//                        .failureHandler((request, response, exception) -> {
-//                            log.info("SIGNIN FAIL HANDLER()");
-//
-//                            String targetURI = "/member/signin_result";
-//                            response.sendRedirect(targetURI);
-//
-//                        })
-//                );
-//
-//        http
-//                .logout(logout -> logout
-//                        .logoutUrl("/member/signout_confirm")
-//                        .logoutSuccessHandler((request, response, authentication) -> {
-//                            log.info("signout success handler");
-//
-//                            String targetURI = "/";
-//                            response.sendRedirect(targetURI);
-//
-//                        }));
-//
-//        http
-//                .exceptionHandling(exception -> exception
-//                        .accessDeniedHandler(new AdminAccessDeniedHandler())
-//                );
-//
-//        return http.build();
-//
-//    }
-//
-//}

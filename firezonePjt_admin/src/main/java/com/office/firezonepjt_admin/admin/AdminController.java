@@ -71,8 +71,9 @@ public class AdminController {
     public String membersList(Authentication authentication, Model model) {
         log.info("membersList()");
         model.addAttribute("admins", adminService.findAllAdmins());
-        boolean canViewUserMembers = hasRole(authentication, "ROLE_MEMBER_LIST")
-                || hasRole(authentication, "ROLE_MEMBER_MODIFY");
+        boolean canViewUserMembers = hasRole(authentication, "ROLE_CONTROL")
+                || hasRole(authentication, "ROLE_MODIFY")
+                || hasMasterRole(authentication);
         model.addAttribute("canViewUserMembers", canViewUserMembers);
         if (canViewUserMembers) {
             model.addAttribute("users", adminService.findAllUsers());
@@ -113,11 +114,21 @@ public class AdminController {
             @RequestParam String permissionRole,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
-        boolean changed = adminService.updatePermissions(
-                adminNo, permissionRole, authentication.getName());
-        redirectAttributes.addFlashAttribute(
-                "message",
-                changed ? "관리자 권한을 변경했습니다." : "변경된 권한이 없습니다.");
+        try {
+            boolean changed = adminService.updatePermissions(
+                    adminNo, permissionRole, authentication.getName());
+            redirectAttributes.addFlashAttribute(
+                    "message",
+                    changed ? "관리자 권한을 변경했습니다." : "변경된 권한이 없습니다.");
+        } catch (ResponseStatusException exception) {
+            String errorMessage = switch (exception.getStatusCode().value()) {
+                case 403 -> "현재 계정은 master가 아니므로 권한을 변경할 수 없습니다.";
+                case 409 -> "이미 다른 관리자에게 master 권한이 있어 부여할 수 없습니다.";
+                case 400 -> "자신의 권한은 변경할 수 없습니다. 다른 관리자 계정을 선택해 주세요.";
+                default -> "권한 변경에 실패했습니다. 대상 관리자와 권한을 확인해 주세요.";
+            };
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        }
         return "redirect:/admin/members_list/admin/" + adminNo;
     }
 
