@@ -60,7 +60,40 @@
     overflow-wrap: anywhere;
 }
 
+/* 주정차 요약 문구 : 제목 바로 아래 전체 폭 안내 박스 (admin 화면과 같은 모양) */
+#summary_message {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    padding: 14px 18px;
+    border: 1px solid #cfe5e3;
+    border-left: 4px solid var(--teal);
+    border-radius: 10px;
+    background: #f2f8f8;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+#summary_message strong {
+    color: var(--teal);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* 문구를 만들 수 없는 경우 빈 박스가 남지 않게 숨김 */
+#summary_message:empty {
+    display: none;
+}
+
 @media (max-width: 760px) {
+    #summary_message {
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
     #list_wrap > .list {
         grid-template-columns: minmax(0, 1fr);
         gap: 18px;

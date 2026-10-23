@@ -237,30 +237,7 @@
     display: contents;
 }
 
-/* ===== 경보 버튼을 로그아웃 옆으로 띄우기 (Absolute) ===== */
-#alarm_sound_btn {
-    position: absolute;
-    top: 98px;
-    right: calc(max(24px, (100vw - 1240px) / 2) + 90px);
-    z-index: 9999;
-    margin: 0;
-    padding: 8px 14px;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    background: #fff;
-    color: var(--ink);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-#alarm_sound_btn:hover {
-    color: #fff;
-    background: var(--teal);
-    border-color: var(--teal);
-}
+/* 경보 소리 버튼은 모든 화면 공통으로 nav에 있음 (header_nav_footer.css) */
 
 /* ===== 최근 탐지 목록 (table / .detection_list) ===== */
 #dashboard_wrap > table {
