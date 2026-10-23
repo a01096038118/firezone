@@ -156,7 +156,6 @@ public class AdminService {
                          AdminRepository adminRepository,
                          AdminAuthorityRepository adminAuthorityRepository,
                          AdminAuthorityHistoryRepository adminAuthorityHistoryRepository) {
-        this.adminDao = adminDao;
         this.userMemberRepository = userMemberRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
