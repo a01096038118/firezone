@@ -1,9 +1,12 @@
 """Boot 서버 HTTP 호출 (Boot 관리자 앱 firezonePjt_admin 의 DetectionController 기준).
 
-POST /detections          → 새 탐지 기록 저장, 응답 본문은 숫자 dl_no (예: 15)
+POST /detections          → 탐지 기록 저장 (같은 날 같은 차면 Boot가 갱신), 응답 {"dl_no": 15, "result": "CREATED"}
+                            사진을 함께 보낼 때는 multipart: data(JSON) + image(단속 사진 파일)
 PUT  /detections/{dl_no}  → 탐지 기록 수정 (Boot에 아직 없음, config.BOOT_UPDATE_API_READY 로 켬)
 """
+import json
 import logging
+import os
 import re
 
 import requests
@@ -16,6 +19,9 @@ log = logging.getLogger(__name__)
 CSRF_TOKEN_PATTERN = re.compile(r'name="_csrf"[^>]*value="([^"]+)"|value="([^"]+)"[^>]*name="_csrf"')
 # Spring Security 가 CSRF 토큰을 읽는 기본 헤더 이름
 CSRF_HEADER_NAME = "X-CSRF-TOKEN"
+# 사진과 함께 보낼 때 multipart 파트 이름 (Boot DetectionController @RequestPart 기준)
+MULTIPART_DATA_PART = "data"     # 기록 JSON
+MULTIPART_IMAGE_PART = "image"   # 단속 사진 파일
 
 # 세션 쿠키(JSESSIONID)와 CSRF 토큰을 계속 쓰기 위한 연결 (전송 스레드 한 개만 사용)
 _boot_session = requests.Session()
@@ -64,18 +70,41 @@ def _refresh_csrf_token():
 
 
 # Boot 요청을 보내고 CSRF로 막히면(403) 토큰을 받아 한 번 더 보내는 것을 담당함.
-def _send_with_csrf_retry(method, url, payload):
-    response = _boot_session.request(method, url, json=payload, timeout=config.BOOT_REQUEST_TIMEOUT_SECONDS)
+def _send_with_csrf_retry(method, url, payload, image_file=None):
+    """image_file 이 있으면 multipart(data JSON + image 파일), 없으면 JSON 으로 보낸다."""
+    # 같은 요청을 다시 보낼 수 있게 요청 내용을 만드는 함수로 둠 (파일은 보낼 때마다 새로 읽음)
+    def send():
+        if image_file is None:
+            body = {"json": payload}
+        else:
+            with open(image_file, "rb") as image:
+                image_bytes = image.read()
+            body = {"files": {
+                MULTIPART_DATA_PART: (None, json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+                                      "application/json"),
+                MULTIPART_IMAGE_PART: (os.path.basename(image_file), image_bytes, "image/jpeg"),
+            }}
+        # 로그인 화면으로 돌려보내는 응답(302)을 따라가면 저장 성공처럼 보이므로 따라가지 않음
+        return _boot_session.request(method, url, timeout=config.BOOT_REQUEST_TIMEOUT_SECONDS,
+                                     allow_redirects=False, **body)
+
+    response = send()
     # 403 이면 CSRF 토큰 문제일 가능성이 커서 토큰을 받아 다시 보냄
     if response.status_code == 403 and _refresh_csrf_token():
-        response = _boot_session.request(method, url, json=payload, timeout=config.BOOT_REQUEST_TIMEOUT_SECONDS)
+        response = send()
+    # 다른 주소로 돌려보내면(보통 로그인 화면) 저장되지 않은 것이므로 실패로 처리
+    if response.is_redirect:
+        raise requests.HTTPError(
+            f"Boot가 {response.headers.get('Location')} 로 돌려보냄 (로그인 필요 → 저장 안 됨). "
+            f"Boot 보안 설정에서 {method} /detections 를 로그인 없이 허용해야 함", response=response)
     return response
 
 
 # Boot에 새 탐지 기록 저장 요청(POST /detections)을 담당함.
-def post_detection(payload):
-    """새 탐지 기록 저장 → Boot가 만든 기록번호 dl_no (못 읽으면 None). 실패 시 requests 예외."""
-    response = _send_with_csrf_retry("POST", _detection_api_url(), payload)
+def post_detection(payload, image_file=None):
+    """탐지 기록 저장 → Boot가 만든(또는 갱신한) 기록번호 dl_no (못 읽으면 None). 실패 시 requests 예외.
+    image_file: 함께 보낼 단속 사진 파일 경로 (사진을 Boot에 넘기는 방식일 때)"""
+    response = _send_with_csrf_retry("POST", _detection_api_url(), payload, image_file)
     # 400·403·500 등이면 예외로 올려서 전송 스레드가 로그를 남기게 함
     response.raise_for_status()
     return _read_dl_no(response)

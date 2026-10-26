@@ -1,6 +1,7 @@
 """Boot detection_log 에 저장할 데이터 만들기 (Boot DetectionDto 형식)."""
 import logging
 
+import config
 from utils.image_storage import get_detection_image_url
 from utils.time_format import format_boot_datetime
 
@@ -36,8 +37,9 @@ def _fit_to_column_length(payload):
 # Boot detection_log 형식(dl_*)의 전송 데이터를 만드는 것을 담당함.
 def build_detection_payload(camera_id, zone_no, violation_type, car_number,
                             evidence_image_path, first_detected_at, last_detected_at):
-    """Boot는 7개 칸이 모두 필수(NOT NULL). 단속은 차량번호를 읽은 경우에만 되므로 항상 채워진다."""
-    return _fit_to_column_length({
+    """Boot는 7개 칸이 모두 필수(NOT NULL). 단속은 차량번호를 읽은 경우에만 되므로 항상 채워진다.
+    사진을 Boot에 파일로 넘기는 방식(config.BOOT_IMAGE_UPLOAD)이면 dl_image_path 는 Boot가 채우므로 보내지 않는다."""
+    payload = {
         "dl_camera_id": camera_id,
         "dl_zone_no": zone_no,
         "dl_violation_type": violation_type,
@@ -45,4 +47,7 @@ def build_detection_payload(camera_id, zone_no, violation_type, car_number,
         "dl_image_path": get_detection_image_url(evidence_image_path),   # 1차+2차 단속 사진 전체 주소
         "dl_first_detected_at": format_boot_datetime(first_detected_at),  # 1차 촬영 시각
         "dl_last_detected_at": format_boot_datetime(last_detected_at),    # 2차(마지막) 촬영 시각
-    })
+    }
+    if config.BOOT_IMAGE_UPLOAD:
+        del payload["dl_image_path"]
+    return _fit_to_column_length(payload)

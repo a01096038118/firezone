@@ -1,6 +1,6 @@
 """촬영 사진 한 장 분석: 차량 탐지 → 구역 찾기 → 소방차 제외 → 구역 안 차량 → 번호판.
 
-구역은 ① 등록된 구역 사진과 맞춰 찾고, ② 맞는 구역이 없으면 바닥 표시(노란 테두리·빨간 빗금)로 직접 찾는다.
+구역은 ① 등록된 구역 사진과 맞춰 찾고, ② 맞는 구역이 없으면 바닥 표시(노란 테두리)로 직접 찾는다.
 
 결과는 ai/shot.py 의 Shot (1차·2차 비교에 쓰는 촬영 결과).
 분석할 수 없으면 UndecidablePhoto 예외로 이유를 알려준다 (판정 불가).
@@ -87,6 +87,8 @@ def analyze_photo(camera_id, photo, captured_at, default_zone_no=None):
     log.info("[%s] 구역 %s (%s) 차량 %d대, 소방차 %d대, 구역 안 일반 차량 %d대 %s",
              camera_id, zone["zone_no"], zone_match["method"], len(vehicles), fire_truck_count,
              len(cars_in_zone), [car.car_number or "번호판 미인식" for car in cars_in_zone])
+    # 사진을 Boot에 넘기는 방식이면 원본은 파일로 남기지 않음 (1차·2차 비교는 메모리의 사진으로 함)
+    photo_path = None if config.BOOT_IMAGE_UPLOAD else save_photo(camera_id, zone["zone_no"], photo, captured_at)
     return Shot(
         camera_id=camera_id,
         zone_no=zone["zone_no"],
@@ -94,7 +96,7 @@ def analyze_photo(camera_id, photo, captured_at, default_zone_no=None):
         violation_type=zone["violation_type"],
         captured_at=captured_at,
         image=photo,
-        photo_path=save_photo(camera_id, zone["zone_no"], photo, captured_at),
+        photo_path=photo_path,
         match_method=zone_match["method"],
         zone_polygon_in_photo=polygon_in_photo,
         cars=cars_in_zone,

@@ -23,7 +23,7 @@ class Shot:
     violation_type: str
     captured_at: float            # 촬영 시각 (timestamp)
     image: np.ndarray             # 촬영 원본 사진
-    photo_path: str               # 저장된 원본 사진 경로 (data/photos 기준)
+    photo_path: Optional[str]     # 저장된 원본 사진 경로 (data/photos 기준). 사진을 Boot에 넘기는 방식이면 None
     match_method: str             # 구역을 맞춘 방법 (자동 맞추기 / 고정 좌표)
     zone_polygon_in_photo: list   # 사진 위 구역 테두리 (화면에 그릴 때 사용)
     cars: List[ParkedCar] = field(default_factory=list)   # 구역 안 일반 차량 (소방차 제외)
