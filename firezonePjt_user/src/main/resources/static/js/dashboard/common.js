@@ -1,11 +1,13 @@
 // Flask 서버 주소 (영상·이미지 서버). 서버에 올릴 때 이 값만 바꿈
-const FLASK_BASE_URL = 'http://192.168.0.106:5000';
+// const FLASK_BASE_URL = 'http://192.168.0.106:5000';   // 로컬 PC끼리 (Flask PC)
+const FLASK_BASE_URL = 'http://192.168.56.107:5000';      // flask-dev VM
+// const FLASK_BASE_URL = 'http://192.168.56.108:5000';   // flask-prod VM
 
 // admin 서버 주소 (탐지 사진은 admin 서버에 저장됨). 서버에 올릴 때 이 값만 바꿈
 // admin-dev VM : 'http://192.168.56.103:8090'
 // admin-prod VM : 'http://192.168.56.104:8090'
-const ADMIN_BASE_URL = 'http://localhost:8090';
-//const ADMIN_BASE_URL = 'http://192.168.56.103:8090';
+//const ADMIN_BASE_URL = 'http://localhost:8090';          // 로컬 (내 PC)
+const ADMIN_BASE_URL = 'http://192.168.56.103:8090';
 //const ADMIN_BASE_URL = 'http://192.168.56.104:8090';
 
 // 로그인 화면 주소
