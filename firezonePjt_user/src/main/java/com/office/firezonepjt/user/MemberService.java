@@ -32,19 +32,16 @@ public class MemberService {
     final public static int NEW_PASSWORD_CREATION_SUCCESS   = 1;
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
 
-    final private MemberDao memberDao;
     final private PasswordEncoder passwordEncoder;
     final private JavaMailSender javaMailSender;
     final private MemberRepository memberRepository;
     final private AuthorityRepository authorityRepository;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    public MemberService(MemberDao memberDao,
-                         PasswordEncoder passwordEncoder,
+    public MemberService(PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
                          MemberRepository memberRepository,
                          AuthorityRepository authorityRepository) {
-        this.memberDao = memberDao;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.memberRepository = memberRepository;
