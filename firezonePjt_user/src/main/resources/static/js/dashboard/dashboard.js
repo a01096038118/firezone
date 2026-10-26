@@ -71,85 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------- 경보 ----------
     let lastDlNo = null;        // 마지막으로 확인한 탐지 번호 (처음 조회 때 기준값으로 저장)
 
-    // 경보 소리는 nav의 공통 버튼(js/alarm.js)에서 켜고 끔
-    function playAlarmSound() {
+    // 경보 소리·팝업은 모든 화면 공통 기능(js/dashboard/alarm.js)이 처리
+    function notifyAlarm(newDetections) {
         if (window.FirezoneAlarm) {
-            window.FirezoneAlarm.play();
-        }
-    }
-
-    // 경보 문구 (2026-10-21T15:30:12 → "15시 30분 12초에 Z01 구역에서 주정차 발생")
-    function alarmMessage(dto) {
-        const value = String(dto.dl_first_detected_at || '');
-        const time = value.includes('T')
-            ? value.split('T')[1].split('.')[0]
-            : '';
-
-        const [hour, minute, second] = time.split(':');
-
-        const timeText = hour
-            ? `${hour}시 ${minute}분 ${second}초`
-            : '시간 미확인';
-
-        return `${timeText}에 ${displayValue(dto.dl_zone_no)} 구역에서 주정차 발생`;
-    }
-
-    // ---------- 경보 팝업 ----------
-
-    const popupArea = document.querySelector('#alarm_popup_area');
-
-    const POPUP_CLOSE_MS = 0;       // 팝업 자동 닫힘 시간 (0이면 ✕를 눌러야 닫힘)
-    const MAX_POPUPS = 3;           // 한 번에 보여줄 팝업 최대 개수
-
-    // 경보 팝업 띄우기
-    function showAlarmPopup(dto) {
-        const popup = document.createElement('div');
-        popup.className = 'alarm_popup';
-
-        // 제목 + 닫기 버튼
-        const header = document.createElement('div');
-        header.className = 'alarm_popup_header';
-
-        const title = document.createElement('strong');
-        title.textContent = '🚨 주정차 경보';
-
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'alarm_popup_close';
-        closeButton.textContent = '✕';
-        closeButton.addEventListener('click', () => popup.remove());
-
-        header.append(title, closeButton);
-
-        // 경보 문구
-        const message = document.createElement('p');
-        message.textContent = alarmMessage(dto);
-
-        // 차량 번호 + 상세 보기
-        const footer = document.createElement('div');
-        footer.className = 'alarm_popup_footer';
-
-        const carNumber = document.createElement('span');
-        carNumber.textContent = displayValue(dto.dl_car_number);
-
-        const detail = document.createElement('a');
-        detail.href =
-            `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-        detail.textContent = '상세 보기';
-
-        footer.append(carNumber, detail);
-
-        popup.append(header, message, footer);
-        popupArea.prepend(popup);
-
-        // 너무 많이 쌓이면 오래된 팝업부터 닫음
-        while (popupArea.children.length > MAX_POPUPS) {
-            popupArea.lastElementChild.remove();
-        }
-
-        // 일정 시간이 지나면 자동으로 닫힘
-        if (POPUP_CLOSE_MS > 0) {
-            window.setTimeout(() => popup.remove(), POPUP_CLOSE_MS);
+            window.FirezoneAlarm.notify(newDetections);
         }
     }
 
@@ -173,8 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        newDetections.forEach(showAlarmPopup);
-        playAlarmSound();
+        notifyAlarm(newDetections);
 
         lastDlNo = newestDlNo;
     }
@@ -253,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
 
-        cell.colSpan = 5;
+        cell.colSpan = 4;
         cell.textContent = message;
 
         row.appendChild(cell);
@@ -284,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 최근 탐지 목록 표시
+    // 최근 탐지 목록 (번호 열 없음, 줄을 누르면 상세 화면으로 이동)
     function showDetectionList(detections) {
         listBody.replaceChildren();
 
@@ -291,31 +216,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
 
             const values = [
-                dto.dl_no,
                 dto.dl_camera_id,
                 dto.dl_zone_no,
                 dto.dl_car_number,
                 formatTime(dto.dl_first_detected_at)
             ];
 
-            values.forEach((value, index) => {
+            for (const value of values) {
                 const cell = document.createElement('td');
-
-                // 탐지 번호를 누르면 상세 화면 이동
-                if (index === 0) {
-                    const link = document.createElement('a');
-
-                    link.href =
-                        `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-                    link.textContent = displayValue(value);
-                    cell.appendChild(link);
-                } else {
-                    cell.textContent = displayValue(value);
-                }
-
+                cell.textContent = displayValue(value);
                 row.appendChild(cell);
-            });
+            }
 
+            makeDetailRow(row, dto.dl_no);
             listBody.appendChild(row);
         }
     }

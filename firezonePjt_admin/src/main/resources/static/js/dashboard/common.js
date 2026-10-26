@@ -1,7 +1,9 @@
 // Flask 서버 주소 (이미지·영상을 제공하는 서버). 팀원에게 확인 후 입력
 // 예: 'http://192.168.56.xx:5000'
 const FLASK_BASE_URL = 'http://192.168.0.106:5000';
-//const FLASK_BASE_URL = 'http://localhost:5000';
+// const FLASK_BASE_URL = 'http://192.168.56.107:5000';
+// const FLASK_BASE_URL = 'http://192.168.56.108:5000';
+// const FLASK_BASE_URL = 'http://localhost:5000';
 
 // 서버 오류를 상태 코드와 함께 전달하는 오류 클래스
 class ApiError extends Error {
@@ -130,4 +132,28 @@ function toImageUrl(path) {
     }
 
     return url.href;
+}
+
+// 표의 한 줄 전체를 눌러 탐지 상세 화면으로 이동 (관제 화면 최근 목록, 탐지 목록 공통)
+// - 줄 안의 버튼(삭제 등)·링크를 누른 경우는 이동하지 않음
+// - 키보드: Tab으로 줄 선택 후 Enter
+function makeDetailRow(row, dlNo) {
+    const url = `/dashboard/listDetail?dl_no=${encodeURIComponent(dlNo)}`;
+
+    row.classList.add('clickable_row');
+    row.tabIndex = 0;
+    row.title = '상세 정보 보기';
+
+    row.addEventListener('click', (event) => {
+        if (event.target.closest('button, a, input, select')) {
+            return;
+        }
+        window.location.href = url;
+    });
+
+    row.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && event.target === row) {
+            window.location.href = url;
+        }
+    });
 }

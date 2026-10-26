@@ -37,7 +37,7 @@ public class DetectionService {
     public DetectionService(
             DetectionRepository detectionRepository,
             DetectionImageStorage detectionImageStorage,
-            @Value("${detection.same-event-seconds:30}") long sameEventSeconds) {
+            @Value("${detection.same-event-seconds:10}") long sameEventSeconds) {
         this.detectionRepository = detectionRepository;
         this.detectionImageStorage = detectionImageStorage;
         this.sameEventSeconds = sameEventSeconds;

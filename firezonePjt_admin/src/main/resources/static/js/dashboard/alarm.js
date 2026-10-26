@@ -1,8 +1,9 @@
-// 경보 소리 공통 기능
+// 경보 소리 + 경보 팝업 공통 기능 (모든 화면)
 // - nav의 '경보 소리 켜기' 버튼 (관제 권한 CONTROL, MASTER에게만 표시)
 // - 켜고 끈 상태는 브라우저에 저장되어 다른 화면으로 이동해도 유지됨
-// - 관제 화면은 dashboard.js가 새 탐지 때 FirezoneAlarm.play()를 호출
-// - 그 밖의 화면은 이 파일이 5초마다 최신 탐지를 확인해 새 탐지가 있으면 소리를 냄
+// - 관제 화면은 dashboard.js가 새 탐지 때 FirezoneAlarm.notify()를 호출
+// - 그 밖의 화면은 이 파일이 5초마다 최신 탐지를 확인해 새 탐지가 있으면 팝업 + 소리
+// - 팝업은 소리를 꺼 둬도 항상 뜸 (팝업 스타일: css/dashboard/alarm.css)
 (function () {
     const STORAGE_KEY = 'firezone.alarmSound';
     const POLL_MS = 5000;               // 새 탐지 확인 주기 (관제 화면 외)
@@ -12,6 +13,9 @@
     const ALARM_GAP_SEC = 0.3;          // 소리 사이 쉬는 시간 (초)
     const ALARM_FREQ = 880;             // 음 높이 (Hz)
     const ALARM_VOLUME = 0.3;           // 음량 (0 ~ 1)
+
+    const POPUP_CLOSE_MS = 0;           // 팝업 자동 닫힘 시간 (0이면 ✕를 눌러야 닫힘)
+    const MAX_POPUPS = 3;               // 한 번에 보여줄 팝업 최대 개수
 
     let soundOn = false;
     let audioContext = null;
@@ -79,9 +83,110 @@
         }
     }
 
+    // ---------- 경보 팝업 ----------
+
+    function displayValue(value) {
+        if (value === null || value === undefined || String(value).trim() === '') {
+            return '미확인';
+        }
+        return String(value);
+    }
+
+    // 경보 문구 (2026-10-21T15:30:12 → "15시 30분 12초에 Z01 구역에서 주정차 발생")
+    function alarmMessage(dto) {
+        const value = String(dto.dl_first_detected_at || '');
+        const time = value.includes('T')
+            ? value.split('T')[1].split('.')[0]
+            : '';
+
+        const [hour, minute, second] = time.split(':');
+
+        const timeText = hour
+            ? `${hour}시 ${minute}분 ${second}초`
+            : '시간 미확인';
+
+        return `${timeText}에 ${displayValue(dto.dl_zone_no)} 구역에서 주정차 발생`;
+    }
+
+    // 팝업을 담을 영역 (관제 화면은 dashboard.html에 있고, 다른 화면은 여기서 만듦)
+    function getPopupArea() {
+        let area = document.getElementById('alarm_popup_area');
+
+        if (!area) {
+            area = document.createElement('div');
+            area.id = 'alarm_popup_area';
+            document.body.appendChild(area);
+        }
+        return area;
+    }
+
+    // 경보 팝업 띄우기
+    function showPopup(dto) {
+        const popupArea = getPopupArea();
+
+        const popup = document.createElement('div');
+        popup.className = 'alarm_popup';
+
+        // 제목 + 닫기 버튼
+        const header = document.createElement('div');
+        header.className = 'alarm_popup_header';
+
+        const title = document.createElement('strong');
+        title.textContent = '🚨 주정차 경보';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'alarm_popup_close';
+        closeButton.textContent = '✕';
+        closeButton.addEventListener('click', () => popup.remove());
+
+        header.append(title, closeButton);
+
+        // 경보 문구
+        const message = document.createElement('p');
+        message.textContent = alarmMessage(dto);
+
+        // 차량 번호 + 상세 보기
+        const footer = document.createElement('div');
+        footer.className = 'alarm_popup_footer';
+
+        const carNumber = document.createElement('span');
+        carNumber.textContent = displayValue(dto.dl_car_number);
+
+        const detail = document.createElement('a');
+        detail.href = `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
+        detail.textContent = '상세 보기';
+
+        footer.append(carNumber, detail);
+
+        popup.append(header, message, footer);
+        popupArea.prepend(popup);
+
+        // 너무 많이 쌓이면 오래된 팝업부터 닫음
+        while (popupArea.children.length > MAX_POPUPS) {
+            popupArea.lastElementChild.remove();
+        }
+
+        // 일정 시간이 지나면 자동으로 닫힘
+        if (POPUP_CLOSE_MS > 0) {
+            window.setTimeout(() => popup.remove(), POPUP_CLOSE_MS);
+        }
+    }
+
+    // 새 탐지 목록(오래된 것부터)으로 팝업 + 소리
+    function notify(newDetections) {
+        if (!Array.isArray(newDetections) || newDetections.length === 0) {
+            return;
+        }
+        newDetections.forEach(showPopup);
+        play();
+    }
+
     // 관제 화면(dashboard.js)에서 사용
     window.FirezoneAlarm = {
         play: play,
+        showPopup: showPopup,
+        notify: notify,
         isOn: function () {
             return soundOn;
         }
@@ -121,9 +226,14 @@
                     return;
                 }
 
-                if (newest > lastDlNo) {
+                // 기준값보다 큰 번호 = 새 탐지 (오래된 것부터 팝업)
+                const newDetections = list
+                    .filter(dto => Number(dto.dl_no) > lastDlNo)
+                    .sort((a, b) => Number(a.dl_no) - Number(b.dl_no));
+
+                if (newDetections.length > 0) {
                     lastDlNo = newest;
-                    play();
+                    notify(newDetections);
                 }
             } catch (error) {
                 // 응답이 JSON이 아니면(로그인 화면 등) 확인 중단

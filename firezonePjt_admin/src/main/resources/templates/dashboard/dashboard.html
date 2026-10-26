@@ -71,10 +71,10 @@
         <!-- 경보 알람 -->
         <section class="alarm_area">
             <h3>경보</h3>
-            <!-- 경보 소리 버튼은 모든 화면 공통으로 nav에 있음 (include/header_nav_footer.html, js/alarm.js) -->
+            <!-- 경보 소리 버튼은 모든 화면 공통으로 nav에 있음 (include/header_nav_footer.html, js/dashboard/alarm.js) -->
         </section>
 
-        <!-- 경보 팝업 -->
+        <!-- 경보 팝업 (내용은 js/dashboard/alarm.js가 채움, 다른 화면에서는 alarm.js가 직접 만듦) -->
         <div id="alarm_popup_area"></div>
 
 
@@ -82,7 +82,6 @@
         <table>
             <thead>
             <tr>
-                <th>탐지 번호</th>
                 <th>카메라 ID</th>
                 <th>탐지 구역</th>
                 <th>차량 번호</th>
@@ -92,7 +91,7 @@
 
             <tbody id="detection_log_list">
                 <tr>
-                    <td colspan="5"> 탐지 정보를 불러오는 중입니다.</td>
+                    <td colspan="4"> 탐지 정보를 불러오는 중입니다.</td>
                 </tr>
             </tbody>
         </table>

@@ -39,8 +39,9 @@
             </th:block>
         </div>
 
-        <!-- 경보 소리 공통 기능 (관제 화면을 볼 수 있는 회원만) -->
-        <script sec:authorize="hasAnyRole('APPR_USER', 'USER')" th:src="@{/js/alarm.js}"></script>
+        <!-- 경보 소리 + 경보 팝업 공통 기능 (모든 화면, 관제 화면을 볼 수 있는 권한만) -->
+        <link sec:authorize="hasAnyRole('APPR_USER', 'USER')" rel="stylesheet" th:href="@{/css/dashboard/alarm.css}">
+        <script sec:authorize="hasAnyRole('APPR_USER', 'USER')" th:src="@{/js/dashboard/alarm.js}"></script>
     </nav>
 
     <footer th:fragment="footer">
