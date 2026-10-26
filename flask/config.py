@@ -7,7 +7,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 # Boot·브라우저가 사진·영상에 접근할 Flask 주소 (다른 PC에서 접근하면 이 PC의 IP로 변경)
-FLASK_PUBLIC_URL = os.getenv("FLASK_PUBLIC_URL", "http://localhost:5000")
+FLASK_PUBLIC_URL = os.getenv("FLASK_PUBLIC_URL", "http://192.168.0.106:5000")
 
 # ── Boot 연동 (Boot 관리자 앱 firezonePjt_admin 기준) ──
 # false 이면 Boot로 보내지 않고 보낼 내용만 로그로 출력 (Boot 없이 테스트용)
@@ -17,6 +17,10 @@ BOOT_DETECTION_API_PATH = os.getenv("BOOT_DETECTION_API_PATH", "/detections")
 BOOT_REQUEST_TIMEOUT_SECONDS = float(os.getenv("BOOT_REQUEST_TIMEOUT_SECONDS", "3"))
 # Boot에 수정 API(PUT /detections/{dl_no})가 생기면 true
 BOOT_UPDATE_API_READY = os.getenv("BOOT_UPDATE_API_READY", "false").lower() == "true"
+# Boot가 단속 사진 파일을 함께 받아 저장하면(multipart: detection + image) true
+#   true 이면: 위반할 때마다 POST 로 사진과 함께 보냄 (Boot가 같은 날 기록이면 갱신)
+#             Boot 저장에 성공한 단속 사진과 촬영 원본은 Flask에 남기지 않음 (사진 원본은 Boot에만)
+BOOT_IMAGE_UPLOAD = os.getenv("BOOT_IMAGE_UPLOAD", "true").lower() == "true"
 # Boot가 저장 요청을 CSRF로 막을 때(403) 토큰을 받아올 Boot 화면
 BOOT_CSRF_TOKEN_PAGE_PATH = os.getenv("BOOT_CSRF_TOKEN_PAGE_PATH", "/admin/signin")
 # Boot DetectionDto 의 LocalDateTime 이 읽는 시간 형식 (중간에 T)
@@ -28,18 +32,18 @@ CAMERAS = {
     "DRONE01": {
         "name": "드론 1 (ESP32-CAM)",
         "enabled": True,
-        "source": os.getenv("DRONE01_SOURCE", "http://192.168.0.100:81/stream"),
+        "source": os.getenv("DRONE01_SOURCE", "http://192.168.0.59:81/stream"),
         # 등록된 구역 사진과 맞지 않을 때 쓸 고정 구역. None 이면 판정 불가 (다른 아파트를 찍었을 때 잘못 단속하지 않게)
         "default_zone": None,
     },
 }
 ZONE_CONFIG_FILE = os.path.join(PROJECT_DIR, "zones", "zones.json")   # 구역 목록 (기준 사진 + 구역 테두리)
-# 등록된 구역 사진과 맞지 않으면 바닥 표시(노란 테두리·빨간 빗금)로 구역을 직접 찾음
+# 등록된 구역 사진과 맞지 않으면 바닥 표시(노란 테두리 직선 4개)로 구역을 직접 찾음
 AUTO_ZONE_ENABLED = os.getenv("AUTO_ZONE_ENABLED", "true").lower() == "true"
 AUTO_ZONE_NO = os.getenv("AUTO_ZONE_NO", "AUTO")          # 자동으로 찾은 구역의 구역번호 (Boot dl_zone_no)
 AUTO_ZONE_MIN_AREA_RATIO = 0.03                           # 구역이 사진에서 최소 이 비율 이상 커야 함
-AUTO_ZONE_MAX_PAINT_RATIO = 0.6                           # 구역 안이 이 비율 넘게 칠해져 있으면 벽·간판으로 보고 제외
-AUTO_ZONE_MIN_OUTLINE_COVERAGE = 0.5                      # 구역 테두리를 따라 이 비율 이상 선이 그려져 있어야 함
+AUTO_ZONE_MAX_PAINT_RATIO = 0.15                          # 구역 안이 이 비율 넘게 노랗게 칠해져 있으면 횡단보도·벽으로 보고 제외
+AUTO_ZONE_MIN_OUTLINE_COVERAGE = 0.6                      # 구역 네 변을 따라 평균 이 비율 이상 노란 선이 그려져 있어야 함
 START_MONITORING_ON_BOOT = os.getenv("START_MONITORING_ON_BOOT", "true").lower() == "true"
 CAMERA_RECONNECT_WAIT_SECONDS = 3
 

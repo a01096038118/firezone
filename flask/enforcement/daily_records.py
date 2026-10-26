@@ -11,6 +11,7 @@ import threading
 from datetime import date, datetime
 
 import config
+from utils.image_storage import delete_detection_image
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,11 @@ def _load_today_records():
         return {}
     # 지난 날짜 기록은 버림 (덮어쓰기는 같은 날만)
     today_prefix = f"{date.today():%Y-%m-%d}|"
+    for key, record in saved_records.items():
+        # 지난 날짜에 Boot로 끝내 못 보낸 첫 단속 사진은 더 보낼 일이 없으므로 지움
+        unsent_first = record.get("unsent_first")
+        if not key.startswith(today_prefix) and unsent_first:
+            delete_detection_image(unsent_first.get("image_path"))
     return {key: record for key, record in saved_records.items() if key.startswith(today_prefix)}
 
 
@@ -65,7 +71,8 @@ def _get_records():
 
 # 같은 날 같은 차의 기록을 찾는 것을 담당함.
 def find_record(record_key):
-    """있으면 {"record_number", "first_detected_at", "last_detected_at", "image_path", "dl_no"}, 없으면 None."""
+    """있으면 {"record_number", "first_detected_at", "last_detected_at", "image_path", "dl_no", "boot_saved",
+    "unsent_first"}, 없으면 None."""
     with _records_lock:
         record = _get_records().get(record_key)
         return dict(record) if record else None
@@ -74,19 +81,60 @@ def find_record(record_key):
 # 새 기록을 만들거나 기존 기록을 덮어쓰는 것을 담당함.
 def save_record(record_key, record):
     with _records_lock:
-        # 기존 dl_no 는 유지 (Boot 응답으로 받은 번호)
-        existing_dl_no = _get_records().get(record_key, {}).get("dl_no")
-        _get_records()[record_key] = {**record, "dl_no": record.get("dl_no", existing_dl_no)}
+        # Boot 응답·전송 상태로 정해지는 값(dl_no, boot_saved, unsent_first)은 유지
+        existing_record = _get_records().get(record_key, {})
+        _get_records()[record_key] = {
+            **record,
+            "dl_no": record.get("dl_no", existing_record.get("dl_no")),
+            "boot_saved": existing_record.get("boot_saved", False),
+            "unsent_first": existing_record.get("unsent_first"),
+        }
         _save_records()
 
 
-# Boot가 돌려준 탐지 기록번호(dl_no)를 기록에 붙이는 것을 담당함.
-def set_dl_no(record_key, dl_no):
+# Boot에 못 보낸 그날 첫 단속(내용과 사진)을 기억하는 것을 담당함.
+def set_unsent_first(record_key, payload, image_path):
+    """Boot는 처음 받은 사진을 '처음 사진'으로 보관하므로, 첫 전송이 실패하면 다음 전송 때 이것부터 다시 보낸다."""
     with _records_lock:
         record = _get_records().get(record_key)
         if record is not None:
+            record["unsent_first"] = {"payload": payload, "image_path": image_path}
+            _save_records()
+
+
+# Boot에 못 보낸 그날 첫 단속을 꺼내는 것을 담당함.
+def get_unsent_first(record_key):
+    """반환: {"payload", "image_path"} 또는 None"""
+    with _records_lock:
+        unsent_first = _get_records().get(record_key, {}).get("unsent_first")
+        return dict(unsent_first) if unsent_first else None
+
+
+# Boot에 못 보낸 첫 단속 기억을 지우는 것을 담당함.
+def clear_unsent_first(record_key):
+    with _records_lock:
+        record = _get_records().get(record_key)
+        if record is not None and record.get("unsent_first"):
+            record["unsent_first"] = None
+            _save_records()
+
+
+# Boot 저장에 성공했다고 표시하고, Boot가 돌려준 탐지 기록번호(dl_no)를 붙이는 것을 담당함.
+def mark_boot_saved(record_key, dl_no):
+    """dl_no 를 못 받았어도(None) 저장은 된 것이므로 다시 저장하지 않게 표시한다."""
+    with _records_lock:
+        record = _get_records().get(record_key)
+        if record is not None:
+            record["boot_saved"] = True
             record["dl_no"] = dl_no
             _save_records()
+
+
+# 이 기록이 Boot에 저장됐는지 확인하는 것을 담당함.
+def is_boot_saved(record_key):
+    """첫 저장이 실패했으면 False → 같은 날 다시 단속될 때 새로 저장을 다시 시도한다."""
+    with _records_lock:
+        return bool(_get_records().get(record_key, {}).get("boot_saved"))
 
 
 # 기록에 붙은 Boot 탐지 기록번호(dl_no)를 꺼내는 것을 담당함.

@@ -2,6 +2,9 @@
 
 data/photos/2026-10-19/100015_DRONE01_Z01.jpg       촬영 원본 (1차·2차 모두)
 data/detections/2026-10-19/100015_DRONE01_Z01.jpg   단속 사진 (1차+2차를 붙인 사진, Boot에 보내는 사진)
+
+config.BOOT_IMAGE_UPLOAD 가 true 이면 촬영 원본은 저장하지 않고,
+단속 사진은 Boot 저장에 성공하면 지운다 (사진 원본은 Boot에만 남김).
 """
 import os
 from datetime import datetime
@@ -43,6 +46,23 @@ def save_detection_image(camera_id, zone_no, image, timestamp):
     relative_path = _make_unique_path(config.DETECTION_IMAGE_DIR, camera_id, zone_no, timestamp)
     cv2.imwrite(os.path.join(config.DETECTION_IMAGE_DIR, relative_path), image)
     return relative_path
+
+
+# 단속 사진의 실제 파일 경로를 만드는 것을 담당함.
+def get_detection_image_file(relative_path):
+    return os.path.join(config.DETECTION_IMAGE_DIR, relative_path)
+
+
+# Boot에 넘긴 단속 사진을 Flask에서 지우는 것을 담당함.
+def delete_detection_image(relative_path):
+    """없거나 지우지 못해도 오류를 내지 않는다. 지웠으면 True."""
+    if not relative_path:
+        return False
+    try:
+        os.remove(get_detection_image_file(relative_path))
+        return True
+    except OSError:
+        return False
 
 
 # 단속 사진을 볼 수 있는 Flask 주소를 만드는 것을 담당함.

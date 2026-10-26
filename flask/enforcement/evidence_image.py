@@ -35,16 +35,17 @@ def _load_font(size):
 
 # 사진 한 장에 구역 테두리와 차량 박스를 그리고 높이를 맞추는 것을 담당함.
 def _make_panel(shot, car):
-    panel = shot.image.copy()
+    # 두 사진 높이를 같게 맞춘 뒤 그림 (원본이 4K여도 선 굵기가 똑같이 보이게)
+    scale = PANEL_HEIGHT / shot.image.shape[0]
+    panel = cv2.resize(shot.image, (int(shot.image.shape[1] * scale), PANEL_HEIGHT))
     # 구역 테두리
     if shot.zone_polygon_in_photo:
-        cv2.polylines(panel, [np.array(shot.zone_polygon_in_photo, dtype=np.int32)], True, ZONE_COLOR_BGR, 3)
-    # 단속 차량 박스
-    x1, y1, x2, y2 = car.box
-    cv2.rectangle(panel, (x1, y1), (x2, y2), BOX_COLOR_BGR, 4)
-    # 두 사진 높이를 같게 맞춤
-    scale = PANEL_HEIGHT / panel.shape[0]
-    return cv2.resize(panel, (int(panel.shape[1] * scale), PANEL_HEIGHT)), scale
+        zone_points = (np.array(shot.zone_polygon_in_photo, dtype=np.float32) * scale).astype(np.int32)
+        cv2.polylines(panel, [zone_points], True, ZONE_COLOR_BGR, 3)
+    # 단속 차량: 빨간 테두리
+    x1, y1, x2, y2 = (int(value * scale) for value in car.box)
+    cv2.rectangle(panel, (x1, y1), (x2, y2), BOX_COLOR_BGR, 2)
+    return panel, scale
 
 
 # 1차·2차 사진을 붙여 단속 사진 한 장을 만드는 것을 담당함.
@@ -62,7 +63,7 @@ def build_evidence_image(first_sighting, second_shot, second_car):
     # 한글 글자는 Pillow 로 그림
     pil_canvas = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(pil_canvas)
-    header_font, plate_font = _load_font(26), _load_font(30)
+    header_font, plate_font = _load_font(26), _load_font(20)
     panels = (
         (0, "1차 촬영", first_sighting.shot, first_sighting.car, first_scale),
         (first_panel.shape[1], "2차 촬영", second_shot, second_car, second_scale),
@@ -71,11 +72,11 @@ def build_evidence_image(first_sighting, second_shot, second_car):
         # 위쪽 띠: "1차 촬영  2026-10-19 10:00:00"
         draw.text((panel_left + 16, 12), f"{title}  {format_readable_datetime(shot.captured_at)}",
                   font=header_font, fill=(0, 0, 0))
-        # 차량 박스 위: 차량번호 (빨간 바탕에 흰 글자)
-        label_x, label_y = int(car.box[0] * scale) + panel_left, int(car.box[1] * scale) + HEADER_HEIGHT - 40
-        label_y = max(label_y, HEADER_HEIGHT)
+        # 차량 박스 바로 위: 차량번호 (빨간 바탕에 흰 글자)
+        label_x, label_y = int(car.box[0] * scale) + panel_left, int(car.box[1] * scale) + HEADER_HEIGHT - 30
+        label_y = max(label_y, HEADER_HEIGHT + 4)
         text_box = draw.textbbox((label_x, label_y), car.car_number, font=plate_font)
-        draw.rectangle((text_box[0] - 6, text_box[1] - 4, text_box[2] + 6, text_box[3] + 4), fill=(220, 0, 0))
+        draw.rectangle((text_box[0] - 4, text_box[1] - 3, text_box[2] + 4, text_box[3] + 3), fill=(220, 0, 0))
         draw.text((label_x, label_y), car.car_number, font=plate_font, fill=(255, 255, 255))
     # 두 사진 사이 구분선
     draw.line((first_panel.shape[1], 0, first_panel.shape[1], canvas.shape[0]), fill=(0, 0, 0), width=3)

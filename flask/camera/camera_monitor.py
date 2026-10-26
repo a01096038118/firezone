@@ -81,7 +81,7 @@ class CameraMonitor(threading.Thread):
         # 3. 화면 그리기 → JPEG
         live_image = draw_live_overlay(frame, self._live_vehicles, *self._last_zone_to_draw(),
                                        self.auto_capture.state, self.auto_capture.still_seconds,
-                                       *self._last_result_line())
+                                       *self._last_result_line(), self._last_violations())
         encode_success, jpeg_buffer = cv2.imencode(".jpg", live_image)
         if encode_success:
             self.latest_jpeg = jpeg_buffer.tobytes()
@@ -120,6 +120,15 @@ class CameraMonitor(threading.Thread):
         if self.last_result and self.auto_capture.state == STATE_WAITING:
             return self.last_result.get("zone_polygon"), self.last_result.get("zone_no")
         return None, None
+
+    # 화면에 빨간 테두리와 차량번호로 표시할 위반 차량을 고르는 것을 담당함.
+    def _last_violations(self):
+        """반환: [(box, 차량번호)]"""
+        # 구역과 같이, 마지막 촬영 장면이 그대로일 때만 표시 (화면이 바뀌면 위치가 맞지 않음)
+        if self.last_result and self.auto_capture.state == STATE_WAITING:
+            return [(violation["box"], violation["car_number"])
+                    for violation in self.last_result.get("violations", []) if violation.get("box")]
+        return []
 
     # 화면에 쓸 마지막 처리 결과 한 줄을 만드는 것을 담당함.
     def _last_result_line(self):
