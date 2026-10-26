@@ -232,10 +232,7 @@
     display: none;
 }
 
-/* 🚨 [수정] 빈 팝업 영역이 그리드 레이아웃에 영향을 주지 않도록 처리 */
-#alarm_popup_area {
-    display: contents;
-}
+/* 경보 팝업 스타일은 css/dashboard/alarm.css (모든 화면 공통) */
 
 /* 경보 소리 버튼은 모든 화면 공통으로 nav에 있음 (header_nav_footer.css) */
 
@@ -375,4 +372,16 @@
     }
 }
 
+/* 줄 전체를 눌러 상세 화면으로 이동 (js/dashboard/common.js makeDetailRow) */
+tr.clickable_row {
+    cursor: pointer;
+}
 
+tr.clickable_row:hover td {
+    background: #eef6f5;
+}
+
+tr.clickable_row:focus-visible {
+    outline: 2px solid #138a7f;
+    outline-offset: -2px;
+}

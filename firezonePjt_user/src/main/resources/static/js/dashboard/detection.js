@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
 
-        cell.colSpan = 5;
+        cell.colSpan = 6;
         cell.textContent = message;
 
         row.appendChild(cell);
@@ -30,25 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 조회한 목록을 표에 표시
-    function showDetections(detections) {
+    // 화면에 보여줄 순번 (DB의 탐지 번호와 별개)
+    // 최신순(desc)이라 전체 건수에서 거꾸로 셈 → 삭제하면 다시 조회할 때 빈 번호 없이 이어짐
+    function rowNumber(data, index) {
+        return data.totalElements - (data.page - 1) * data.size - index;
+    }
+
+    function showDetections(data) {
         listBody.replaceChildren();
 
-        for (const dto of detections) {
+        data.content.forEach((dto, index) => {
             const row = document.createElement('tr');
 
-            // 구역번호를 누르면 해당 기록의 상세 화면으로 이동
-            const zoneCell = document.createElement('td');
-            const detailLink = document.createElement('a');
+            // 순번
+            const noCell = document.createElement('td');
+            noCell.textContent = String(rowNumber(data, index));
+            row.appendChild(noCell);
 
-            detailLink.href =
-                `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-            detailLink.textContent = displayValue(dto.dl_zone_no);
-
-            zoneCell.appendChild(detailLink);
-            row.appendChild(zoneCell);
-
-            // 나머지 네 개의 열
+            // 나머지 다섯 개의 열 (줄 전체를 누르면 상세 화면으로 이동)
             const values = [
+                displayValue(dto.dl_zone_no),
                 displayValue(dto.dl_violation_type),
                 displayValue(dto.dl_car_number),
                 formatTime(dto.dl_first_detected_at),
@@ -62,8 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.appendChild(cell);
             }
 
+            makeDetailRow(row, dto.dl_no);
             listBody.appendChild(row);
-        }
+        });
     }
 
     // 서버에서 탐지 목록 조회
@@ -98,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            showDetections(data.content);
+            showDetections(data);
 
         } catch (error) {
             console.error('탐지 목록 조회 오류:', error);

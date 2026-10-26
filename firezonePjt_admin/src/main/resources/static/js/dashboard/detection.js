@@ -80,21 +80,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 조회한 목록을 표에 표시
-    function showDetections(detections) {
+    // 화면에 보여줄 순번 (DB의 탐지 번호와 별개)
+    // 최신순(desc)이라 전체 건수에서 거꾸로 셈 → 삭제하면 다시 조회할 때 빈 번호 없이 이어짐
+    function rowNumber(data, index) {
+        return data.totalElements - (data.page - 1) * data.size - index;
+    }
+
+    function showDetections(data) {
         listBody.replaceChildren();
 
-        for (const dto of detections) {
+        data.content.forEach((dto, index) => {
             const row = document.createElement('tr');
 
-            // 탐지 번호를 누르면 상세 화면으로 이동
+            // 순번 (줄 전체를 누르면 상세 화면으로 이동, 이동은 실제 탐지 번호 dl_no 사용)
             const noCell = document.createElement('td');
-            const detailLink = document.createElement('a');
-
-            detailLink.href =
-                `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-            detailLink.textContent = displayValue(dto.dl_no);
-
-            noCell.appendChild(detailLink);
+            noCell.textContent = String(rowNumber(data, index));
             row.appendChild(noCell);
 
             // 나머지 여섯 개의 열
@@ -121,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 deleteButton.type = 'button';
                 deleteButton.textContent = '삭제';
-                deleteButton.addEventListener('click', () => {
+                deleteButton.addEventListener('click', (event) => {
+                    event.stopPropagation();    // 삭제 버튼을 눌러도 상세 화면으로 이동하지 않게
                     deleteDetection(dto.dl_no, deleteButton);
                 });
 
@@ -129,8 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.appendChild(deleteCell);
             }
 
+            makeDetailRow(row, dto.dl_no);
             listBody.appendChild(row);
-        }
+        });
     }
 
     // 서버에서 탐지 목록 조회
@@ -163,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? '조건에 맞는 탐지 기록이 없습니다.'
                     : '저장된 탐지 기록이 없습니다.');
             } else {
-                showDetections(data.content);
+                showDetections(data);
             }
 
             updatePaging();

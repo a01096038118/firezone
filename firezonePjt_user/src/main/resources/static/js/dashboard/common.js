@@ -1,5 +1,5 @@
 // Flask 서버 주소 (영상·이미지 서버). 서버에 올릴 때 이 값만 바꿈
-const FLASK_BASE_URL = 'http://192.168.0.141:5000';
+const FLASK_BASE_URL = 'http://192.168.0.106:5000';
 
 // admin 서버 주소 (탐지 사진은 admin 서버에 저장됨). 서버에 올릴 때 이 값만 바꿈
 // admin-dev VM : 'http://192.168.56.103:8090'
@@ -99,4 +99,28 @@ async function fetchJson(url) {
     }
 
     return response.json();
+}
+
+// 표의 한 줄 전체를 눌러 탐지 상세 화면으로 이동 (관제 화면 최근 목록, 탐지 목록 공통)
+// - 줄 안의 버튼(삭제 등)·링크를 누른 경우는 이동하지 않음
+// - 키보드: Tab으로 줄 선택 후 Enter
+function makeDetailRow(row, dlNo) {
+    const url = `/dashboard/listDetail?dl_no=${encodeURIComponent(dlNo)}`;
+
+    row.classList.add('clickable_row');
+    row.tabIndex = 0;
+    row.title = '상세 정보 보기';
+
+    row.addEventListener('click', (event) => {
+        if (event.target.closest('button, a, input, select')) {
+            return;
+        }
+        window.location.href = url;
+    });
+
+    row.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && event.target === row) {
+            window.location.href = url;
+        }
+    });
 }

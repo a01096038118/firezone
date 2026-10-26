@@ -260,3 +260,17 @@
         min-width: 800px;
     }
 }
+
+/* 줄 전체를 눌러 상세 화면으로 이동 (js/dashboard/common.js makeDetailRow) */
+tr.clickable_row {
+    cursor: pointer;
+}
+
+tr.clickable_row:hover td {
+    background: #eef6f5;
+}
+
+tr.clickable_row:focus-visible {
+    outline: 2px solid #138a7f;
+    outline-offset: -2px;
+}
