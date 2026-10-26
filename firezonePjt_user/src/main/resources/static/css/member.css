@@ -281,3 +281,99 @@ body:has(#section_wrap .word) > section {
         transform: none;
     }
 }
+
+/* =========================================================
+   아이디 중복확인 UI 개선 (Admin & User 공통 적용)
+   ========================================================= */
+
+/* 1. form을 flex 컨테이너로 변경 */
+#section_wrap .content form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 2. <br> 태그를 숨기지 않고, Flexbox에서 '줄바꿈' 역할만 하도록 설정 */
+#section_wrap .content form br {
+    flex-basis: 100%; /* 한 줄을 100% 차지해서 다음 요소를 아래로 밀어냄 */
+    height: 0;
+    margin: 0;
+}
+
+/* 3. 🚨 아이디 입력창 (Admin: am_id, User: um_id 둘 다 대응) */
+#section_wrap .content form input[name="am_id"],
+#section_wrap .content form input[name="um_id"] {
+    flex: 1 1 0%; /* 기존 width: 100%를 무력화하고 남은 공간만 차지 */
+    width: auto;
+    min-width: 0;
+}
+
+/* 4. 중복확인 버튼 (Admin: checkAdminId, User: checkMemberId 둘 다 대응) */
+#section_wrap .content form button[onclick="checkAdminId()"],
+#section_wrap .content form button[onclick="checkMemberId()"] {
+    flex: 0 0 auto;
+    width: auto;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--teal, #0d9488);
+    border-radius: 8px;
+    background: var(--teal, #0d9488);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+    box-sizing: border-box;
+}
+
+#section_wrap .content form button[onclick="checkAdminId()"]:hover,
+#section_wrap .content form button[onclick="checkMemberId()"]:hover {
+    background: #0f766e;
+    border-color: #0f766e;
+}
+
+/* 5. 중복확인 결과 메시지 (Admin & User 공통) */
+#section_wrap #admin-id-check-message,
+#section_wrap #member-id-check-message {
+    flex: 1 1 100%;
+    min-height: 18px;
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: -5px;
+}
+
+#section_wrap #admin-id-check-message.success,
+#section_wrap #member-id-check-message.success {
+    color: #059669;
+    font-weight: 600;
+}
+
+#section_wrap #admin-id-check-message.error,
+#section_wrap #member-id-check-message.error {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* 6. 나머지 입력창들: 한 줄 전체 차지 (Admin & User 공통) */
+#section_wrap .content form input[type="password"],
+#section_wrap .content form input[name="am_name"],
+#section_wrap .content form input[name="am_mail"],
+#section_wrap .content form input[name="am_phone"],
+#section_wrap .content form input[name="um_pw"],
+#section_wrap .content form input[name="um_name"],
+#section_wrap .content form input[name="um_mail"],
+#section_wrap .content form input[name="um_phone"] {
+    flex: 1 1 100%;
+    width: auto;
+    box-sizing: border-box;
+}
+
+/* 7. 하단 sign-up / reset 버튼: 반반씩 배치 */
+#section_wrap .content form input[type="button"],
+#section_wrap .content form input[type="reset"] {
+    flex: 1 1 calc(50% - 5px);
+    width: auto;
+    box-sizing: border-box;
+}
