@@ -94,21 +94,6 @@ public class MemberController {
 
     }
 
-    // 로그 아웃 /signout_confirm
-    /*
-    @GetMapping("/signout_confirm")
-    public String signoutConfirm(HttpSession session) {
-        System.out.println(CLASS_NAME.concat("signoutConfirm()"));
-
-        String nextPage = "redirect:/";
-
-        session.invalidate();
-
-        return nextPage;
-
-    }
-    */
-
     // 계정 수정 양식(/member/modify)
     @GetMapping("/modify")
     public String modify(Principal principal, Model model) {
@@ -151,31 +136,6 @@ public class MemberController {
         String nextPage = "member/modify_result";
 
         int result = memberService.modifyConfirm(principal.getName(), memberDto, currentPassword);
-        model.addAttribute("result", result);
-
-        return nextPage;
-
-    }
-
-    // 비밀번호 찾기 양식(/member/findpassword)
-    @GetMapping({"/findpassword"})
-    public String findpassword(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("findpassword()"));
-
-        String nextPage = "member/findpassword_form";
-
-        return nextPage;
-
-    }
-
-    // 비밀번호 찾기 확인(/member/findpassword_confirm)
-    @PostMapping({"/findpassword_confirm"})
-    public String findpasswordConfirm(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
-
-        String nextPage = "member/findpassword_result";
-
-        int result = memberService.findpasswordConfirm(memberDto);
         model.addAttribute("result", result);
 
         return nextPage;
