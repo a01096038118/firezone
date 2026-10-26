@@ -201,31 +201,6 @@ public class AdminController {
         return "redirect:/admin/members_list";
     }
 
-    // 비밀번호 찾기 양식(/member/findpassword)
-    @GetMapping({"/findpassword"})
-    public String findpassword(AdminDto adminDto, Model model) {
-        log.info("findpassword()");
-
-        String nextPage = "admin/findpassword_form";
-
-        return nextPage;
-
-    }
-
-    // 비밀번호 찾기 확인(/member/findpassword_confirm)
-    @PostMapping({"/findpassword_confirm"})
-    public String findpasswordConfirm(AdminDto adminDto, Model model) {
-        log.info("findpasswordConfirm()");
-
-        String nextPage = "admin/findpassword_result";
-
-        int result = adminService.findpasswordConfirm(adminDto);
-        model.addAttribute("result", result);
-
-        return nextPage;
-
-    }
-
     @GetMapping("/signin_result")
     public String signinResult(
             @RequestParam(value = "loginedID", required = false) String loginedID,
