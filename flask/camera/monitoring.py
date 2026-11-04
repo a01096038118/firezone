@@ -4,6 +4,7 @@ import time
 
 from ai.plate_reader import start_plate_reader_warmup
 from ai.vehicle import warmup_vehicle_model
+from ai.zone_locator import warmup_zone_model
 from camera.camera_config import load_camera_config
 from camera.camera_monitor import CameraMonitor
 
@@ -24,6 +25,15 @@ def _warmup_models():
         log.info("차량 탐지 모델 워밍업 완료 (%.1f초)", time.time() - warmup_started_at)
     except Exception:
         log.exception("차량 탐지 모델 워밍업 실패 (첫 분석이 느릴 수 있음)")
+    # 구역 위치 모델 (파일이 없으면 노란 선 규칙만 씀)
+    warmup_started_at = time.time()
+    try:
+        if warmup_zone_model():
+            log.info("구역 위치 모델 워밍업 완료 (%.1f초)", time.time() - warmup_started_at)
+        else:
+            log.info("구역 위치 모델 없음 → 바닥 노란 선 규칙만 사용")
+    except Exception:
+        log.exception("구역 위치 모델 워밍업 실패 (첫 분석이 느릴 수 있음)")
 
 
 # 설정된 카메라마다 실시간 관제를 시작하는 것을 담당함.

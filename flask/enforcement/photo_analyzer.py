@@ -1,11 +1,14 @@
 """촬영 사진 한 장 분석: 차량 탐지 → 구역 찾기 → 소방차 제외 → 구역 안 차량 → 번호판.
 
 구역은 ① 등록된 구역 사진과 맞춰 찾고, ② 맞는 구역이 없으면 바닥 표시(노란 테두리)로 직접 찾는다.
+②에서는 팀원 구역 모델로 구역 위치를 먼저 찾아 그 안에서만 노란 선을 찾고, 거기서 못 찾으면 사진 전체에서 찾는다.
 
 결과는 ai/shot.py 의 Shot (1차·2차 비교에 쓰는 촬영 결과).
 분석할 수 없으면 UndecidablePhoto 예외로 이유를 알려준다 (판정 불가).
 """
 import logging
+
+import numpy as np
 
 import config
 from ai.fire_truck import mark_fire_trucks
@@ -14,6 +17,7 @@ from ai.shot import ParkedCar, Shot
 from ai.vehicle import detectVehicle
 from ai.zone import box_to_reference, get_ground_point, ground_box_to_reference, is_point_in_photo_polygon, zone_polygon_in_photo
 from ai.zone_finder import MATCH_METHOD_AUTO_MARKING, find_zone_by_marking
+from ai.zone_locator import locate_zone_area
 from ai.zone_matcher import find_zone_in_photo
 from camera.camera_config import load_zones
 from utils.image_storage import save_photo
@@ -40,10 +44,36 @@ def _find_zone(photo, vehicles, default_zone_no):
     zone_match = find_zone_in_photo(photo, load_zones(), default_zone_no)
     if zone_match is not None:
         return zone_match
-    # 2. 등록된 곳이 아니면 바닥 표시로 직접 찾음 (차량 위 색은 바닥 칠로 보지 않게 차량 박스를 넘김)
-    if config.AUTO_ZONE_ENABLED:
-        return find_zone_by_marking(photo, [vehicle["box"] for vehicle in vehicles])
-    return None
+    if not config.AUTO_ZONE_ENABLED:
+        return None
+    vehicle_boxes = [vehicle["box"] for vehicle in vehicles]
+    # 2. 구역 모델로 위치를 찾았으면 그 안에서만 노란 선을 찾음 (다른 노란 선과 덜 헷갈림)
+    zone_area = locate_zone_area(photo)
+    if zone_area is not None:
+        zone_match = _find_zone_by_marking_in_area(photo, vehicle_boxes, zone_area)
+        if zone_match is not None:
+            return zone_match
+    # 3. 모델이 없거나 그 안에서 못 찾으면 사진 전체에서 바닥 표시로 찾음 (차량 위 색은 바닥 칠로 보지 않게 차량 박스를 넘김)
+    return find_zone_by_marking(photo, vehicle_boxes)
+
+
+# 구역 모델이 찾은 범위 안에서만 바닥 표시(노란 테두리)로 구역을 찾는 것을 담당함.
+def _find_zone_by_marking_in_area(photo, vehicle_boxes, zone_area):
+    """zone_area: (x1, y1, x2, y2). 반환 모양은 find_zone_by_marking 과 같고 좌표는 원본 사진 기준."""
+    area_x1, area_y1, area_x2, area_y2 = zone_area
+    area_photo = photo[area_y1:area_y2, area_x1:area_x2]
+    if area_photo.size == 0:
+        return None
+    # 차량 박스도 잘라낸 범위 기준 좌표로 옮김
+    area_vehicle_boxes = [(x1 - area_x1, y1 - area_y1, x2 - area_x1, y2 - area_y1) for x1, y1, x2, y2 in vehicle_boxes]
+    zone_match = find_zone_by_marking(area_photo, area_vehicle_boxes)
+    if zone_match is None:
+        return None
+    # 잘라낸 범위 좌표 → 원본 사진 좌표로 바꾸는 변환을 앞에 붙임
+    area_offset = np.array([[1, 0, -area_x1], [0, 1, -area_y1], [0, 0, 1]], dtype=np.float64)
+    zone_match["photo_to_reference"] = zone_match["photo_to_reference"] @ area_offset
+    log.info("구역 모델 위치 안에서 바닥 표시로 구역 인식 (범위 %s)", zone_area)
+    return zone_match
 
 
 # 촬영 사진 한 장을 분석해서 Shot 을 만드는 것을 담당함.

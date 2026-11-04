@@ -45,6 +45,12 @@ AUTO_ZONE_NO = os.getenv("AUTO_ZONE_NO", "AUTO")          # 자동으로 찾은 
 AUTO_ZONE_MIN_AREA_RATIO = 0.03                           # 구역이 사진에서 최소 이 비율 이상 커야 함
 AUTO_ZONE_MAX_PAINT_RATIO = 0.15                          # 구역 안이 이 비율 넘게 노랗게 칠해져 있으면 횡단보도·벽으로 보고 제외
 AUTO_ZONE_MIN_OUTLINE_COVERAGE = 0.6                      # 구역 네 변을 따라 평균 이 비율 이상 노란 선이 그려져 있어야 함
+# 팀원 구역 모델(fire_zone_area 박스)로 구역 "위치"를 먼저 찾고, 그 안에서만 노란 선을 찾음 (없으면 사진 전체에서 찾음)
+#   모델 박스는 직사각형이라 그대로 쓰면 옆 주차칸까지 들어감 → 위치만 쓰고 모양은 노란 선으로 잡음 (11/4 비교: 오탐지 0)
+FIRE_ZONE_MODEL_PATH = os.getenv("FIRE_ZONE_MODEL_PATH", os.path.join(PROJECT_DIR, "models", "fire_zone.pt"))
+FIRE_ZONE_MIN_CONFIDENCE = float(os.getenv("FIRE_ZONE_MIN_CONFIDENCE", "0.4"))
+FIRE_ZONE_IMAGE_SIZE = 640       # 팀원 모델 학습 입력 크기
+FIRE_ZONE_BOX_MARGIN = 0.15      # 모델 박스보다 이 비율만큼 넓게 봄 (박스가 테두리를 살짝 잘라도 찾게)
 START_MONITORING_ON_BOOT = os.getenv("START_MONITORING_ON_BOOT", "true").lower() == "true"
 CAMERA_RECONNECT_WAIT_SECONDS = 3
 
@@ -66,10 +72,14 @@ ZONE_MATCH_MIN_INLIERS = 15     # 서로 맞는 특징점이 이 개수 이상�
 
 # ── AI 모델 (팀원 모델 best.pt 를 받으면 models/ 에 넣고 경로만 바꾸면 됨) ──
 VEHICLE_MODEL_PATH = os.getenv("VEHICLE_MODEL_PATH", "yolov8n.pt")
-VEHICLE_MIN_CONFIDENCE = float(os.getenv("VEHICLE_MIN_CONFIDENCE", "0.4"))
+# 위에서 내려다본 흰 차를 0.4 근처로 겨우 잡는 경우가 있어 0.3 사용 (11/4: 0.4에서 10/23 위반 차량을 놓침)
+VEHICLE_MIN_CONFIDENCE = float(os.getenv("VEHICLE_MIN_CONFIDENCE", "0.3"))
 # 번호판 전용 YOLO 모델 (없으면 차량 이미지 전체에서 번호판 글자를 찾음)
+# 팀원 모델: YOLO11n 기반, 클래스 License_Plate 하나 (pjt_best/flask_handoff/README.txt 기준값)
 PLATE_MODEL_PATH = os.getenv("PLATE_MODEL_PATH", os.path.join(PROJECT_DIR, "models", "plate.pt"))
-PLATE_MIN_CONFIDENCE = 0.4
+PLATE_MIN_CONFIDENCE = float(os.getenv("PLATE_MIN_CONFIDENCE", "0.4"))
+PLATE_IMAGE_SIZE = int(os.getenv("PLATE_IMAGE_SIZE", "960"))   # 학습할 때 쓴 입력 크기
+PLATE_IOU = float(os.getenv("PLATE_IOU", "0.45"))               # 겹친 번호판 박스를 하나로 합치는 기준
 # 소방차 전용 YOLO 모델 (없으면 빨간 트럭·버스를 소방차로 판단)
 FIRE_TRUCK_MODEL_PATH = os.getenv("FIRE_TRUCK_MODEL_PATH", os.path.join(PROJECT_DIR, "models", "fire_truck.pt"))
 FIRE_TRUCK_MIN_CONFIDENCE = 0.5
