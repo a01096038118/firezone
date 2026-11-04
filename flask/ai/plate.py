@@ -18,6 +18,10 @@ KOREAN_PLATE_PATTERN = re.compile(r"\d{2,3}[가-힣]\d{4}")
 # OCR에 넣기 전 이미지 가로 크기 범위 (너무 크면 느리고, 너무 작으면 글자가 뭉개짐)
 OCR_MAX_IMAGE_WIDTH = 960
 OCR_MIN_IMAGE_WIDTH = 480
+# 번호판을 박스보다 이 비율만큼 넓게 자름 (꽉 맞게 자르면 OCR이 한글·가장자리 글자를 놓침, 11/4 비교: 6 → 13개 인식)
+PLATE_CROP_MARGIN = 0.4
+# 잘라낸 번호판 바깥에 붙이는 테두리 두께(px). 가장자리 픽셀을 늘려 붙여 글자가 이미지 끝에 닿지 않게 함
+PLATE_BORDER_PX = 20
 
 _plate_detect_model = None
 _ocr_engine = None
@@ -74,12 +78,20 @@ def _crop_plate_area(vehicle_image):
         return vehicle_image
 
     # 번호판 모델로 가장 확실한 번호판 하나를 고름
-    plate_boxes = plate_model.predict(vehicle_image, conf=config.PLATE_MIN_CONFIDENCE, verbose=False)[0].boxes
+    plate_boxes = plate_model.predict(vehicle_image, conf=config.PLATE_MIN_CONFIDENCE, iou=config.PLATE_IOU,
+                                      imgsz=config.PLATE_IMAGE_SIZE, verbose=False)[0].boxes
     if plate_boxes is None or len(plate_boxes) == 0:
         return None
     most_confident = int(plate_boxes.conf.argmax())
     x1, y1, x2, y2 = (int(coord) for coord in plate_boxes.xyxy[most_confident].tolist())
-    return vehicle_image[y1:y2, x1:x2]
+    # 번호판 박스보다 가로·세로로 넓게 자름 (차량 이미지 밖으로는 나가지 않음)
+    margin_x, margin_y = int((x2 - x1) * PLATE_CROP_MARGIN), int((y2 - y1) * PLATE_CROP_MARGIN)
+    plate_image = vehicle_image[max(y1 - margin_y, 0):y2 + margin_y, max(x1 - margin_x, 0):x2 + margin_x]
+    if plate_image.size == 0:
+        return None
+    # 바깥에 테두리를 붙여 글자가 이미지 끝에 닿지 않게 함
+    return cv2.copyMakeBorder(plate_image, PLATE_BORDER_PX, PLATE_BORDER_PX, PLATE_BORDER_PX, PLATE_BORDER_PX,
+                              cv2.BORDER_REPLICATE)
 
 
 # 차량 이미지에서 차량번호를 읽어내는 것을 담당함.
@@ -115,5 +127,5 @@ def warmup_plate_reader():
     with _ocr_lock:
         # 번호판 모델이 있으면 같이 불러옴
         if _get_plate_detect_model() is not None:
-            _get_plate_detect_model().predict(blank_image, verbose=False)
+            _get_plate_detect_model().predict(blank_image, imgsz=config.PLATE_IMAGE_SIZE, verbose=False)
         _get_ocr_engine().predict(blank_image)
