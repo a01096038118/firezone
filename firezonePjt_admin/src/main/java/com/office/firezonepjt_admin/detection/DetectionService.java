@@ -227,6 +227,7 @@ public class DetectionService {
     }
 
     private DetectionEntity findDetection(Integer dlNo) {
+        log.info("findDetection()");
 
         return detectionRepository.findById(dlNo)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -252,6 +253,7 @@ public class DetectionService {
 
     // CSV 셀 값 변환
     private String csvCell(Object value) {
+        log.info("csvCell()");
         // 값이 없으면 빈칸으로 처리
         if (value == null) {
             return "";
@@ -312,6 +314,7 @@ public class DetectionService {
     // 주정차 시간 = 마지막 탐지 시간 - 최초 탐지 시간 (화면의 주정차 시간과 같은 형식)
     // 예: 1시간 5분 / 12분 30초 / 40초
     private String parkingDuration(LocalDateTime first, LocalDateTime last) {
+        log.info("parkingDuration()");
         if (first == null || last == null || last.isBefore(first)) {
             return "미확인";
         }
@@ -331,10 +334,12 @@ public class DetectionService {
     }
 
     private String csvTime(LocalDateTime time) {
+        log.info("csvTime()");
         return time == null ? "" : time.format(LOG_FMT);
     }
 
     private List<DetectionDto> toDtoList(List<DetectionEntity> entities) {
+        log.info("toDtoList()");
 
         List<DetectionDto> dtoList = new ArrayList<>();
 

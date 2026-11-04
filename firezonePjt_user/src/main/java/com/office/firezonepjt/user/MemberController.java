@@ -18,8 +18,6 @@ import java.security.Principal;
 @RequestMapping("/member")
 public class MemberController {
 
-    final private String CLASS_NAME = "[MemberController] ";
-
     final private MemberService memberService;
 
     public MemberController(MemberService memberService) {
@@ -29,7 +27,7 @@ public class MemberController {
     // 회원가입 양식
     @GetMapping("/signup")
     public String signup() {
-        System.out.println(CLASS_NAME.concat("signup()"));
+        log.info("signup()");
 
         String nextPage = "member/signup_form";
 
@@ -40,7 +38,7 @@ public class MemberController {
     // 회원가입 확인
     @PostMapping("/signup_confirm")
     public String signupConfirm(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("signupConfirm()"));
+        log.info("signupConfirm()");
 
         String nextPage = "member/signup_result";
 
@@ -63,7 +61,7 @@ public class MemberController {
     public String signin(
             @RequestParam(value = "withdrawn", required = false) String withdrawn,
             Model model) {
-        System.out.println(CLASS_NAME.concat("signin()"));
+        log.info("signin()");
 
         model.addAttribute("accountWithdrawn", withdrawn != null);
         String nextPage = "member/signin_form";
@@ -78,7 +76,7 @@ public class MemberController {
     public String signinConfirm(MemberDto memberDto,
                                 Model model,
                                 HttpSession session) {
-        System.out.println(CLASS_NAME.concat("signinConfirm()"));
+        log.info("signinConfirm()");
 
         String nextPage = "member/signin_result";
 
@@ -97,7 +95,7 @@ public class MemberController {
     // 계정 수정 양식(/member/modify)
     @GetMapping("/modify")
     public String modify(Principal principal, Model model) {
-        System.out.println(CLASS_NAME.concat("modify()"));
+        log.info("modify()");
 
         String nextPage = "member/modify_form";
 
@@ -131,7 +129,7 @@ public class MemberController {
             @RequestParam("currentPassword") String currentPassword,
             Principal principal,
             Model model) {
-        System.out.println(CLASS_NAME.concat("modifyConfirm()"));
+        log.info("modifyConfirm()");
 
         String nextPage = "member/modify_result";
 

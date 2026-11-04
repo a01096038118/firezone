@@ -54,13 +54,13 @@
         </dl>
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">회원 목록</a>
-            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
+            <form sec:authorize="hasRole('MASTER')"
                   th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
                   th:action="@{/admin/members_list/user/{userNo}/approve(userNo=${user.userNo})}"
                   method="post">
                 <button class="button button-primary" type="submit">회원 승인</button>
             </form>
-            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
+            <form sec:authorize="hasRole('MASTER')"
                   th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
                   method="post"
                   onsubmit="return confirm('이 회원을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">

@@ -43,6 +43,10 @@ public class SecurityConfig {
                         .hasRole("MASTER")
                         .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
                         .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/*/delete")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/*/approve")
+                        .hasRole("MASTER")
                         .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
                         .hasRole("MODIFY")
                         .requestMatchers(

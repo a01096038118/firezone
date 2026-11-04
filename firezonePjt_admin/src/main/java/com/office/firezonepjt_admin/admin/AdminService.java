@@ -17,12 +17,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,14 +53,17 @@ public class AdminService {
         }
 
         public String getRoleName() {
+            log.info("getRoleName()");
             return roleName;
         }
 
         public boolean isMaster() {
+            log.info("isMaster()");
             return master;
         }
 
         public List<String> toSpringRoles() {
+            log.info("toSpringRoles()");
             List<String> roles = new ArrayList<>();
             if (control) {
                 roles.add("CONTROL");
@@ -75,6 +78,7 @@ public class AdminService {
         }
 
         private static AdminPermissionRole fromRoleName(String roleName) {
+            log.info("fromRoleName()");
             if (roleName == null || roleName.isBlank()) {
                 return NONE;
             }
@@ -82,6 +86,7 @@ public class AdminService {
         }
 
         private static AdminPermissionRole fromRoleNameForUpdate(String roleName) {
+            log.info("fromRoleNameForUpdate()");
             if (roleName == null) {
                 throw new IllegalArgumentException("Permission set is required");
             }
@@ -135,6 +140,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public AdminPermissionRole findCurrentRole(int adminNo) {
+        log.info("findCurrentRole()");
         return latestPermissionHistory(adminNo)
                 .map(history -> adminAuthorityRepository.findById(history.getAfterAuthorityNo())
                         .map(authority -> AdminPermissionRole.fromRoleName(authority.getRoleName()))
@@ -148,6 +154,7 @@ public class AdminService {
             int adminNo,
             String roleName,
             String changedByUsername) {
+        log.info("updatePermissions()");
         AdminEntity changedBy = adminRepository.findByAdId(changedByUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         if (!findCurrentRole(changedBy.getAdNo()).isMaster()) {
@@ -208,6 +215,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<AdminDto> findPermissionHistory(int adminNo, String viewerUsername) {
+        log.info("findPermissionHistory()");
         AdminEntity viewer = adminRepository.findByAdId(viewerUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         if (!findCurrentRole(viewer.getAdNo()).isMaster()) {
@@ -221,6 +229,7 @@ public class AdminService {
     }
 
     private Optional<AdminAuthorityHistoryEntity> latestPermissionHistory(int adminNo) {
+        log.info("latestPermissionHistory()");
         return adminAuthorityHistoryRepository
                 .findFirstByAdminNoOrderByChangedAtDescHistoryNoDesc(adminNo);
     }
@@ -262,6 +271,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public boolean isAdminIdAvailable(String adminId) {
+        log.info("isAdminIdAvailable()");
         return adminId != null && !adminId.isBlank()
                 && !adminRepository.existsByAdId(adminId.trim());
     }
@@ -306,30 +316,38 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<AdminDto> findAllAdmins() {
         log.info("findAllAdmins()");
-        return adminRepository.findAll(Sort.by(Sort.Direction.DESC, "adNo"))
+        return adminRepository.findAll()
                 .stream()
+                .sorted(Comparator.comparingInt(AdminEntity::getAdNo))
                 .map(this::toManagementDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UserMemberEntity> findAllUsers() {
-        return userMemberRepository.findAllByOrderByUserNoDesc();
+        log.info("findAllUsers()");
+        return userMemberRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparingInt(UserMemberEntity::getUserNo))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<AdminDto> findAdminByNo(int adminNo) {
+        log.info("findAdminByNo()");
         return adminRepository.findById(adminNo)
                 .map(this::toManagementDto);
     }
 
     @Transactional(readOnly = true)
     public Optional<UserMemberEntity> findUserByNo(int userNo) {
+        log.info("findUserByNo()");
         return userMemberRepository.findByUserNo(userNo);
     }
 
     @Transactional
     public boolean approveUser(int userNo) {
+        log.info("approveUser()");
         Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
         if (optionalUser.isEmpty()) {
             return false;
@@ -358,12 +376,12 @@ public class AdminService {
 
     @Transactional
     public boolean deleteUser(int userNo) {
+        log.info("deleteUser()");
         Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
         if (optionalUser.isEmpty()) {
             return false;
         }
 
-        userMemberRepository.deleteAuthorityLinkByUserNo(userNo);
         userMemberRepository.delete(optionalUser.get());
         return true;
     }
@@ -412,6 +430,7 @@ public class AdminService {
     }
 
     private boolean isBlank(String value) {
+        log.info("isBlank()");
         return value == null || value.isBlank();
     }
 
