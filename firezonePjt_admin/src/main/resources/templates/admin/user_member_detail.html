@@ -54,7 +54,7 @@
         </dl>
         <div class="form-actions">
             <a class="button button-secondary" th:href="@{/admin/members_list}">회원 목록</a>
-            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
+            <form sec:authorize="hasRole('MASTER')"
                   th:if="${user.authorityEntity != null and user.authorityEntity.roleName == 'PRE_USER'}"
                   th:action="@{/admin/members_list/user/{userNo}/approve(userNo=${user.userNo})}"
                   method="post">
