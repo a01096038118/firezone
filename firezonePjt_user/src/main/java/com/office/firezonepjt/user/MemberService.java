@@ -19,8 +19,6 @@ import java.util.Optional;
 //@RequiredArgsConstructor
 public class MemberService {
 
-    final private String CLASS_NAME = "[MemberService] ";
-
     final public static int USER_ID_ALREADY_EXIST   = 0;
     final public static int USER_SIGNUP_SUCCESS     = 1;
     final public static int USER_SIGNUP_FAIL        = -1;
@@ -51,7 +49,7 @@ public class MemberService {
 
     @Transactional
     public int signupConfirm(MemberDto memberDto) {
-        System.out.println(CLASS_NAME.concat("signupConfirm()"));
+        log.info("signupConfirm()");
 
 //        boolean isMember = memberDao.isMember(memberDto.getId());
 //        boolean isMember = memberMapper.isMember(memberDto.getId());
@@ -81,12 +79,13 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public boolean isMemberIdAvailable(String memberId) {
+        log.info("isMemberIdAvailable()");
         return memberId != null && !memberId.isBlank()
                 && !memberRepository.existsByMemId(memberId.trim());
     }
 
     public String signinConfirm(MemberDto memberDto) {
-        System.out.println(CLASS_NAME.concat("signinConfirm()"));
+        log.info("signinConfirm()");
 
         Optional<MemberEntity> optionalMember =
                 memberRepository.findByMemId(memberDto.getUm_id());
@@ -104,7 +103,7 @@ public class MemberService {
     }
 
     public MemberDto modify(String loginedID) {
-        System.out.println(CLASS_NAME.concat("modify()"));
+        log.info("modify()");
 
         Optional<MemberEntity> optionalMember =
                 memberRepository.findByMemId(loginedID);
@@ -120,7 +119,7 @@ public class MemberService {
 
     @Transactional
     public int modifyConfirm(String loginedID, MemberDto memberDto, String currentPassword) {
-        System.out.println(CLASS_NAME.concat("modifyConfirm()"));
+        log.info("modifyConfirm()");
 
         if (memberDto.getUm_name() == null || memberDto.getUm_name().isBlank()
                 || memberDto.getUm_mail() == null || memberDto.getUm_mail().isBlank()
@@ -154,6 +153,7 @@ public class MemberService {
 
     @Transactional
     public boolean withdraw(String loginedID, String currentPassword) {
+        log.info("withdraw()");
         if (currentPassword == null || currentPassword.isBlank()) {
             return false;
         }
@@ -171,7 +171,7 @@ public class MemberService {
 
     @Transactional
     public int findpasswordConfirm(MemberDto memberDto) {
-        System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
+        log.info("findpasswordConfirm()");
 
         Optional<MemberEntity> optionalMember =
                 memberRepository.findByMemIdAndMemMail(memberDto.getUm_id(), memberDto.getUm_mail());
@@ -193,7 +193,7 @@ public class MemberService {
     }
 
     private String createNewPassword() {
-        System.out.println("[MemberService] createNewPassword()");
+        log.info("createNewPassword()");
 
         char[] chars = {
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -213,7 +213,7 @@ public class MemberService {
     }
 
     private void sendNewPasswordByMail(String toMailAddr, String newPassword) {
-        System.out.println("[MemberService] sendNewPasswordByMail()");
+        log.info("sendNewPasswordByMail()");
 
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(toMailAddr);
