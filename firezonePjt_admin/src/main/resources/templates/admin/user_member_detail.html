@@ -60,7 +60,7 @@
                   method="post">
                 <button class="button button-primary" type="submit">회원 승인</button>
             </form>
-            <form sec:authorize="hasAnyRole('MODIFY', 'MASTER')"
+            <form sec:authorize="hasRole('MASTER')"
                   th:action="@{/admin/members_list/user/{userNo}/delete(userNo=${user.userNo})}"
                   method="post"
                   onsubmit="return confirm('이 회원을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');">

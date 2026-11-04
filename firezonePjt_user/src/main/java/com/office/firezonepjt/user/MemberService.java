@@ -165,7 +165,6 @@ public class MemberService {
         }
 
         MemberEntity member = optionalMember.get();
-        memberRepository.deleteAuthorityLinkByMemberNo(member.getMemNo());
         memberRepository.delete(member);
         return true;
     }

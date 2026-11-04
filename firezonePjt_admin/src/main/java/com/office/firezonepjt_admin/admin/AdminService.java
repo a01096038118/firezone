@@ -17,12 +17,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -306,15 +306,19 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<AdminDto> findAllAdmins() {
         log.info("findAllAdmins()");
-        return adminRepository.findAll(Sort.by(Sort.Direction.DESC, "adNo"))
+        return adminRepository.findAll()
                 .stream()
+                .sorted(Comparator.comparingInt(AdminEntity::getAdNo))
                 .map(this::toManagementDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UserMemberEntity> findAllUsers() {
-        return userMemberRepository.findAllByOrderByUserNoDesc();
+        return userMemberRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparingInt(UserMemberEntity::getUserNo))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -363,7 +367,6 @@ public class AdminService {
             return false;
         }
 
-        userMemberRepository.deleteAuthorityLinkByUserNo(userNo);
         userMemberRepository.delete(optionalUser.get());
         return true;
     }
