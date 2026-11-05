@@ -3,7 +3,7 @@
 // const FLASK_BASE_URL = 'http://192.168.0.106:5000';
 // const FLASK_BASE_URL = 'http://192.168.56.107:5000';
 // const FLASK_BASE_URL = 'http://192.168.56.108:5000';
-const FLASK_BASE_URL = 'http://192.168.0.106:5000';
+const FLASK_BASE_URL = 'http://192.168.0.141:5000';   // dev: flask-dev VM (서버 PC 주소로 접속)
 
 // 서버 오류를 상태 코드와 함께 전달하는 오류 클래스
 class ApiError extends Error {
