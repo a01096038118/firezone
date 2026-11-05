@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const STREAM_URL = `${FLASK_BASE_URL}/api/monitor`;
 
+    // 관제 화면에서 고를 수 있는 카메라 (Flask config.CAMERAS의 카메라 ID와 같아야 함)
+    const CAMERA_IDS = ['DRONE01', 'CAM_01'];
+    let currentCameraId = CAMERA_IDS[0];    // 처음에는 드론 영상
+
+    // 선택한 카메라의 영상 주소 (/api/monitor/<카메라 ID>)
+    function streamUrl() {
+        return `${STREAM_URL}/${encodeURIComponent(currentCameraId)}`;
+    }
+
+
     // 영상 서버가 살아 있는지 확인하는 주소 (Flask 팀원에게 요청)
     // 비워 두면 영상 중단 감지를 하지 않음
     const STREAM_STATUS_URL = `${FLASK_BASE_URL}/api/health`;
@@ -23,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.connection_status');
 
     const cameraId = document.querySelector('.camera_id');
-    const cameraZone = document.querySelector('.zone_no');
 
     const detectionImage = document.querySelector('#detection_img');
     const detailLink =
@@ -51,10 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
         streamMessage.hidden = false;
 
         // 매번 새 연결이 되도록 주소 끝에 시간 값을 붙임
-        const separator = STREAM_URL.includes('?') ? '&' : '?';
+        const url = streamUrl();
+        const separator = url.includes('?') ? '&' : '?';
 
         liveStream.hidden = false;
-        liveStream.src = `${STREAM_URL}${separator}t=${Date.now()}`;
+        liveStream.src = `${url}${separator}t=${Date.now()}`;
     }
 
     liveStream.addEventListener('load', () => {
@@ -72,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         connectionStatus.textContent = '연결 실패';
         streamMessage.hidden = false;
         streamMessage.textContent =
-            '영상 연결에 실패했습니다. 재연결 버튼을 눌러주세요.';
+            `${currentCameraId} 영상 연결에 실패했습니다. 재연결 버튼을 눌러주세요.`;
     });
 
     // 재연결 버튼 생성
@@ -86,6 +96,33 @@ document.addEventListener('DOMContentLoaded', () => {
     reconnectButton.addEventListener('click', () => {
         liveStream.removeAttribute('src');
         connectStream();
+    });
+
+    // ---------- 카메라 전환 ----------
+    const cameraTabs = document.querySelectorAll('.camera_tab');
+
+    // 선택한 카메라로 영상을 바꿈 (버튼 표시와 카메라 ID 표시도 같이 바꿈)
+    function selectCamera(id) {
+        currentCameraId = id;
+        cameraId.textContent = id;
+
+        cameraTabs.forEach(tab => {
+            const active = tab.dataset.camera === id;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-pressed', String(active));
+        });
+
+        // 이전 카메라 연결을 끊고 새 카메라로 연결
+        liveStream.removeAttribute('src');
+        connectStream();
+    }
+
+    cameraTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.dataset.camera !== currentCameraId) {
+                selectCamera(tab.dataset.camera);
+            }
+        });
     });
 
     // 영상 서버 응답 확인 (영상이 중간에 끊긴 경우를 알아내기 위함)
@@ -356,11 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 영상 소스 정보는 Flask 연동 시 실제 값으로 설정
-    cameraId.textContent = '-';
-    cameraZone.textContent = '-';
-
-    connectStream();
+    // 첫 번째 카메라(DRONE01)로 영상 연결 (카메라 ID 표시도 함께 설정)
+    selectCamera(currentCameraId);
     refreshDetections();
 
     if (STREAM_STATUS_URL) {

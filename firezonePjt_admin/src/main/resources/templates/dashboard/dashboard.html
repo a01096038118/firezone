@@ -19,15 +19,18 @@
 
 <nav th:replace="~{/include/header_nav_footer.html::nav}"/>
 
-
     <section id="dashboard_wrap">
         <!-- 실시간 관제 화면 -->
         <div class="monitoring">
             <h2>실시간 관제</h2>
 
             <div class="camera_info">
+                <!-- 카메라 전환 버튼 (영상은 하나만 보여주고 버튼으로 바꿈, js/dashboard/dashboard.js) -->
+                <div class="camera_tabs" role="group" aria-label="카메라 선택">
+                    <button type="button" class="camera_tab" data-camera="DRONE01">DRONE01</button>
+                    <button type="button" class="camera_tab" data-camera="CAM_01">CAM_01</button>
+                </div>
                 <span class="camera_id">-</span>
-                <span class="zone_no">-</span>
                 <span class="connection_status">연결대기</span>
             </div>
 

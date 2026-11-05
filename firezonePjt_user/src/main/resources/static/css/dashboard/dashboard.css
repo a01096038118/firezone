@@ -383,3 +383,39 @@ tr.clickable_row:focus-visible {
     outline: 2px solid #138a7f;
     outline-offset: -2px;
 }
+
+/* ===== 카메라 전환 버튼 (DRONE01 / CAM_01) ===== */
+.camera_tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.camera_tab {
+    padding: 7px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: #f7f9fa;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.camera_tab:hover {
+    color: var(--ink);
+    border-color: #b9c7cf;
+}
+
+.camera_tab.active {
+    color: #fff;
+    border-color: var(--navy);
+    background: var(--navy);
+}
+
+/* 선택된 카메라 ID는 연결 상태(수신 중단 등) 바로 왼쪽에 붙여서 표시 */
+.camera_info .camera_id {
+    margin-left: auto;
+}
+
+.camera_info .connection_status {
+    margin-left: 4px;
+}
