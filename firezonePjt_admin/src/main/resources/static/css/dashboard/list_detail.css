@@ -1,6 +1,13 @@
 #list_wrap > .list {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
+    /* 이미지 / 정보 영역을 나란히 배치 */
+    grid-template-areas:
+        "title   title"
+        "message message"
+        "summary summary"
+        "img     info"
+        "link    link";
     gap: 22px 30px;
     padding: clamp(20px, 4vw, 38px);
     border: 1px solid var(--line);
@@ -12,12 +19,13 @@
 }
 
 #list_wrap h2 {
-    grid-column: 1 / -1;
+    grid-area: title;
     margin: 0;
     min-width: 0;
 }
 
 #list_wrap .detection_img {
+    grid-area: img;
     min-height: 300px;
     align-self: start;
     min-width: 0;
@@ -44,11 +52,14 @@
 /* 2. 로딩/요약 메시지가 그리드 전체 폭을 차지하도록 설정 */
 #detail_message,
 #summary_message {
-    grid-column: 1 / -1;
     margin: 0 0 10px;
     color: var(--muted);
     font-size: 14px;
+    min-width: 0;
 }
+
+#detail_message { grid-area: message; }
+#summary_message { grid-area: summary; }
 
 /* 3. 이미지 로딩 메시지 */
 #image_message {
@@ -59,6 +70,7 @@
 
 /* 4. 정보 영역 및 필드 (주정차 시간 포함 다시 보임) */
 .list_info {
+    grid-area: info;
     min-width: 0;
     align-self: start !important;
 }
@@ -110,8 +122,8 @@
 
 /* 6. '탐지 목록' 링크를 맨 아래 전체 폭으로 배치 */
 #list_wrap > .list > a {
-    grid-column: 1 / -1; /* 전체 폭 */
-    justify-self: start; /* 버튼 크기 유지 */
+    grid-area: link;
+    justify-self: start;
     margin-top: 10px;
     padding: 10px 20px;
     border-radius: 7px;
@@ -134,11 +146,14 @@
 @media (max-width: 760px) {
     #list_wrap > .list {
         grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "title"
+            "message"
+            "summary"
+            "img"
+            "info"
+            "link";
         gap: 18px;
-    }
-
-    #list_wrap h2 {
-        grid-column: auto;
     }
 
     #list_wrap .detection_img {
