@@ -43,6 +43,7 @@ def _judgment_to_dict(judgment):
         "vehicle_type": judgment.car.vehicle_type,
         "status": judgment.status,
         "stay": format_duration(judgment.stay_seconds) if judgment.first_sighting else None,
+        "box": list(judgment.car.box),   # 실시간 화면에 구역 안 차량 번호를 그릴 때 사용
     }
 
 

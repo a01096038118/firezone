@@ -3,18 +3,17 @@
 판단 순서
   1) 차량 탐지 모델이 fire_truck 클래스로 찾았으면 소방차 (팀원 모델에 클래스가 있을 때)
   2) 소방차 전용 모델(models/fire_truck.pt)이 있으면 그 모델로 판단
-  3) 둘 다 없으면 트럭·버스 중 차체가 대부분 빨간색인 차량을 소방차로 봄
+  3) 둘 다 없으면 같은 사진의 다른 차보다 확실히 큰(FIRE_TRUCK_MIN_SIZE_RATIO 배 이상) 차 중
+     차체가 대부분 빨간색인 차량을 소방차로 봄 (차 종류는 모두 car 로 통일해서 크기로 큰 차를 구분)
 """
 import os
 import threading
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 import config
-
-# 빨간색 판단으로 소방차 후보가 될 수 있는 차량 종류 (승용차·오토바이는 소방차가 아님)
-FIRE_TRUCK_CANDIDATE_TYPES = {"truck", "bus"}
 
 _fire_truck_model = None
 _fire_truck_model_lock = threading.Lock()
@@ -39,7 +38,8 @@ def _red_color_ratio(vehicle_image):
 
 
 # 차량 한 대가 소방차인지 판단하는 것을 담당함.
-def isFireTruck(vehicle_image, vehicle_type):
+def isFireTruck(vehicle_image, vehicle_type, is_large_vehicle=True):
+    """is_large_vehicle: 같은 사진의 다른 차보다 확실히 큰 차인지 (모델이 없을 때 빨간색 판단에만 씀)"""
     # 차량 탐지 모델이 이미 소방차로 분류했으면 바로 소방차
     if vehicle_type == "fire_truck":
         return True
@@ -55,15 +55,22 @@ def isFireTruck(vehicle_image, vehicle_type):
             )[0].boxes
         return found_boxes is not None and len(found_boxes) > 0
 
-    # 전용 모델이 없으면 빨간 트럭·버스를 소방차로 봄
-    if vehicle_type not in FIRE_TRUCK_CANDIDATE_TYPES:
+    # 전용 모델이 없으면 큰 빨간 차를 소방차로 봄 (빨간 승용차는 크기가 작아서 제외)
+    if not is_large_vehicle:
         return False
     return _red_color_ratio(vehicle_image) >= config.FIRE_TRUCK_MIN_RED_RATIO
 
 
 # 사진 속 차량마다 소방차인지 표시(vehicle["is_fire_truck"])하는 것을 담당함.
 def mark_fire_trucks(image, vehicles):
-    for vehicle in vehicles:
+    if not vehicles:
+        return
+    # 같은 사진 속 차량 넓이의 중앙값 (드론 높이가 달라도 사진 안에서 비교하므로 영향이 적음)
+    areas = [(x2 - x1) * (y2 - y1) for x1, y1, x2, y2 in (vehicle["box"] for vehicle in vehicles)]
+    typical_area = float(np.median(areas))
+    for vehicle, area in zip(vehicles, areas):
         # 차량 부분만 잘라서 판단함
         x1, y1, x2, y2 = vehicle["box"]
-        vehicle["is_fire_truck"] = isFireTruck(image[max(y1, 0):y2, max(x1, 0):x2], vehicle["vehicle_type"])
+        is_large_vehicle = len(vehicles) > 1 and area >= typical_area * config.FIRE_TRUCK_MIN_SIZE_RATIO
+        vehicle["is_fire_truck"] = isFireTruck(image[max(y1, 0):y2, max(x1, 0):x2], vehicle["vehicle_type"],
+                                               is_large_vehicle)

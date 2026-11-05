@@ -14,3 +14,5 @@ logs/
 .idea/
 Thumbs.db
 desktop.ini
+# 내 PC 전용 시연 실행 파일 (영상 경로·IP가 내 PC 기준)
+*.bat

@@ -3,7 +3,8 @@
 클래스를 번호가 아니라 이름으로 구분해서, 팀원이 학습시킨 모델(best.pt)로 바꿔도 코드를 고치지 않는다.
 - 기본 모델(yolov8n.pt): car, motorcycle, bus, truck
 - 팀원 모델: car, vehicle, suv ... 처럼 이름이 달라도 아래 목록에 넣으면 됨
-- 팀원 모델에 fire_truck 클래스가 있으면 소방차로 바로 표시함
+차량 종류는 모두 car 하나로 통일한다 (단속 판정·Boot 전송은 종류와 상관없음).
+소방차 클래스(fire_truck)가 있는 모델이면 그것만 소방차로 따로 표시한다.
 """
 import threading
 
@@ -12,10 +13,10 @@ from ultralytics import YOLO
 
 import config
 
-# 모델 클래스 이름 → 차량 종류. 여기에 있는 이름만 차량으로 본다.
+# 모델 클래스 이름 → 차량 종류. 여기에 있는 이름만 차량으로 본다 (소방차 외에는 모두 car)
 VEHICLE_TYPE_BY_CLASS_NAME = {
     "car": "car", "vehicle": "car", "suv": "car", "van": "car", "taxi": "car",
-    "truck": "truck", "bus": "bus", "motorcycle": "motorcycle", "motorbike": "motorcycle",
+    "truck": "car", "bus": "car", "motorcycle": "car", "motorbike": "car",
     "fire_truck": "fire_truck", "firetruck": "fire_truck", "fire truck": "fire_truck",
 }
 
@@ -50,9 +51,11 @@ def detectVehicle(image):
     with _vehicle_model_lock:
         model = _get_vehicle_model()
         # 차량 클래스만, 기준 신뢰도 이상인 것만 찾음
+        # agnostic_nms: 한 차를 car·truck 으로 두 번 잡아도(종류가 달라도) 많이 겹치면 점수 높은 박스 하나만 남김
         detected_boxes = model.predict(
             image, classes=_vehicle_class_ids(model),
-            conf=config.VEHICLE_MIN_CONFIDENCE, verbose=False,
+            conf=config.VEHICLE_MIN_CONFIDENCE, iou=config.VEHICLE_MERGE_IOU,
+            agnostic_nms=True, verbose=False,
         )[0].boxes
         class_names = model.names
 

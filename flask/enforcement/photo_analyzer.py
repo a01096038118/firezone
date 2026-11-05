@@ -12,15 +12,16 @@ import numpy as np
 
 import config
 from ai.fire_truck import mark_fire_trucks
-from ai.plate_reader import read_plate_and_wait
+from ai.plate_reader import read_plate_detail_and_wait
 from ai.shot import ParkedCar, Shot
 from ai.vehicle import detectVehicle
 from ai.zone import box_to_reference, get_ground_point, ground_box_to_reference, is_point_in_photo_polygon, zone_polygon_in_photo
 from ai.zone_finder import MATCH_METHOD_AUTO_MARKING, find_zone_by_marking
 from ai.zone_locator import locate_zone_area
 from ai.zone_matcher import find_zone_in_photo
-from camera.camera_config import load_zones
+from camera.camera_config import get_auto_zone_no, load_zones
 from utils.image_storage import save_photo
+from utils.plate_fail_log import write_plate_failure
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +58,17 @@ def _find_zone(photo, vehicles, default_zone_no):
     return find_zone_by_marking(photo, vehicle_boxes)
 
 
+# 실시간 화면에 그릴 구역만 찾는 것을 담당함 (판정은 하지 않음. 드론이 움직이는 중에도 구역을 보여주기 위함).
+def find_zone_for_view(camera_id, frame, vehicles, default_zone_no=None):
+    """반환: (frame 좌표의 구역 테두리, 구역번호) 또는 None. vehicles 는 frame 좌표의 차량 목록."""
+    zone_match = _find_zone(frame, vehicles, default_zone_no)
+    if zone_match is None:
+        return None
+    zone_no = (get_auto_zone_no(camera_id) if zone_match["method"] == MATCH_METHOD_AUTO_MARKING
+               else zone_match["zone"]["zone_no"])
+    return zone_polygon_in_photo(zone_match["zone"], zone_match["photo_to_reference"]), zone_no
+
+
 # 구역 모델이 찾은 범위 안에서만 바닥 표시(노란 테두리)로 구역을 찾는 것을 담당함.
 def _find_zone_by_marking_in_area(photo, vehicle_boxes, zone_area):
     """zone_area: (x1, y1, x2, y2). 반환 모양은 find_zone_by_marking 과 같고 좌표는 원본 사진 기준."""
@@ -90,6 +102,9 @@ def analyze_photo(camera_id, photo, captured_at, default_zone_no=None):
     zone_match = _find_zone(photo, vehicles, default_zone_no)
     if zone_match is None:
         raise UndecidablePhoto(REASON_NO_ZONE, detail="등록된 구역 사진과 맞지 않고 바닥 표시도 찾지 못함")
+    # 바닥 표시로 찾은 구역은 카메라(영상)마다 정한 구역번호를 붙임 (등록 구역은 등록한 번호 그대로)
+    if zone_match["method"] == MATCH_METHOD_AUTO_MARKING:
+        zone_match["zone"]["zone_no"] = get_auto_zone_no(camera_id)
     zone, photo_to_reference = zone_match["zone"], zone_match["photo_to_reference"]
     polygon_in_photo = zone_polygon_in_photo(zone, photo_to_reference)
     # 바닥 표시로 찾은 구역은 차량 지붕이 크게 늘어나므로 바닥 부분만으로 같은 자리를 비교
@@ -104,7 +119,13 @@ def analyze_photo(camera_id, photo, captured_at, default_zone_no=None):
             continue
         # 4. 구역 안 차량만 번호판을 읽음 (차 안에서만 읽음)
         x1, y1, x2, y2 = vehicle["box"]
-        car_number = read_plate_and_wait(photo[max(y1, 0):y2, max(x1, 0):x2])
+        vehicle_image = photo[max(y1, 0):y2, max(x1, 0):x2]
+        plate_detail = read_plate_detail_and_wait(vehicle_image)
+        car_number = plate_detail["number"]
+        # 번호판을 못 읽었으면 원인·OCR 원본·사진을 Flask에만 남김 (Boot로는 보내지 않음)
+        if car_number is None:
+            write_plate_failure(camera_id, zone["zone_no"], captured_at, len(cars_in_zone) + 1,
+                                vehicle["box"], vehicle_image, plate_detail)
         cars_in_zone.append(ParkedCar(
             vehicle_type=vehicle["vehicle_type"],
             box=vehicle["box"],
