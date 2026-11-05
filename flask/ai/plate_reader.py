@@ -8,7 +8,7 @@ import logging
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-from ai.plate import recognizeLicensePlate, warmup_plate_reader
+from ai.plate import FAIL_ERROR, readLicensePlateDetail, recognizeLicensePlate, warmup_plate_reader
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +32,17 @@ def read_plate_and_wait(vehicle_image):
     except Exception:
         log.exception("번호판 인식 오류")
         return None
+
+
+# 차량 이미지 한 장의 번호판을 읽고, 못 읽은 이유·OCR 원본까지 받아오는 것을 담당함.
+def read_plate_detail_and_wait(vehicle_image):
+    """ai.plate.readLicensePlateDetail 결과 dict. 오류가 나도 fail_reason="번호판 인식 오류" 로 돌려준다."""
+    try:
+        return _get_plate_reader_process().submit(readLicensePlateDetail, vehicle_image).result()
+    except Exception as error:
+        log.exception("번호판 인식 오류")
+        return {"number": None, "fail_reason": FAIL_ERROR, "ocr_text": str(error)[:100], "ocr_scores": [],
+                "plate_confidence": None, "used_plate_model": False, "plate_image": None}
 
 
 # 번호판 인식 프로세스를 미리 띄우고 OCR을 불러두는 것(워밍업)을 담당함.

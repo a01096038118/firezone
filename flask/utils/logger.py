@@ -2,6 +2,7 @@
 
 logs/server_2026-10-19.log     서버 전체 로그
 logs/violation_2026-10-19.log  위반 기록(고지서 형식) + 판정 불가 기록 (utils/violation_log.py 가 기록)
+logs/plate_fail_2026-10-19.log 번호판 미인식 분석 기록 (utils/plate_fail_log.py 가 기록)
 
 로그 파일은 자동으로 지우지 않는다. (기록 삭제는 관리자만 할 수 있음)
 """
@@ -13,6 +14,7 @@ import config
 
 SERVER_LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 VIOLATION_LOGGER_NAME = "violation"
+PLATE_FAIL_LOGGER_NAME = "plate_fail"   # utils/plate_fail_log.py 와 같은 이름
 
 
 # 날짜가 들어간 파일 이름으로 로그를 남기고, 날짜가 바뀌면 새 파일로 넘어가는 것을 담당함.
@@ -66,6 +68,11 @@ def setup_logging():
     violation_file_handler = DailyFileHandler("violation")
     violation_file_handler.setFormatter(logging.Formatter("%(message)s"))
     logging.getLogger(VIOLATION_LOGGER_NAME).addHandler(violation_file_handler)
+
+    # 번호판 미인식 분석 기록도 별도 파일에 남김 (한 줄에 차량 한 대)
+    plate_fail_file_handler = DailyFileHandler("plate_fail")
+    plate_fail_file_handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.getLogger(PLATE_FAIL_LOGGER_NAME).addHandler(plate_fail_file_handler)
 
     # 웹 요청 로그(werkzeug)는 너무 많아서 경고 이상만 남김
     logging.getLogger("werkzeug").setLevel(logging.WARNING)

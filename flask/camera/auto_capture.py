@@ -1,7 +1,8 @@
 """자동 촬영: 화면이 바뀐 뒤 STILL_SECONDS_BEFORE_CAPTURE 초 동안 멈춰 있으면 가장 선명한 장면을 찍는다.
 
 드론이 이동(화면이 움직임) → 호버링(화면이 멈춤) → 촬영 → 다시 이동 하는 흐름과 같다.
-한 번 찍은 뒤에는 화면이 다시 바뀔 때까지 찍지 않는다 (같은 장면을 여러 번 찍지 않음).
+한 번 찍은 뒤 화면이 그대로면 STILL_RECAPTURE_SECONDS 초마다 다시 찍는다.
+  → 드론이 구역 위에 떠 있기만 해도 같은 각도로 2차 촬영이 되어 1차와 비교할 수 있다 (같은 자리 판정이 안정적).
 """
 import cv2
 
@@ -40,6 +41,7 @@ class AutoCapture:
         self._has_new_scene = True        # 처음 들어온 장면도 찍을 수 있게 True 로 시작
         self._best_frame = None
         self._best_sharpness = -1.0
+        self._last_capture_at = None      # 마지막으로 찍은 시각 (정지 중 다시 찍기용)
         self.state = STATE_MOVING
         self.still_seconds = 0.0
 
@@ -62,9 +64,13 @@ class AutoCapture:
             self._reset_still(new_scene=self._has_new_scene)
             return None
 
-        # 3. 이미 찍은 장면이면 다음 장면까지 기다림
+        # 3. 이미 찍은 장면이면 다음 장면까지 기다림. 화면이 그대로인 채 일정 시간이 지나면 한 번 더 찍음
         if not self._has_new_scene:
             self.state = STATE_WAITING
+            if (config.STILL_RECAPTURE_SECONDS > 0 and self._last_capture_at is not None
+                    and now - self._last_capture_at >= config.STILL_RECAPTURE_SECONDS):
+                self._last_capture_at = now
+                return frame.copy(), measure_sharpness(frame)
             return None
 
         # 4. 멈춘 동안 가장 선명한 프레임을 후보로 기억
@@ -80,6 +86,7 @@ class AutoCapture:
             captured = (self._best_frame, self._best_sharpness)
             self._reset_still(new_scene=False)
             self.state = STATE_WAITING
+            self._last_capture_at = now
             return captured
         return None
 

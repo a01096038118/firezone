@@ -52,6 +52,21 @@ def load_zones():
     return zones
 
 
+# 자동으로 찾은 구역에 붙일 구역번호를 카메라마다 정하는 것을 담당함.
+def get_auto_zone_no(camera_id):
+    """① 카메라 설정의 zone_no (예: DRONE01_ZONE_NO) → ② config.VIDEO_ZONE_NO 표에 있는 영상 파일 → ③ config.AUTO_ZONE_NO.
+    매 촬영마다 다시 계산하므로 카메라 입력(영상)을 바꾸면 구역번호도 따라 바뀐다."""
+    camera = load_camera_config().get(camera_id, {})
+    if camera.get("zone_no"):
+        return str(camera["zone_no"])
+    source = camera.get("source")
+    if source is not None:
+        video_source, is_video_file = parse_video_source(source)
+        if is_video_file:
+            return config.VIDEO_ZONE_NO.get(os.path.basename(str(video_source)), config.AUTO_ZONE_NO)
+    return config.AUTO_ZONE_NO
+
+
 # 카메라 주소가 웹캠 번호/스트림 주소/영상 파일 중 무엇인지 구분하는 것을 담당함.
 def parse_video_source(source):
     """반환: (OpenCV에 넘길 값, 영상 파일 여부)
