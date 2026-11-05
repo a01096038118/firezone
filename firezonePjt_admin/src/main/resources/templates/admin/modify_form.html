@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:replace="~{/include/title.html::title}"/>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+
+    <script th:src="@{/js/admin.js}"></script>
+
+</head>
+<body>
+
+<header th:replace="~{/include/header_nav_footer.html::header}" />
+
+<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+
+<section>
+    <div id="section_wrap">
+        <div class="word">
+            MODIFY FORM
+        </div>
+        <div class="content">
+            <form
+            th:action="@{/admin/modify_confirm}"
+            name="modify_form"
+            method="post">
+
+                <input type="hidden" name="no" th:value="${loginedMemberDto.no}">
+
+                <input type="text" name="am_id" th:value="${loginedMemberDto.am_id}" readonly><br>
+                <input type="password"
+                       name="currentPassword"
+                       placeholder="INPUT CURRENT ADMIN PW"
+                       autocomplete="current-password"
+                       required><br>
+                <input type="password" name="am_pw" placeholder="NEW ADMIN PW (OPTIONAL)" autocomplete="new-password"><br>
+                <input type="text" name="am_name" th:value="${loginedMemberDto.am_name}" placeholder="INPUT ADMIN NAME" required><br>
+                <input type="email" name="am_mail" th:value="${loginedMemberDto.am_mail}" placeholder="INPUT ADMIN MAIL" required><br>
+                <input type="text" name="am_phone" th:value="${loginedMemberDto.am_phone}" placeholder="INPUT ADMIN PHONE" required><br>
+                <input type="button" value="modify" onclick="modifyForm();">
+                <input type="reset" value="reset">
+
+            </form>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+
+</body>
+</html>

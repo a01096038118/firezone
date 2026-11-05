@@ -1,0 +1,170 @@
+package com.office.firezonepjt.user;
+
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.security.Principal;
+
+@Slf4j
+@Controller
+@RequestMapping("/member")
+public class MemberController {
+
+    final private MemberService memberService;
+
+    public MemberController(MemberService memberService) {
+        this.memberService = memberService;
+    }
+
+    // 회원가입 양식
+    @GetMapping("/signup")
+    public String signup() {
+        log.info("signup()");
+
+        String nextPage = "member/signup_form";
+
+        return nextPage;
+
+    }
+
+    // 회원가입 확인
+    @PostMapping("/signup_confirm")
+    public String signupConfirm(MemberDto memberDto, Model model) {
+        log.info("signupConfirm()");
+
+        String nextPage = "member/signup_result";
+
+        int result = memberService.signupConfirm(memberDto);
+        model.addAttribute("result", result);
+        model.addAttribute("duplicateId", result == MemberService.USER_ID_ALREADY_EXIST);
+
+        return nextPage;
+
+    }
+
+    @GetMapping(value = "/id-check", produces = "text/plain")
+    @ResponseBody
+    public String checkMemberId(@RequestParam String um_id) {
+        return Boolean.toString(memberService.isMemberIdAvailable(um_id));
+    }
+
+    // 로그인 양식 /signin
+    @GetMapping("/signin")
+    public String signin(
+            @RequestParam(value = "withdrawn", required = false) String withdrawn,
+            Model model) {
+        log.info("signin()");
+
+        model.addAttribute("accountWithdrawn", withdrawn != null);
+        String nextPage = "member/signin_form";
+
+        return nextPage;
+
+    }
+
+//    로그인 확인 /signin_confirm
+
+    @PostMapping("/signin_confirm")
+    public String signinConfirm(MemberDto memberDto,
+                                Model model,
+                                HttpSession session) {
+        log.info("signinConfirm()");
+
+        String nextPage = "member/signin_result";
+
+        String loginedID = memberService.signinConfirm(memberDto);
+        model.addAttribute("loginedID", loginedID);
+
+        if (loginedID != null) {
+            session.setAttribute("loginedID", loginedID);
+            session.setMaxInactiveInterval(60 * 30);
+        }
+
+        return nextPage;
+
+    }
+
+    // 계정 수정 양식(/member/modify)
+    @GetMapping("/modify")
+    public String modify(Principal principal, Model model) {
+        log.info("modify()");
+
+        String nextPage = "member/modify_form";
+
+        MemberDto loginedMemberDto = memberService.modify(principal.getName());
+        model.addAttribute("loginedMemberDto", loginedMemberDto);
+
+        return nextPage;
+
+    }
+
+    @PostMapping("/withdraw")
+    public String withdraw(
+            @RequestParam("currentPassword") String currentPassword,
+            Principal principal,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        if (!memberService.withdraw(principal.getName(), currentPassword)) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "현재 비밀번호가 올바르지 않습니다. 탈퇴하지 않았습니다.");
+            return "redirect:/member/modify";
+        }
+
+        session.invalidate();
+        return "redirect:/member/signin?withdrawn";
+    }
+
+    // 계정 수정 확인(/member/modify_confirm)
+    @PostMapping("/modify_confirm")
+    public String modifyConfirm(
+            MemberDto memberDto,
+            @RequestParam("currentPassword") String currentPassword,
+            Principal principal,
+            Model model) {
+        log.info("modifyConfirm()");
+
+        String nextPage = "member/modify_result";
+
+        int result = memberService.modifyConfirm(principal.getName(), memberDto, currentPassword);
+        model.addAttribute("result", result);
+
+        return nextPage;
+
+    }
+
+    @GetMapping("/signin_result")
+    public String signinResult(
+            @RequestParam(value = "loginedID", required = false) String loginedID,
+            @RequestParam(value = "error", required = false) String error,
+            Model model) {
+        log.info("signinResult");
+
+        String nextPage = "member/signin_result";
+        model.addAttribute("loginedID", loginedID);
+        model.addAttribute("approvalPending", "approval_pending".equalsIgnoreCase(error));
+        model.addAttribute("loginFailed", error != null);
+
+        return nextPage;
+
+    }
+
+    // 권한이 없어서 접근이 막힌경우(/member/access_denied)
+    @GetMapping("/access_denied")
+    public String accessDenied() {
+        log.info("accessDenied()");
+
+        String nextPage = "member/access_denied";
+
+        return nextPage;
+
+    }
+
+}
