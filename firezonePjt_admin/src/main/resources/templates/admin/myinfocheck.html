@@ -48,6 +48,15 @@
             <input id="am_phone" type="tel" th:field="*{am_phone}" maxlength="20" required>
         </div>
         <div class="form-field">
+            <label for="currentPassword">현재 비밀번호</label>
+            <input id="currentPassword"
+                   name="currentPassword"
+                   type="password"
+                   autocomplete="current-password"
+                   required>
+            <small>정보를 수정하려면 현재 비밀번호를 입력해 주세요.</small>
+        </div>
+        <div class="form-field">
             <label for="am_pw">새 비밀번호</label>
             <input id="am_pw" name="am_pw" type="password" minlength="8" autocomplete="new-password">
             <small>비밀번호를 변경하지 않으려면 비워 두세요.</small>

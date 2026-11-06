@@ -107,6 +107,7 @@ public class DetectionService {
 
 
     // 탐지 목록 상세 조회
+    @Transactional(readOnly = true)
     public DetectionDto getDetectionDetail(Integer dlNo) {
         log.info("getDetectionDetail()");
 

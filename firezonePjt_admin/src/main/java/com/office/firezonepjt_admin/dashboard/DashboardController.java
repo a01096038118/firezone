@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/dashboard")
 public class DashboardController {
 
+
+
     // 실시간 관제 화면
     @GetMapping("/monitoring")
     public String monitoring() {
         log.info("monitoring()");
 
-        String nextPage = "dashboard/monitoring";
+        String nextPage = "dashboard/dashboard";
 
         return nextPage;
     }

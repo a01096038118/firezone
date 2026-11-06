@@ -4,7 +4,6 @@ import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 //@Getter
 //@Setter
@@ -22,6 +21,39 @@ public class AdminDto {
     private String am_phone;
     private String am_reg_date;
     private String am_mod_date;
+    private int historyNo;
+    private int historyAdminNo;
+    private String historyAdminId;
+    private Integer beforeAuthorityNo;
+    private String beforeRoleName;
+    private int afterAuthorityNo;
+    private String afterRoleName;
+    private int changedBy;
+    private String changedById;
+    private LocalDateTime changedAt;
+
+    public AdminDto(
+            int historyNo,
+            int historyAdminNo,
+            String historyAdminId,
+            Integer beforeAuthorityNo,
+            String beforeRoleName,
+            int afterAuthorityNo,
+            String afterRoleName,
+            int changedBy,
+            String changedById,
+            LocalDateTime changedAt) {
+        this.historyNo = historyNo;
+        this.historyAdminNo = historyAdminNo;
+        this.historyAdminId = historyAdminId;
+        this.beforeAuthorityNo = beforeAuthorityNo;
+        this.beforeRoleName = beforeRoleName;
+        this.afterAuthorityNo = afterAuthorityNo;
+        this.afterRoleName = afterRoleName;
+        this.changedBy = changedBy;
+        this.changedById = changedById;
+        this.changedAt = changedAt;
+    }
 
     public int getAm_no() {
         return am_no;
@@ -88,9 +120,6 @@ public class AdminDto {
     }
 
     public AdminEntity toEntity() {
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
         return AdminEntity.builder()
                 .adNo(am_no)
                 .adId(am_id)
@@ -98,10 +127,7 @@ public class AdminDto {
                 .adName(am_name)
                 .adMail(am_mail)
                 .adPhone(am_phone)
-                .adRegDate(am_reg_date != null ? LocalDateTime.parse(am_reg_date, formatter) : null)
-                .adModDate(am_mod_date != null ? LocalDateTime.parse(am_mod_date, formatter) : null)
                 .build();
-
     }
 
 }

@@ -1,11 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    /*
-     * Flask 팀원이 알려준 영상 주소를 넣기
-     * 아래 영상 연결 코드는 <img>로 표시할 수 있는
-     * MJPEG 스트림을 사용하는 경우의 코드
-     */
-    const STREAM_URL = '';
+    // Flask 영상 스트림 (common.js의 FLASK_BASE_URL 사용)
+    const STREAM_URL = `${FLASK_BASE_URL}/api/monitor`;
+
+    // 관제 화면에서 고를 수 있는 카메라 (Flask config.CAMERAS의 카메라 ID와 같아야 함)
+    const CAMERA_IDS = ['DRONE01', 'CAM_01'];
+    let currentCameraId = CAMERA_IDS[0];    // 처음에는 드론 영상
+
+    // 선택한 카메라의 영상 주소 (/api/monitor/<카메라 ID>)
+    function streamUrl() {
+        return `${STREAM_URL}/${encodeURIComponent(currentCameraId)}`;
+    }
+
+
+    const REFRESH_MS = 5000;        // 탐지 목록 갱신 주기
 
     const liveStream = document.querySelector('#live_stream');
     const streamMessage = document.querySelector('#stream_message');
@@ -13,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.connection_status');
 
     const cameraId = document.querySelector('.camera_id');
-    const cameraZone = document.querySelector('.zone_no');
 
     const detectionImage = document.querySelector('#detection_img');
     const detailLink =
@@ -21,39 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const listBody = document.querySelector('#detection_log_list');
 
-    // 날짜를 화면에 표시할 형태로 변환
-    function formatTime(value) {
-        if (!value) {
-            return '미확인';
-        }
+    let stopped = false;        // 로그인·권한 문제로 갱신을 멈췄는지
+    let hasData = false;        // 목록을 한 번이라도 불러왔는지
 
-        return value.replace('T', ' ').split('.')[0];
-    }
 
-    // 비어 있는 값은 미확인으로 표시
-    function displayValue(value) {
-        return value === null
-        || value === undefined
-        || String(value).trim() === ''
-            ? '미확인'
-            : String(value);
-    }
+    // ---------- 실시간 영상 ----------
 
-    // 실시간 영상 연결
     function connectStream() {
-        if (!STREAM_URL) {
-            connectionStatus.textContent = '영상 주소 미설정';
-            streamMessage.textContent =
-                'Flask 영상 주소를 설정해주세요.';
-            return;
-        }
-
         connectionStatus.textContent = '연결 시도 중';
         streamMessage.textContent = '영상을 연결하고 있습니다.';
         streamMessage.hidden = false;
 
+        // 매번 새 연결이 되도록 주소 끝에 시간 값을 붙임
+        const url = streamUrl();
+        const separator = url.includes('?') ? '&' : '?';
+
         liveStream.hidden = false;
-        liveStream.src = STREAM_URL;
+        liveStream.src = `${url}${separator}t=${Date.now()}`;
     }
 
     liveStream.addEventListener('load', () => {
@@ -62,14 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     liveStream.addEventListener('error', () => {
+        // 주소를 비운 상태의 오류는 무시
+        if (!liveStream.getAttribute('src')) {
+            return;
+        }
+
         liveStream.hidden = true;
         connectionStatus.textContent = '연결 실패';
         streamMessage.hidden = false;
         streamMessage.textContent =
-            '영상 연결에 실패했습니다. 재연결 버튼을 눌러주세요.';
+            `${currentCameraId} 영상 연결에 실패했습니다. 재연결 버튼을 눌러주세요.`;
     });
 
-    // 재연결 버튼 생성
+    // 재연결 버튼
     const reconnectButton = document.createElement('button');
     reconnectButton.type = 'button';
     reconnectButton.textContent = '영상 재연결';
@@ -81,6 +77,71 @@ document.addEventListener('DOMContentLoaded', () => {
         liveStream.removeAttribute('src');
         connectStream();
     });
+
+    // ---------- 카메라 전환 ----------
+    const cameraTabs = document.querySelectorAll('.camera_tab');
+
+    // 선택한 카메라로 영상을 바꿈 (버튼 표시와 카메라 ID 표시도 같이 바꿈)
+    function selectCamera(id) {
+        currentCameraId = id;
+        cameraId.textContent = id;
+
+        cameraTabs.forEach(tab => {
+            const active = tab.dataset.camera === id;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-pressed', String(active));
+        });
+
+        // 이전 카메라 연결을 끊고 새 카메라로 연결
+        liveStream.removeAttribute('src');
+        connectStream();
+    }
+
+    cameraTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.dataset.camera !== currentCameraId) {
+                selectCamera(tab.dataset.camera);
+            }
+        });
+    });
+
+    // ---------- 경보 ----------
+    let lastDlNo = null;        // 마지막으로 확인한 탐지 번호 (처음 조회 때 기준값으로 저장)
+
+    // 경보 소리·팝업은 모든 화면 공통 기능(js/dashboard/alarm.js)이 처리
+    function notifyAlarm(newDetections) {
+        if (window.FirezoneAlarm) {
+            window.FirezoneAlarm.notify(newDetections);
+        }
+    }
+
+
+    // 새로 들어온 탐지가 있으면 경보 발생
+    function checkNewDetections(detections) {
+        const newestDlNo = Number(detections[0].dl_no);
+
+        // 처음 조회한 기록은 경보로 보지 않고 기준값으로만 저장
+        if (lastDlNo === null) {
+            lastDlNo = newestDlNo;
+            return;
+        }
+
+        // 기준값보다 큰 번호 = 새 탐지 (오래된 것부터 추가)
+        const newDetections = detections
+            .filter(dto => Number(dto.dl_no) > lastDlNo)
+            .reverse();
+
+        if (newDetections.length === 0) {
+            return;
+        }
+
+        notifyAlarm(newDetections);
+
+        lastDlNo = newestDlNo;
+    }
+
+
+    // ---------- 탐지 정보 ----------
 
     // 탐지 이미지가 없거나 열리지 않는 경우 안내
     const imageMessage = document.createElement('p');
@@ -95,13 +156,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     detectionImage.addEventListener('error', () => {
+        if (!detectionImage.getAttribute('src')) {
+            return;
+        }
+
         detectionImage.hidden = true;
         imageMessage.hidden = false;
         imageMessage.textContent = '탐지된 이미지를 불러올 수 없습니다.';
     });
 
-    // 실시간 탐지 정보 표시
+    // 최신 탐지 정보 표시
     function showLatestDetection(dto) {
+        document.querySelector('#detection_camera_id').textContent =
+            displayValue(dto.dl_camera_id);
+
         document.querySelector('#zone_id').textContent =
             displayValue(dto.dl_zone_no);
 
@@ -117,20 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#last_detected').textContent =
             formatTime(dto.dl_last_detected_at);
 
-        /*
-         * 위쪽 camera_info는 영상 소스 정보이므로
-         * 최신 탐지 기록의 카메라 정보로 덮어쓰지 않음.
-         */
+        const imageUrl = toImageUrl(dto.dl_image_path);
 
-        if (dto.dl_image_path) {
-            // 같은 경로의 이미지는 반복해서 다시 요청하지 않음
-            if (detectionImage.getAttribute('src')
-                !== dto.dl_image_path) {
-
+        if (imageUrl) {
+            // 같은 주소의 이미지는 반복해서 다시 요청하지 않음
+            if (detectionImage.getAttribute('src') !== imageUrl) {
                 detectionImage.hidden = true;
                 imageMessage.hidden = false;
                 imageMessage.textContent = '이미지를 불러오는 중입니다.';
-                detectionImage.src = dto.dl_image_path;
+                detectionImage.src = imageUrl;
             }
         } else {
             detectionImage.removeAttribute('src');
@@ -141,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         detailLink.href =
             `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-
         detailLink.hidden = false;
     }
 
@@ -152,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
 
-        cell.colSpan = 5;
+        cell.colSpan = 4;
         cell.textContent = message;
 
         row.appendChild(cell);
@@ -162,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 탐지 기록이 없는 경우
     function clearLatestDetection() {
         [
+            '#detection_camera_id',
             '#zone_id',
             '#violation_type',
             '#car_number',
@@ -182,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 최근 탐지 목록 표시
+    // 최근 탐지 목록 (번호 열 없음, 줄을 누르면 상세 화면으로 이동)
     function showDetectionList(detections) {
         listBody.replaceChildren();
 
@@ -189,77 +253,48 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
 
             const values = [
-                dto.dl_no,
                 dto.dl_camera_id,
                 dto.dl_zone_no,
                 dto.dl_car_number,
                 formatTime(dto.dl_first_detected_at)
             ];
 
-            values.forEach((value, index) => {
+            for (const value of values) {
                 const cell = document.createElement('td');
-
-                // 탐지 번호를 누르면 상세 화면 이동
-                if (index === 0) {
-                    const link = document.createElement('a');
-
-                    link.href =
-                        `/dashboard/listDetail?dl_no=${encodeURIComponent(dto.dl_no)}`;
-
-                    link.textContent = displayValue(value);
-                    cell.appendChild(link);
-                } else {
-                    cell.textContent = displayValue(value);
-                }
-
+                cell.textContent = displayValue(value);
                 row.appendChild(cell);
-            });
+            }
 
+            makeDetailRow(row, dto.dl_no);
             listBody.appendChild(row);
         }
     }
 
     // 최신 10건 조회
     async function fetchDetections() {
-        const response = await fetch(
-            '/detections/list?page=0&size=10&direction=desc',
-            {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }
+        const data = await fetchJson(
+            '/detections/list?page=1&size=10&direction=desc'
         );
 
-        // Security가 로그인 화면으로 이동시킨 경우도 확인
-        if (response.redirected || response.status === 401) {
-            throw new Error('로그인 상태를 확인해주세요.');
+        // 서버 응답: { content: [...], totalElements, ... }
+        if (!data || !Array.isArray(data.content)) {
+            throw new ApiError('탐지 목록 응답 형식이 올바르지 않습니다.', 0);
         }
 
-        if (response.status === 403) {
-            throw new Error('탐지 목록 조회 권한이 없습니다.');
-        }
-
-        if (!response.ok) {
-            throw new Error('탐지 기록을 불러오지 못했습니다.');
-        }
-
-        const contentType = response.headers.get('content-type') || '';
-
-        if (!contentType.includes('application/json')) {
-            throw new Error('서버의 데이터 응답을 확인해주세요.');
-        }
-
-        const detections = await response.json();
-
-        if (!Array.isArray(detections)) {
-            throw new Error('탐지 목록 응답 형식이 올바르지 않습니다.');
-        }
+        const detections = data.content;
+        hasData = true;
 
         if (detections.length === 0) {
+
+            if (lastDlNo === null) {
+                lastDlNo = 0;
+            }
+
             showListMessage('저장된 탐지 기록이 없습니다.');
             clearLatestDetection();
             return;
         }
+        checkNewDetections(detections);
 
         showLatestDetection(detections[0]);
         showDetectionList(detections);
@@ -275,20 +310,35 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await fetchDetections();
             refreshMessage.hidden = true;
+
         } catch (error) {
             console.error(error);
 
             refreshMessage.textContent = error.message;
             refreshMessage.hidden = false;
-        } finally {
-            window.setTimeout(refreshDetections, 5000);
+
+            if (!hasData) {
+                showListMessage(error.message);
+            }
+
+            // 로그인·권한 문제는 계속 요청해도 소용없으므로 멈춤
+            if (error.status === 401 || error.status === 403) {
+                stopped = true;
+
+                if (error.status === 401) {
+                    window.location.href = LOGIN_URL;
+                }
+
+                return;
+            }
+        }
+
+        if (!stopped) {
+            window.setTimeout(refreshDetections, REFRESH_MS);
         }
     }
 
-    // 영상 소스 정보는 Flask 연동 시 실제 값으로 설정
-    cameraId.textContent = '-';
-    cameraZone.textContent = '-';
-
-    connectStream();
+    // 첫 번째 카메라(DRONE01)로 영상 연결 (카메라 ID 표시도 함께 설정)
+    selectCamera(currentCameraId);
     refreshDetections();
 });

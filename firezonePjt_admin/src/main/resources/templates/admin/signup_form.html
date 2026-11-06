@@ -27,9 +27,12 @@
             <form
             th:action="@{/admin/signup_confirm}"
             name="signup_form"
+            th:attr="data-id-check-url=@{/admin/id-check}"
             method="post">
 
-                <input type="text" name="am_id" placeholder="INPUT NEW ADMIN ID"><br>
+                <input type="text" name="am_id" placeholder="INPUT NEW ADMIN ID" oninput="resetAdminIdCheck()">
+                <button type="button" onclick="checkAdminId()">아이디 중복확인</button><br>
+                <span id="admin-id-check-message" aria-live="polite"></span><br>
                 <input type="password" name="am_pw" placeholder="INPUT NEW ADMIN PW"><br>
                 <input type="name" name="am_name" placeholder="INPUT NEW ADMIN NAME"><br>
                 <input type="email" name="am_mail" placeholder="INPUT NEW ADMIN MAIL"><br>

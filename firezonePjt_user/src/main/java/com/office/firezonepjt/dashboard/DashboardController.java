@@ -15,7 +15,7 @@ public class DashboardController {
     public String monitoring() {
         log.info("monitoring()");
 
-        String nextPage = "dashboard/monitoring";
+        String nextPage = "dashboard/dashboard";
 
         return nextPage;
     }

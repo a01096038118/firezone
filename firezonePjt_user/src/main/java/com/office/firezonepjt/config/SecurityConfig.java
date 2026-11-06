@@ -39,6 +39,7 @@ public class SecurityConfig {
                                 "/include/**",
                                 "/member/signup",
                                 "/member/signup_confirm",
+                                "/member/id-check",
                                 "/member/signin",
                                 "/member/signin_confirm",
                                 "/member/signin_result",
@@ -47,7 +48,7 @@ public class SecurityConfig {
                                 "/member/findpassword_confirm",
                                 "/member/findpassword_result",
                                 "/member/access_denied").permitAll()
-                        .requestMatchers("/planner/**").hasAnyRole("APPR_USER", "USER")
+                        .requestMatchers("/planner/**","/detections/**", "/dashboard/**").hasAnyRole("APPR_USER", "USER")
                         .anyRequest().authenticated()
                 );
 

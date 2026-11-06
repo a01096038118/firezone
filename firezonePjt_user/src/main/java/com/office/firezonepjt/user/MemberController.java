@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.Principal;
 
@@ -16,8 +17,6 @@ import java.security.Principal;
 @Controller
 @RequestMapping("/member")
 public class MemberController {
-
-    final private String CLASS_NAME = "[MemberController] ";
 
     final private MemberService memberService;
 
@@ -28,7 +27,7 @@ public class MemberController {
     // 회원가입 양식
     @GetMapping("/signup")
     public String signup() {
-        System.out.println(CLASS_NAME.concat("signup()"));
+        log.info("signup()");
 
         String nextPage = "member/signup_form";
 
@@ -39,15 +38,22 @@ public class MemberController {
     // 회원가입 확인
     @PostMapping("/signup_confirm")
     public String signupConfirm(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("signupConfirm()"));
+        log.info("signupConfirm()");
 
         String nextPage = "member/signup_result";
 
         int result = memberService.signupConfirm(memberDto);
         model.addAttribute("result", result);
+        model.addAttribute("duplicateId", result == MemberService.USER_ID_ALREADY_EXIST);
 
         return nextPage;
 
+    }
+
+    @GetMapping(value = "/id-check", produces = "text/plain")
+    @ResponseBody
+    public String checkMemberId(@RequestParam String um_id) {
+        return Boolean.toString(memberService.isMemberIdAvailable(um_id));
     }
 
     // 로그인 양식 /signin
@@ -55,7 +61,7 @@ public class MemberController {
     public String signin(
             @RequestParam(value = "withdrawn", required = false) String withdrawn,
             Model model) {
-        System.out.println(CLASS_NAME.concat("signin()"));
+        log.info("signin()");
 
         model.addAttribute("accountWithdrawn", withdrawn != null);
         String nextPage = "member/signin_form";
@@ -70,7 +76,7 @@ public class MemberController {
     public String signinConfirm(MemberDto memberDto,
                                 Model model,
                                 HttpSession session) {
-        System.out.println(CLASS_NAME.concat("signinConfirm()"));
+        log.info("signinConfirm()");
 
         String nextPage = "member/signin_result";
 
@@ -86,25 +92,10 @@ public class MemberController {
 
     }
 
-    // 로그 아웃 /signout_confirm
-    /*
-    @GetMapping("/signout_confirm")
-    public String signoutConfirm(HttpSession session) {
-        System.out.println(CLASS_NAME.concat("signoutConfirm()"));
-
-        String nextPage = "redirect:/";
-
-        session.invalidate();
-
-        return nextPage;
-
-    }
-    */
-
     // 계정 수정 양식(/member/modify)
     @GetMapping("/modify")
     public String modify(Principal principal, Model model) {
-        System.out.println(CLASS_NAME.concat("modify()"));
+        log.info("modify()");
 
         String nextPage = "member/modify_form";
 
@@ -133,37 +124,16 @@ public class MemberController {
 
     // 계정 수정 확인(/member/modify_confirm)
     @PostMapping("/modify_confirm")
-    public String modifyConfirm(MemberDto memberDto, Principal principal, Model model) {
-        System.out.println(CLASS_NAME.concat("modifyConfirm()"));
+    public String modifyConfirm(
+            MemberDto memberDto,
+            @RequestParam("currentPassword") String currentPassword,
+            Principal principal,
+            Model model) {
+        log.info("modifyConfirm()");
 
         String nextPage = "member/modify_result";
 
-        int result = memberService.modifyConfirm(principal.getName(), memberDto);
-        model.addAttribute("result", result);
-
-        return nextPage;
-
-    }
-
-    // 비밀번호 찾기 양식(/member/findpassword)
-    @GetMapping({"/findpassword"})
-    public String findpassword(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("findpassword()"));
-
-        String nextPage = "member/findpassword_form";
-
-        return nextPage;
-
-    }
-
-    // 비밀번호 찾기 확인(/member/findpassword_confirm)
-    @PostMapping({"/findpassword_confirm"})
-    public String findpasswordConfirm(MemberDto memberDto, Model model) {
-        System.out.println(CLASS_NAME.concat("findpasswordConfirm()"));
-
-        String nextPage = "member/findpassword_result";
-
-        int result = memberService.findpasswordConfirm(memberDto);
+        int result = memberService.modifyConfirm(principal.getName(), memberDto, currentPassword);
         model.addAttribute("result", result);
 
         return nextPage;

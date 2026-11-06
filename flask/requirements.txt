@@ -1,0 +1,14 @@
+# Python 3.10 기준
+# 설치 순서 (ultralytics가 opencv-python을 같이 깔아서 cv2가 겹치므로 2·3번까지 해야 함)
+#   1) pip install -r requirements.txt
+#   2) pip uninstall -y opencv-python
+#   3) pip install --force-reinstall --no-deps opencv-contrib-python==4.10.0.84
+flask>=3.0
+requests>=2.31
+numpy
+pillow
+# PaddleOCR이 이 버전을 고정 요구함. opencv-python 과 같이 깔면 cv2 폴더가 겹쳐 꼬이므로 이것 하나만 사용
+opencv-contrib-python==4.10.0.84
+ultralytics>=8.3
+paddlepaddle>=3.0
+paddleocr>=3.0

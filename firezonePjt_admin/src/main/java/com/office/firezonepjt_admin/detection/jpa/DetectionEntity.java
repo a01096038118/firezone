@@ -11,7 +11,14 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Builder
-@Table(name = "detection_log")
+@Table(name = "detection_log", indexes = {
+        // 같은 카메라·구역·차량·위반유형의 가장 최근 기록을 찾는 저장용 조회
+        @Index(name = "idx_detection_find",
+                columnList = "dl_camera_id, dl_zone_no, dl_car_number, dl_violation_type, dl_last_detected_at"),
+        // 최초 탐지 시간 기준 기간 조회
+        @Index(name = "idx_detection_first_time",
+                columnList = "dl_first_detected_at")
+})
 @AllArgsConstructor
 @NoArgsConstructor
 public class DetectionEntity {

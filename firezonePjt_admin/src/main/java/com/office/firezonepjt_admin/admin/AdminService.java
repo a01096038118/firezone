@@ -2,6 +2,10 @@ package com.office.firezonepjt_admin.admin;
 
 import com.office.firezonepjt_admin.admin.jpa.AdminEntity;
 import com.office.firezonepjt_admin.admin.jpa.AdminRepository;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityEntity;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityHistoryEntity;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityHistoryRepository;
+import com.office.firezonepjt_admin.admin.jpa.AdminAuthorityRepository;
 import com.office.firezonepjt_admin.admin.jpa.AuthorityEntity;
 import com.office.firezonepjt_admin.admin.jpa.AuthorityRepository;
 import com.office.firezonepjt_admin.admin.jpa.UserMemberEntity;
@@ -13,16 +17,91 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class AdminService {
+
+    public enum AdminPermissionRole {
+        NONE("", false, false, false),
+        CONTROL("CONTROL", false, true, false),
+        CONTROL_AND_MODIFY("CONTROL, MODIFY", true, true, false),
+        MASTER("MASTER", true, true, true);
+
+        private final String roleName;
+        private final boolean memberModify;
+        private final boolean control;
+        private final boolean master;
+
+        AdminPermissionRole(
+                String roleName,
+                boolean memberModify,
+                boolean control,
+                boolean master) {
+            this.roleName = roleName;
+            this.memberModify = memberModify;
+            this.control = control;
+            this.master = master;
+        }
+
+        public String getRoleName() {
+            log.info("getRoleName()");
+            return roleName;
+        }
+
+        public boolean isMaster() {
+            log.info("isMaster()");
+            return master;
+        }
+
+        public List<String> toSpringRoles() {
+            log.info("toSpringRoles()");
+            List<String> roles = new ArrayList<>();
+            if (control) {
+                roles.add("CONTROL");
+            }
+            if (memberModify) {
+                roles.add("MODIFY");
+            }
+            if (master) {
+                roles.add("MASTER");
+            }
+            return roles;
+        }
+
+        private static AdminPermissionRole fromRoleName(String roleName) {
+            log.info("fromRoleName()");
+            if (roleName == null || roleName.isBlank()) {
+                return NONE;
+            }
+            return fromRoleNameForUpdate(roleName);
+        }
+
+        private static AdminPermissionRole fromRoleNameForUpdate(String roleName) {
+            log.info("fromRoleNameForUpdate()");
+            if (roleName == null) {
+                throw new IllegalArgumentException("Permission set is required");
+            }
+            String normalizedRoleName = roleName.trim().toLowerCase(java.util.Locale.ROOT);
+            if (normalizedRoleName.isEmpty()) {
+                return NONE;
+            }
+            for (AdminPermissionRole role : values()) {
+                if (role.roleName.equalsIgnoreCase(normalizedRoleName)) {
+                    return role;
+                }
+            }
+            throw new IllegalArgumentException("Invalid admin permission set: " + roleName);
+        }
+    }
 
     final public static int ADMIN_ID_ALREADY_EXIST   = 0;
     final public static int ADMIN_SIGNUP_SUCCESS     = 1;
@@ -34,29 +113,128 @@ public class AdminService {
     final public static int NEW_PASSWORD_CREATION_SUCCESS   = 1;
     final public static int NEW_PASSWORD_CREATION_FAIL      = 0;
 
-    final private AdminDao adminDao;
     final private UserMemberRepository userMemberRepository;
     final private AuthorityRepository authorityRepository;
     final private PasswordEncoder passwordEncoder;
     final private JavaMailSender javaMailSender;
     final private AdminRepository adminRepository;
+    final private AdminAuthorityRepository adminAuthorityRepository;
+    final private AdminAuthorityHistoryRepository adminAuthorityHistoryRepository;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    public AdminService(AdminDao adminDao,
-                         UserMemberRepository userMemberRepository,
+    public AdminService(UserMemberRepository userMemberRepository,
                          AuthorityRepository authorityRepository,
                          PasswordEncoder passwordEncoder,
                          JavaMailSender javaMailSender,
-                         AdminRepository adminRepository) {
-        this.adminDao = adminDao;
+                         AdminRepository adminRepository,
+                         AdminAuthorityRepository adminAuthorityRepository,
+                         AdminAuthorityHistoryRepository adminAuthorityHistoryRepository) {
         this.userMemberRepository = userMemberRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.adminRepository = adminRepository;
+        this.adminAuthorityRepository = adminAuthorityRepository;
+        this.adminAuthorityHistoryRepository = adminAuthorityHistoryRepository;
     }
 
+    @Transactional(readOnly = true)
+    public AdminPermissionRole findCurrentRole(int adminNo) {
+        log.info("findCurrentRole()");
+        return latestPermissionHistory(adminNo)
+                .map(history -> adminAuthorityRepository.findById(history.getAfterAuthorityNo())
+                        .map(authority -> AdminPermissionRole.fromRoleName(authority.getRoleName()))
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Authority not found: " + history.getAfterAuthorityNo())))
+                .orElse(AdminPermissionRole.NONE);
+    }
 
+    @Transactional
+    public boolean updatePermissions(
+            int adminNo,
+            String roleName,
+            String changedByUsername) {
+        log.info("updatePermissions()");
+        AdminEntity changedBy = adminRepository.findByAdId(changedByUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!findCurrentRole(changedBy.getAdNo()).isMaster()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the master administrator can change administrator permissions");
+        }
+        adminAuthorityRepository.findAllByRoleNameForUpdate("MASTER");
+
+        AdminPermissionRole newRole;
+        try {
+            newRole = AdminPermissionRole.fromRoleNameForUpdate(roleName);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
+
+        AdminEntity targetAdmin = adminRepository.findById(adminNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (targetAdmin.getAdNo() == changedBy.getAdNo()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change your own permissions");
+        }
+        if (newRole.isMaster()
+                && adminAuthorityHistoryRepository.countAnotherCurrentMaster(adminNo) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only one administrator can have master permission");
+        }
+
+        Optional<AdminAuthorityHistoryEntity> previousHistory = latestPermissionHistory(adminNo);
+        AdminPermissionRole currentRole = previousHistory
+                .map(history -> adminAuthorityRepository.findById(history.getAfterAuthorityNo())
+                        .map(authority -> AdminPermissionRole.fromRoleName(authority.getRoleName()))
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Authority not found: " + history.getAfterAuthorityNo())))
+                .orElse(AdminPermissionRole.NONE);
+
+        if (currentRole == newRole) {
+            return false;
+        }
+
+        AdminAuthorityEntity newAuthority = adminAuthorityRepository
+                .findByRoleNameIgnoreCase(newRole.getRoleName())
+                .orElseGet(() -> adminAuthorityRepository.save(AdminAuthorityEntity.builder()
+                        .roleName(newRole.getRoleName())
+                        .build()));
+
+        AdminAuthorityHistoryEntity history = AdminAuthorityHistoryEntity.builder()
+                .adminNo(adminNo)
+                .beforeAuthorityNo(previousHistory
+                        .map(AdminAuthorityHistoryEntity::getAfterAuthorityNo)
+                        .orElse(null))
+                .afterAuthorityNo(newAuthority.getAuthorityNo())
+                .changedBy(changedBy.getAdNo())
+                .changedAt(LocalDateTime.now())
+                .build();
+        adminAuthorityHistoryRepository.save(history);
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminDto> findPermissionHistory(int adminNo, String viewerUsername) {
+        log.info("findPermissionHistory()");
+        AdminEntity viewer = adminRepository.findByAdId(viewerUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!findCurrentRole(viewer.getAdNo()).isMaster()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the master administrator can view administrator permission history");
+        }
+
+        AdminEntity targetAdmin = adminRepository.findById(adminNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return adminAuthorityHistoryRepository.findPermissionHistory(targetAdmin.getAdNo());
+    }
+
+    private Optional<AdminAuthorityHistoryEntity> latestPermissionHistory(int adminNo) {
+        log.info("latestPermissionHistory()");
+        return adminAuthorityHistoryRepository
+                .findFirstByAdminNoOrderByChangedAtDescHistoryNoDesc(adminNo);
+    }
+
+    @Transactional
     public int signupConfirm(AdminDto adminDto) {
         log.info("signupConfirm()");
 
@@ -68,15 +246,34 @@ public class AdminService {
 
             AdminEntity savedAdminEntity = adminRepository.save(adminDto.toEntity());
 
-            if (savedAdminEntity != null)
-                return ADMIN_SIGNUP_SUCCESS;
-            else
+            if (savedAdminEntity == null) {
                 return ADMIN_SIGNUP_FAIL;
+            }
+
+            AdminAuthorityEntity emptyAuthority = adminAuthorityRepository.save(
+                    AdminAuthorityEntity.builder()
+                            .roleName("")
+                            .build());
+            adminAuthorityHistoryRepository.save(AdminAuthorityHistoryEntity.builder()
+                    .adminNo(savedAdminEntity.getAdNo())
+                    .beforeAuthorityNo(null)
+                    .afterAuthorityNo(emptyAuthority.getAuthorityNo())
+                    .changedBy(savedAdminEntity.getAdNo())
+                    .changedAt(LocalDateTime.now())
+                    .build());
+            return ADMIN_SIGNUP_SUCCESS;
 
         } else {
             return ADMIN_ID_ALREADY_EXIST;
         }
 
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAdminIdAvailable(String adminId) {
+        log.info("isAdminIdAvailable()");
+        return adminId != null && !adminId.isBlank()
+                && !adminRepository.existsByAdId(adminId.trim());
     }
 
     public String signinConfirm(AdminDto adminDto) {
@@ -119,30 +316,38 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<AdminDto> findAllAdmins() {
         log.info("findAllAdmins()");
-        return adminRepository.findAll(Sort.by(Sort.Direction.DESC, "adNo"))
+        return adminRepository.findAll()
                 .stream()
+                .sorted(Comparator.comparingInt(AdminEntity::getAdNo))
                 .map(this::toManagementDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UserMemberEntity> findAllUsers() {
-        return userMemberRepository.findAllByOrderByUserNoDesc();
+        log.info("findAllUsers()");
+        return userMemberRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparingInt(UserMemberEntity::getUserNo))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<AdminDto> findAdminByNo(int adminNo) {
+        log.info("findAdminByNo()");
         return adminRepository.findById(adminNo)
                 .map(this::toManagementDto);
     }
 
     @Transactional(readOnly = true)
     public Optional<UserMemberEntity> findUserByNo(int userNo) {
+        log.info("findUserByNo()");
         return userMemberRepository.findByUserNo(userNo);
     }
 
     @Transactional
     public boolean approveUser(int userNo) {
+        log.info("approveUser()");
         Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
         if (optionalUser.isEmpty()) {
             return false;
@@ -171,24 +376,26 @@ public class AdminService {
 
     @Transactional
     public boolean deleteUser(int userNo) {
+        log.info("deleteUser()");
         Optional<UserMemberEntity> optionalUser = userMemberRepository.findByUserNo(userNo);
         if (optionalUser.isEmpty()) {
             return false;
         }
 
-        userMemberRepository.deleteAuthorityLinkByUserNo(userNo);
         userMemberRepository.delete(optionalUser.get());
         return true;
     }
 
     @Transactional
-    public boolean updateOwnAdmin(String currentUsername, AdminDto form) {
+    public boolean updateOwnAdmin(String currentUsername, AdminDto form, String currentPassword) {
         log.info("updateOwnAdmin()");
         Optional<AdminEntity> optionalAdmin = adminRepository.findByAdId(currentUsername);
         if (optionalAdmin.isEmpty()
                 || isBlank(form.getAm_name())
                 || isBlank(form.getAm_mail())
-                || isBlank(form.getAm_phone())) {
+                || isBlank(form.getAm_phone())
+                || isBlank(currentPassword)
+                || !passwordEncoder.matches(currentPassword, optionalAdmin.get().getAdPw())) {
             return false;
         }
 
@@ -223,6 +430,7 @@ public class AdminService {
     }
 
     private boolean isBlank(String value) {
+        log.info("isBlank()");
         return value == null || value.isBlank();
     }
 

@@ -7,8 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "admin_authority", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "aa_role_name")
+@Table(name = "user_authority", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "ua_role_name")
 })
 @Data
 @Builder
@@ -17,17 +17,17 @@ import lombok.NoArgsConstructor;
 public class AuthorityEntity {
 
     @Id
-    @Column(name="aa_no")
+    @Column(name="ua_no")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int authNo;                // 권한 고유 번호
 
-    @Column(name="aa_role_name", nullable = false, length = 20)
+    @Column(name="ua_role_name", nullable = false, length = 20)
     private String authRoleName;        // 권한 이름
 
     public AuthorityDto toDto() {
         return AuthorityDto.builder()
-                .aa_no(authNo)
-                .aa_role_name(authRoleName)
+                .ua_no(authNo)
+                .ua_role_name(authRoleName)
                 .build();
     }
 

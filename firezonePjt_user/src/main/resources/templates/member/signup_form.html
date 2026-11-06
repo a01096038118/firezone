@@ -27,9 +27,12 @@
             <form
             th:action="@{/member/signup_confirm}"
             name="signup_form"
+            th:attr="data-id-check-url=@{/member/id-check}"
             method="post">
 
-                <input type="text" name="um_id" placeholder="INPUT NEW MEMBER ID"><br>
+                <input type="text" name="um_id" placeholder="INPUT NEW MEMBER ID" oninput="resetMemberIdCheck()">
+                <button type="button" onclick="checkMemberId()">아이디 중복확인</button><br>
+                <span id="member-id-check-message" aria-live="polite"></span><br>
                 <input type="password" name="um_pw" placeholder="INPUT NEW MEMBER PW"><br>
                 <input type="email" name="um_name" placeholder="INPUT NEW MEMBER NAME"><br>
                 <input type="email" name="um_mail" placeholder="INPUT NEW MEMBER MAIL"><br>

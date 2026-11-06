@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "admin_authority", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "aa_role_name")
+@Table(name = "user_authority", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "ua_role_name")
 })
 @Getter
 @Setter
@@ -26,9 +26,9 @@ public class AuthorityEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "aa_no")
+    @Column(name = "ua_no")
     private int authorityNo;
 
-    @Column(name = "aa_role_name", nullable = false, length = 20)
+    @Column(name = "ua_role_name", nullable = false, length = 20)
     private String roleName;
 }

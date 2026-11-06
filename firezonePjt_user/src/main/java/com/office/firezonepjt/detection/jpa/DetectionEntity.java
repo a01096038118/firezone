@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Builder
-@Table(name = "detection_log")
+@Table(name = "detection_log", indexes = {
+        @Index(name = "idx_detection_find",
+                columnList = "dl_camera_id, dl_zone_no, dl_car_number, dl_violation_type, dl_last_detected_at"),
+        @Index(name = "idx_detection_first_time",
+                columnList = "dl_first_detected_at")
+})
 @AllArgsConstructor
 @NoArgsConstructor
 public class DetectionEntity {

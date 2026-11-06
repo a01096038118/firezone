@@ -12,9 +12,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 
 @EntityScan(basePackages = {
-        "com.office.firezonepjt.user.jpa"
+        "com.office.firezonepjt.user.jpa",
+        "com.office.firezonepjt.detection.jpa"
 })
-@EnableJpaRepositories(basePackages = "com.office.firezonepjt.user.jpa")
+@EnableJpaRepositories(basePackages = {
+        "com.office.firezonepjt.user.jpa",
+        "com.office.firezonepjt.detection.jpa"
+})
 public class FirezonePjtApplication {
 
     public static void main(String[] args) {

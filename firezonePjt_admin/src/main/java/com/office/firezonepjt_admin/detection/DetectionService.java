@@ -4,6 +4,7 @@ import com.office.firezonepjt_admin.detection.jpa.DetectionEntity;
 import com.office.firezonepjt_admin.detection.jpa.DetectionRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
@@ -27,26 +29,54 @@ import java.util.Optional;
 @Service
 public class DetectionService {
     private final DetectionRepository detectionRepository;
+    private final DetectionImageStorage detectionImageStorage;
     private static final DateTimeFormatter LOG_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final int SAME_EVENT_SECONDS = 30;
+    private final long sameEventSeconds;
     private static final int MAX_PAGE_SIZE = 100;
 
-    public DetectionService(DetectionRepository detectionRepository
-                            ) {
+    public DetectionService(
+            DetectionRepository detectionRepository,
+            DetectionImageStorage detectionImageStorage,
+            @Value("${detection.same-event-seconds:10}") long sameEventSeconds) {
         this.detectionRepository = detectionRepository;
+        this.detectionImageStorage = detectionImageStorage;
+        this.sameEventSeconds = sameEventSeconds;
     }
 
 
     // 탐지 기록 저장
+    // image : Flask가 함께 보낸 이미지 파일 (없으면 dto의 이미지 경로를 그대로 저장)
     @Transactional
-    public Integer saveDetection(DetectionDto dto) {
+    public DetectionSaveResponse saveDetection(DetectionDto dto, MultipartFile image) {
         log.info("saveDetection()");
 
-        // Flask가 보낸 마지막 탐지 시간
-        LocalDateTime detectedAt = dto.getDl_last_detected_at();
+        boolean hasImage = image != null && !image.isEmpty();
 
-        if (detectedAt == null) {
-            throw new IllegalArgumentException("마지막 탐지 시간이 필요합니다.");
+        // 이미지 파일도, 이미지 경로도 없으면 저장하지 않음
+        if (!hasImage
+                && (dto.getDl_image_path() == null || dto.getDl_image_path().isBlank())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "이미지 파일 또는 이미지 경로가 필요합니다."
+            );
+        }
+
+        // Flask가 보낸 최초·마지막 탐지 시간
+        LocalDateTime firstAt = dto.getDl_first_detected_at();
+        LocalDateTime lastAt = dto.getDl_last_detected_at();
+
+        if (firstAt == null || lastAt == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "탐지 시간이 필요합니다."
+            );
+        }
+
+        if (firstAt.isAfter(lastAt)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "최초 탐지 시간이 마지막 탐지 시간보다 늦을 수 없습니다."
+            );
         }
 
         String carNumber = dto.getDl_car_number();
@@ -75,28 +105,46 @@ public class DetectionService {
                 // 기존 '마지막' 탐지시간
                 LocalDateTime lastTime = entity.getDlLastTime();
 
-                // 기존 마지막 탐지 시간과 30초 이내면 같은 기록으로 판단
+                // 기존 마지막 탐지 시간과 설정된 시간(초) 이내이고, 같은 날짜일 때만 같은 기록으로 판단
+                // (자정을 넘기면 계속 서 있던 차량이라도 다음 날짜의 새 기록으로 저장)
                 if (lastTime != null
-                        && !detectedAt.isBefore(lastTime.minusSeconds(SAME_EVENT_SECONDS))
-                        && !detectedAt.isAfter(lastTime.plusSeconds(SAME_EVENT_SECONDS))) {
+                        && lastTime.toLocalDate().equals(lastAt.toLocalDate())
+                        && !lastAt.isBefore(lastTime.minusSeconds(sameEventSeconds))
+                        && !lastAt.isAfter(lastTime.plusSeconds(sameEventSeconds))) {
 
                     // 새로운 시간이 더 최근일 때만 수정
-                    if (detectedAt.isAfter(lastTime)) {
-                        entity.setDlLastTime(detectedAt);
+                    // (같은 사건의 갱신이므로 이미지는 처음 저장한 것을 유지하고 새 이미지는 저장하지 않음)
+                    if (lastAt.isAfter(lastTime)) {
+                        entity.setDlLastTime(lastAt);
                     }
 
-                    return entity.getDlNo();
+                    return DetectionSaveResponse.updated(entity.getDlNo());
                 }
             }
 
+        // 최초 탐지 시간이 전날이면 마지막 탐지 날짜의 00:00으로 맞춤
+        // (자정을 넘겨 새로 만드는 기록이 다음 날짜로 조회되도록)
+        if (firstAt.toLocalDate().isBefore(lastAt.toLocalDate())) {
+            dto.setDl_first_detected_at(lastAt.toLocalDate().atStartOfDay());
+        }
 
-        // Dto에 담긴 데이터를 Entity에 옮김
-        DetectionEntity entity = dto.toEntity();
+        // 새 기록일 때만 이미지 파일을 Boot 폴더에 저장하고 그 주소를 이미지 경로로 사용
+        String storedImageUrl = null;
+        if (hasImage) {
+            storedImageUrl = detectionImageStorage.store(image);
+            dto.setDl_image_path(storedImageUrl);
+        }
 
-        // detection_log 테이블에 저장
-        DetectionEntity saved = detectionRepository.save(entity);
+        // detection_log 테이블에 저장 (실패하면 방금 저장한 이미지 파일도 지움)
+        DetectionEntity saved;
+        try {
+            saved = detectionRepository.saveAndFlush(dto.toEntity());
+        } catch (RuntimeException e) {
+            detectionImageStorage.deleteQuietly(storedImageUrl);
+            throw e;
+        }
 
-        return saved.getDlNo();
+        return DetectionSaveResponse.created(saved.getDlNo());
 
     }
 
@@ -179,6 +227,7 @@ public class DetectionService {
     }
 
     private DetectionEntity findDetection(Integer dlNo) {
+        log.info("findDetection()");
 
         return detectionRepository.findById(dlNo)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -197,10 +246,14 @@ public class DetectionService {
         DetectionEntity entity = findDetection(dlNo);
 
         detectionRepository.delete(entity);
+
+        // Boot에 저장해 둔 이미지 파일도 함께 삭제 (Flask 쪽 경로인 예전 기록은 건드리지 않음)
+        detectionImageStorage.deleteQuietly(entity.getDlImage());
     }
 
     // CSV 셀 값 변환
     private String csvCell(Object value) {
+        log.info("csvCell()");
         // 값이 없으면 빈칸으로 처리
         if (value == null) {
             return "";
@@ -238,7 +291,7 @@ public class DetectionService {
 
         // CSV 첫 줄: 열 제목
         csv.append("탐지 번호,카메라 ID,구역번호,위반유형,")
-                .append("차량번호,이미지 경로,최초 탐지 시간,마지막 탐지 시간\r\n"
+                .append("차량번호,이미지 경로,최초 탐지 시간,마지막 탐지 시간,주정차 시간\r\n"
         );
 
         // 탐지 기록 한 건마다 추가
@@ -250,17 +303,43 @@ public class DetectionService {
             csv.append(csvCell(dto.getDl_car_number())).append(",");
             csv.append(csvCell(dto.getDl_image_path())).append(",");
             csv.append(csvCell(csvTime(dto.getDl_first_detected_at()))).append(",");
-            csv.append(csvCell(csvTime(dto.getDl_last_detected_at())));
+            csv.append(csvCell(csvTime(dto.getDl_last_detected_at()))).append(",");
+            csv.append(csvCell(parkingDuration(
+                    dto.getDl_first_detected_at(), dto.getDl_last_detected_at())));
             csv.append("\r\n");
         }
         return csv.toString().getBytes(StandardCharsets.UTF_8);
     }
 
+    // 주정차 시간 = 마지막 탐지 시간 - 최초 탐지 시간 (화면의 주정차 시간과 같은 형식)
+    // 예: 1시간 5분 / 12분 30초 / 40초
+    private String parkingDuration(LocalDateTime first, LocalDateTime last) {
+        log.info("parkingDuration()");
+        if (first == null || last == null || last.isBefore(first)) {
+            return "미확인";
+        }
+
+        long totalSeconds = java.time.Duration.between(first, last).getSeconds();
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+            return hours + "시간 " + minutes + "분";
+        }
+        if (minutes > 0) {
+            return minutes + "분 " + seconds + "초";
+        }
+        return seconds + "초";
+    }
+
     private String csvTime(LocalDateTime time) {
+        log.info("csvTime()");
         return time == null ? "" : time.format(LOG_FMT);
     }
 
     private List<DetectionDto> toDtoList(List<DetectionEntity> entities) {
+        log.info("toDtoList()");
 
         List<DetectionDto> dtoList = new ArrayList<>();
 

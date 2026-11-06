@@ -42,8 +42,17 @@
                 <label>연락처
                     <input type="text" name="um_phone" th:value="${loginedMemberDto.um_phone}" required><br>
                 </label>
-                <label>비밀번호
-                    <input type="password" name="um_pw" placeholder="변경할 때만 입력"><br>
+                <label>현재 비밀번호
+                    <input type="password"
+                           name="currentPassword"
+                           autocomplete="current-password"
+                           required><br>
+                </label>
+                <label>새 비밀번호
+                    <input type="password"
+                           name="um_pw"
+                           placeholder="변경하지 않으려면 비워 두세요"
+                           autocomplete="new-password"><br>
                 </label>
                 <p th:if="${loginedMemberDto.um_reg_date != null}">
                     가입일: <span th:text="${loginedMemberDto.um_reg_date}"></span>

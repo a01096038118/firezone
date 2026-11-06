@@ -1,16 +1,17 @@
 package com.office.firezonepjt_admin.config;
 
-import com.office.firezonepjt_admin.admin.security.AdminAccessDeniedHandler;
-import lombok.extern.slf4j.Slf4j;
+import com.office.firezonepjt_admin.admin.security.AdminDetailsService;
+import com.office.firezonepjt_admin.admin.security.AdminPermissionRefreshFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -21,15 +22,50 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, AdminDetailsService adminDetailsService) throws Exception {
 
         http
+                // Flask의 탐지 저장 요청 -> 로그인 토큰이 없으므로 경로 제외
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/detections")
+                )
                 .authorizeHttpRequests(auth -> auth
+                        // Flask 탐지 저장 :  로그인 없이 통과
+                        .requestMatchers(HttpMethod.POST, "/detections").permitAll()
+                        // 탐지 삭제 : MASTER만 (/detections/** 규칙보다 반드시 위에 있어야 함)
+                        .requestMatchers(HttpMethod.DELETE, "/detections/delete")
+                        .hasRole("MASTER")
+                        // CSV 다운로드 : MODIFY 이상 (MASTER도 MODIFY를 가짐)
+                        .requestMatchers(HttpMethod.GET, "/detections/csv")
+                        .hasRole("MODIFY")
+                        // 관리자 권한 변경 / 권한 이력 조회 : MASTER만
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/admin/*/authority")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.GET, "/admin/members_list/admin/*/authority-history")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/*/delete")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/*/approve")
+                        .hasRole("MASTER")
+                        .requestMatchers(HttpMethod.POST, "/admin/members_list/user/**")
+                        .hasRole("MODIFY")
+                        .requestMatchers(
+                                "/admin/members_list",
+                                "/admin/members_list/admin/**"
+                        ).hasAnyRole("CONTROL", "MODIFY", "MASTER")
+                        .requestMatchers("/admin/members_list/user/**")
+                        .hasAnyRole("CONTROL", "MODIFY", "MASTER")
+                        // 탐지 사진 : user 화면에서도 불러갈 수 있게 로그인 없이 허용
+                        // (파일 이름이 임의의 긴 값이라 주소를 모르면 열 수 없음)
+                        .requestMatchers(HttpMethod.GET, "/uploads/detections/**").permitAll()
+                        .requestMatchers("/dashboard/**", "/detections/**")
+                        .hasAnyRole("CONTROL", "MASTER")
                         .requestMatchers(
                                 "/",
                                 "/admin/signin",
                                 "/admin/signup",
                                 "/admin/signup_confirm",
+                                "/admin/id-check",
                                 "/admin/findpassword",
                                 "/admin/findpassword_confirm",
                                 "/admin/signin_result",
@@ -41,8 +77,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/admin/**",
-                                "/monitoring/**",
-                                "/detection/**",
                                 "/planner/**",
                                 "/logs/**"
                         ).hasRole("ADMIN")
@@ -61,86 +95,11 @@ public class SecurityConfig {
                         .logoutUrl("/admin/logout")
                         .logoutSuccessUrl("/admin/signin?logout")
                         .permitAll()
-                );
+                )
+                .addFilterBefore(
+                        new AdminPermissionRefreshFilter(adminDetailsService),
+                        AuthorizationFilter.class);
 
         return http.build();
     }
 }
-
-//@Slf4j
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig {
-//
-//    @Bean PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//
-//    }
-//
-//    @Bean SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .cors(cors -> cors.disable())
-//                .csrf(csrf -> csrf.disable());
-//
-//        http
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(
-//                                "/",
-//                                "/css/*",
-//                                "/img/*",
-//                                "/js/*",
-//                                "/member/signup",
-//                                "/member/signup_confirm",
-//                                "/member/signin",
-//                                "/member/signin_confirm",
-//                                "/member/findpassword",
-//                                "/member/findpassword_confirm").permitAll()
-//                        .requestMatchers("/planner/**").hasAnyRole("USER")
-//                        .anyRequest().authenticated()
-//                );
-//
-//        http
-//                .formLogin(login -> login
-//                        .loginPage("/member/signin")
-//                        .loginProcessingUrl("/member/signin_confirm")
-//                        .usernameParameter("id")
-//                        .passwordParameter("pw")
-//                        .successHandler((request, response, authentication) -> {
-//                            log.info("SIGNIN SUCCESS HANDLER()");
-//
-//                            User user = (User) authentication.getPrincipal();
-//                            String targetURI = "/member/signin_result?loginedID=" + user.getUsername();
-//                            response.sendRedirect(targetURI);
-//
-//                        })
-//                        .failureHandler((request, response, exception) -> {
-//                            log.info("SIGNIN FAIL HANDLER()");
-//
-//                            String targetURI = "/member/signin_result";
-//                            response.sendRedirect(targetURI);
-//
-//                        })
-//                );
-//
-//        http
-//                .logout(logout -> logout
-//                        .logoutUrl("/member/signout_confirm")
-//                        .logoutSuccessHandler((request, response, authentication) -> {
-//                            log.info("signout success handler");
-//
-//                            String targetURI = "/";
-//                            response.sendRedirect(targetURI);
-//
-//                        }));
-//
-//        http
-//                .exceptionHandling(exception -> exception
-//                        .accessDeniedHandler(new AdminAccessDeniedHandler())
-//                );
-//
-//        return http.build();
-//
-//    }
-//
-//}
