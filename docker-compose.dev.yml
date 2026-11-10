@@ -1,0 +1,52 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: DB_FIREZONE
+      MYSQL_USER: firezone
+      MYSQL_PASSWORD: firezone1234
+      TZ: Asia/Seoul
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot1234"]
+      interval: 5s
+      retries: 30
+      start_period: 120s
+
+  admin:
+    build: ./firezonePjt_admin
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8090
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/DB_FIREZONE?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: firezone
+      SPRING_DATASOURCE_PASSWORD: firezone1234
+    ports:
+      - "8090:8090"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  user:
+    build: ./firezonePjt_user
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8091
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/DB_FIREZONE?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: firezone
+      SPRING_DATASOURCE_PASSWORD: firezone1234
+    ports:
+      - "8091:8091"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  db-data:
