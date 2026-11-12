@@ -8,7 +8,7 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <!-- 탐지 삭제 권한(MASTER)이 있을 때만 생김 -> JS가 삭제 버튼 표시 여부 판단 -->
     <meta name="can_delete" content="true" sec:authorize="hasRole('MASTER')">
-    <title th:replace="~{/include/title.html::title}"/>
+    <title th:replace="~{include/title.html::title}"/>
 
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
@@ -20,9 +20,9 @@
 </head>
 <body>
 
-<header th:replace="~{/include/header_nav_footer.html::header}"/>
+<header th:replace="~{include/header_nav_footer.html::header}"/>
 
-<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+<nav th:replace="~{include/header_nav_footer.html::nav}"/>
 
 
 <section id="detection_wrap">
@@ -92,7 +92,7 @@
 </section>
 
 
-<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+<footer th:replace="~{include/header_nav_footer.html::footer}"/>
 
 </body>
 </html>

@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:replace="~{/include/title.html::title}"/>
+    <title th:replace="~{include/title.html::title}"/>
 
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
@@ -12,9 +12,9 @@
 </head>
 <body>
 
-<header th:replace="~{/include/header_nav_footer.html::header}" />
+<header th:replace="~{include/header_nav_footer.html::header}" />
 
-<nav th:replace="~{/include/header_nav_footer.html::nav}"/>
+<nav th:replace="~{include/header_nav_footer.html::nav}"/>
 
 <section>
     <div id="section_wrap">
@@ -35,7 +35,7 @@
     </div>
 </section>
 
-<footer th:replace="~{/include/header_nav_footer.html::footer}"/>
+<footer th:replace="~{include/header_nav_footer.html::footer}"/>
 
 </body>
 </html>

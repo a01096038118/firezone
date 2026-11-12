@@ -44,3 +44,5 @@ logs/
 
 
 uploads/
+# 로컬 Docker용 DB 덤프 (회원 데이터 포함, 커밋 금지)
+db/*.sql
