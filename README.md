@@ -1,4 +1,4 @@
-# 🔥 firezone
+# firezone
 
 **드론 영상 기반 소방시설 주변 불법주정차 탐지·관제 시스템**
 
@@ -8,7 +8,7 @@
 
 <br>
 
-## 📌 주요 기능
+## 주요 기능
 
 | 구분 | 기능 |
 |---|---|
@@ -19,7 +19,7 @@
 
 <br>
 
-## 🏗️ 시스템 구조
+## 시스템 구조
 
 ```mermaid
 flowchart LR
@@ -42,7 +42,7 @@ firezone/
 
 <br>
 
-## 🛠️ 기술 스택
+## 기술 스택
 
 | 구분 | 기술 |
 |---|---|
@@ -55,7 +55,7 @@ firezone/
 
 <br>
 
-## 👥 팀원 및 역할
+## 팀원 및 역할
 
 | 이름 | 역할 | 담당 |
 |---|---|---|
@@ -68,7 +68,7 @@ firezone/
 
 <br>
 
-## 💡 고민한 부분
+## 고민한 부분
 
 | 문제 | 해결 |
 |---|---|
@@ -79,7 +79,7 @@ firezone/
 
 <br>
 
-## ▶️ 실행 방법
+## 실행 방법
 
 Docker Desktop이 설치되어 있어야 합니다. MySQL, 관리자 서버, 회원 서버가 함께 실행됩니다.
 
@@ -109,7 +109,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 <br>
 
-## 📸 화면
+## 화면
 
 ### 관제 화면
 <img width="1440" height="900" alt="관제화면" src="https://github.com/user-attachments/assets/cc1582d3-3f14-4b0c-945a-94388adf1e1b" />
@@ -125,7 +125,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 <br>
 
-## 📝 아쉬운 점 · 개선 계획
+## 아쉬운 점 · 개선 계획
 
 - 원거리에서 바닥 글씨가 작게 찍히면 탐지가 누락됨 → 원거리 이미지 추가 수집·재학습
 - 차량이 바닥 표시를 가리면 구역 판정이 어려움 → 부분 가림 데이터 보강
