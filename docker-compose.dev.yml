@@ -27,6 +27,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/DB_FIREZONE?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: firezone
       SPRING_DATASOURCE_PASSWORD: firezone1234
+      # Docker를 거쳐 들어온 Flask 요청은 IP가 Docker 게이트웨이(172.31.0.1, 아래 networks에서 고정)로 보임
+      DETECTION_ALLOWEDIPS: 127.0.0.1,0:0:0:0:0:0:0:1,192.168.56.107,192.168.0.106,192.168.56.1,172.31.0.1
+      # 대시보드가 영상·이미지를 가져올 Flask 주소 (.env의 FLASK_IP)
+      DASHBOARD_FLASKBASEURL: http://${FLASK_IP:-192.168.0.106}:5000
     ports:
       - "8090:8090"
     depends_on:
@@ -42,11 +46,22 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/DB_FIREZONE?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: firezone
       SPRING_DATASOURCE_PASSWORD: firezone1234
+      # 대시보드가 영상을 가져올 Flask 주소, 탐지 사진을 가져올 admin 주소 (.env의 FLASK_IP, SERVER_IP)
+      DASHBOARD_FLASKBASEURL: http://${FLASK_IP:-192.168.0.106}:5000
+      DASHBOARD_ADMINBASEURL: http://${SERVER_IP:-192.168.0.141}:8090
     ports:
       - "8091:8091"
     depends_on:
       mysql:
         condition: service_healthy
+
+# Docker 내부 네트워크 주소 고정 (게이트웨이 172.31.0.1 = admin 허용 IP)
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+          gateway: 172.31.0.1
 
 volumes:
   db-data:
