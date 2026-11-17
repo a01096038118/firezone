@@ -4,13 +4,17 @@
 // const FLASK_BASE_URL = 'http://192.168.56.108:5000';   // flask-prod VM
 // const FLASK_BASE_URL = 'http://localhost:5000';        // 로컬 (내 PC)
 // const FLASK_BASE_URL = 'http://192.168.0.141:5000';     // dev: flask-dev VM (서버 PC 주소로 접속)
-const FLASK_BASE_URL = 'http://192.168.0.106:5000';     // 팀원 Flask PC
+// 서버 설정(DASHBOARD_FLASKBASEURL, Docker는 .env의 FLASK_IP)에서 넘겨준 값이 있으면 그 값을 사용
+const FLASK_BASE_URL = (window.FIREZONE_CONFIG && window.FIREZONE_CONFIG.flaskBaseUrl)
+    || 'http://192.168.0.106:5000';     // 팀원 Flask PC
 
 // admin 서버 주소 (탐지 사진은 admin 서버에 저장됨). 서버에 올릴 때 이 값만 바꿈
 // admin-dev VM : 'http://192.168.56.103:8090'
 // admin-prod VM : 'http://192.168.56.104:8090'
 //const ADMIN_BASE_URL = 'http://localhost:8090';         // 로컬 (내 PC)
-const ADMIN_BASE_URL = 'http://192.168.56.103:8090';      // dev: admin-dev VM
+// 서버 설정(DASHBOARD_ADMINBASEURL, Docker는 .env의 SERVER_IP)에서 넘겨준 값이 있으면 그 값을 사용
+const ADMIN_BASE_URL = (window.FIREZONE_CONFIG && window.FIREZONE_CONFIG.adminBaseUrl)
+    || 'http://192.168.56.103:8090';      // dev: admin-dev VM
 //const ADMIN_BASE_URL = 'http://192.168.56.104:8090';
 
 // 로그인 화면 주소
