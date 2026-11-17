@@ -9,6 +9,13 @@
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/dashboard.css}">
 
+    <!-- 서버 설정의 Flask·admin 주소를 common.js에 넘겨줌 -->
+    <script th:inline="javascript">
+        window.FIREZONE_CONFIG = {
+            flaskBaseUrl: /*[[${flaskBaseUrl}]]*/ '',
+            adminBaseUrl: /*[[${adminBaseUrl}]]*/ ''
+        };
+    </script>
     <script th:src="@{/js/dashboard/common.js}"></script>
     <script th:src="@{/js/dashboard/dashboard.js}"></script>
 

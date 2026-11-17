@@ -12,6 +12,10 @@
     <link rel="stylesheet" th:href="@{/css/header_nav_footer.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard/list_detail.css}">
 
+    <!-- 서버 설정의 Flask 주소를 common.js에 넘겨줌 -->
+    <script th:inline="javascript">
+        window.FIREZONE_CONFIG = { flaskBaseUrl: /*[[${flaskBaseUrl}]]*/ '' };
+    </script>
     <script th:src="@{/js/dashboard/common.js}"></script>
     <script th:src="@{/js/dashboard/list_detail.js}"></script>
 
